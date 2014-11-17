@@ -1,2 +1,2 @@
-MapsClient
+MapClient
 ==========
