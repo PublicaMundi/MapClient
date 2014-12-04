@@ -1,0 +1,3 @@
+include mapclient/config/deployment.ini_tmpl
+recursive-include mapclient/public *
+recursive-include mapclient/templates *

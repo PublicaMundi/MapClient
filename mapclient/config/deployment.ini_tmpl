@@ -1,0 +1,93 @@
+#
+# mapclient - Pylons configuration
+#
+# The %(here)s variable will be replaced with the parent directory of this file
+#
+[DEFAULT]
+debug = true
+# Uncomment and replace with the address which should receive any error reports
+#email_to = you@yourdomain.com
+#smtp_server = localhost
+#error_email_from = paste@localhost
+
+[server:main]
+use = egg:Paste#http
+host = 0.0.0.0
+port = 5000
+
+[app:main]
+use = egg:mapclient
+full_stack = true
+static_files = true
+
+cache_dir = %(here)s/data
+beaker.session.key = mapclient
+beaker.session.secret = ${app_instance_secret}
+app_instance_uuid = ${app_instance_uuid}
+
+# Map Client
+mapclient.url.prefix = /mapclient
+mapclient.url.catalog = http://web.dev.publicamundi.eu/
+mapclient.base.layer.key = 
+
+# Data API
+dataapi.sqlalchemy.catalog = postgresql://user:password@host:port/database
+dataapi.sqlalchemy.vectorstore = postgresql://user:password@host:port/database
+dataapi.cors.enabled = true
+
+# If you would like to fine-tune the individual locations of the cache data dirs
+# for the Cache data, or the Session saves, un-comment the desired settings
+# here:
+#beaker.cache.data_dir = %(here)s/data/cache
+#beaker.session.data_dir = %(here)s/data/sessions
+
+# SQLAlchemy database URL
+sqlalchemy.url = postgresql://user:password@host:port/database
+
+# WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
+# Debug mode will enable the interactive debugging tool, allowing ANYONE to
+# execute malicious code after an exception is raised.
+set debug = false
+
+# Logging configuration
+[loggers]
+keys = root, routes, mapclient, sqlalchemy
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[logger_routes]
+level = INFO
+handlers =
+qualname = routes.middleware
+# "level = DEBUG" logs the route matched and routing variables.
+
+[logger_mapclient]
+level = DEBUG
+handlers =
+qualname = mapclient
+
+[logger_sqlalchemy]
+level = INFO
+handlers =
+qualname = sqlalchemy.engine
+# "level = INFO" logs SQL queries.
+# "level = DEBUG" logs SQL queries and results.
+# "level = WARN" logs neither.  (Recommended for production systems.)
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S

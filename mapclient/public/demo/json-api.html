@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data API - Internal Format</title>
+    <link rel="stylesheet" href="../content/css/lib/ol3/ol.css" />
+    <script type="text/javascript" src="../content/js/lib/jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="../content/js/lib/ol3/ol.js"></script>
+    <script type="text/javascript" src="../content/js/api/data.js"></script>
+    <script type="text/javascript" src="../content/js/demo/data-api-json.js"></script>
+</head>
+<body>
+    <table>
+        <tr>
+            <td>
+                <select type="text" id="resource_id" style="width: 400px;" autocomplete="off"></select>
+            </td>
+            <td>
+                <button id="resource_show" type="button">Show Resources</button>
+            </td>
+            <td>
+                <button id="resource_describe" type="button">Show Resource</button>
+            </td>
+            <td>
+                <button id="resource_query" type="button">Query</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span for="query">Query</span>
+            </td>
+            <td colspan="3" />
+        </tr>
+        <tr>
+            <td>
+                <select type="text" id="query_id" style="width: 400px;" autocomplete="off">
+                    <option value="0">Distance</option>
+                    <option value="1">Area</option>
+                    <option value="2">Contains</option>
+                    <option value="3">Intersects</option>
+                </select>
+            </td>
+            <td rowspan="4" colspan="3">
+                <div id="map" style="width: 550px; height: 685px;"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <textarea id="query" rows="20" cols="60" autocomplete="off"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Output</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <textarea id="response" rows="20" cols="60" autocomplete="off"></textarea>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

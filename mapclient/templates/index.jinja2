@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="content/css/lib/normalize/normalize.css" />
+
+    <link rel="stylesheet" href="content/css/lib/ol3/ol.css" />
+
+    <!--<link rel="stylesheet" href="content/css/lib/jquery-ui/jquery-ui.min.css" />-->
+
+    <link rel="stylesheet" href="content/css/lib/jquery-mobile/publicamundi/publicamundi.css" />
+    <link rel="stylesheet" href="content/css/lib/jquery-mobile/publicamundi/jquery.mobile.icons.min.css" />
+    <link rel="stylesheet" href="content/css/lib/jquery-mobile/default/jquery.mobile.structure-1.4.5.css" />
+
+    <!--<link href="content/css/lib/jquery-mobile/default/jquery.mobile-1.4.5.min.css" rel="stylesheet" />-->
+
+    <link rel="stylesheet" href="content/css/default.css" />
+
+    <title>PublicaMundi - Map Client</title>
+    <script type="text/javascript">
+        var resource = '{{c.resource}}';
+        var ﻿require = {
+            config: {
+                app: {
+                    proxy: {
+                        path: '{{ h.url_for(controller='proxy', action='proxy_resource')}}',
+                        param: 'url'
+                    },
+                    bing: {
+                        key: '{{config['mapclient.base.layer.key']}}'
+                    },
+                    imagePath: '/content/images/',
+                    map: {
+                        target: 'map',
+                        center: [3000000, 4600000],
+                        zoom: 7
+                    },
+                    ckan: {
+                        endpoint: '{{config['mapclient.url.catalog']}}'
+                    }
+                }
+            }
+        };
+    </script>
+    <script type="text/javascript" data-main="content/js/main.js" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>
+    <script type="text/javascript">
+        var result = null;
+
+        if (typeof requirejs === 'undefined') {
+            document.write(decodeURI("%3Cscript type='text/javascript' data-main='/content/js/main.js' src='/content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
+        }
+    </script>
+</head>
+<body>
+    <div id="block-ui">
+        <div id="loader-icon">
+            <img src="content/images/geodata-biglogo.png" alt="" />
+        </div>
+    </div>
+    <div data-role="page" id="main">
+        <div id="content">
+            <div id="header">
+                <div class="nav-button-left">
+                    <a href="#view-layers" class="ui-btn ui-btn-icon-notext ui-icon-bullets ui-corner-all" data-rel="popup" data-position-to="window" data-role="button" data-inline="true" data-transition="pop"></a>
+                </div>
+                <div class="logo-container">
+                    <div class="logo-publicamundi"></div>
+                    <div class="progress-loader">
+                        <img src="content/images/ajax-loader.gif" alt="" />
+                    </div>
+                </div>
+                <div class="nav-button-right">
+                    <a href="#actions" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-action ui-corner-all"></a>
+                </div>
+                <div class="nav-button-right">
+                    <a href="#query" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-edit ui-corner-all"></a>
+                </div>
+            </div>
+            <div id="map"></div>
+            <div id="footer">
+                <div class="mouse-pos">
+                    <div class="mouse-pos-img ui-btn ui-btn-icon-notext ui-icon-navigation">
+                    </div>
+                </div>
+                <div class="combo-crs">
+                    <select name="pos_epsg" id="pos_epsg" data-native-menu="false">
+                        <option value="EPSG:3857" selected="selected">3857</option>
+                        <option value="EPSG:4326">4326</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="panel" data-position="left" data-position-fixed="true" data-display="push" data-theme="a" id="view-layers" data-inset="false">
+            <h2 style="padding-right: 4px;">Base Layer<a style="float: right; margin-top: 0px !important;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
+            <div class="clearfix">
+                <div class="base-layer base-layer-selected">
+                    <img src="content/images/road.png" alt="" data-image-set="Road" />
+                </div>
+                <div class="base-layer">
+                    <img src="content/images/aerial.png" alt="" data-image-set="Aerial" />
+                </div>
+            </div>
+            <form>
+                <div id="select-visible" style="display: none;">
+                    <select name="filter-selected" id="filter-selected" data-role="slider">
+                        <option value="All">All</option>
+                        <option value="Selected">Selected</option>
+                    </select>
+                </div>
+                <input data-type="search" id="searchAllLayers">
+            </form>
+
+            <h2 class="panel-section">Resources</h2>
+            <div class="clearfix ui-collapsible-set ui-group-theme-a ui-corner-all" id="services" data-filter="false" data-children="> div,  > ul, > div div ul li, > ul div li" data-input="#searchAllLayers">
+            </div>
+
+            <div style="position: relative;">
+                <div style="position: absolute;">
+                    <a id="toggle-catalog" style="float: left; margin: 5px 0 0 8px;" href="#" class="ui-btn ui-btn-icon-notext ui-icon-minus ui-corner-all"></a>
+                </div>
+                <div style="position: absolute; right: 0px;">
+                    <a id="catalog-return" style="float: right; margin: 5px 5px 0 0px; display: none;" href="#" class="ui-btn ui-btn-icon-notext ui-icon-back ui-corner-all"></a>
+                </div>
+                <h2 id="catalog-header" class="panel-section panel-section-collaspible">Catalog</h2>
+            </div>
+
+            <div data-theme="a" data-content-theme="b" data-role="collapsibleset" class="clearfix ui-collapsible ui-group-theme-a ui-corner-all" id="catalog" data-filter="true" data-children="> div div, > div div span, > div ul li" data-input="#searchAllLayers">
+                <div id="topics"></div>
+                <div id="datasets"></div>
+            </div>
+        </div>
+
+        <div data-role="panel" data-position="right" data-position-fixed="true" data-display="push" data-theme="a" id="query">
+            <h2 style="padding-right: 4px;">Query Builder<a style="float: right; margin-top: 0px !important;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
+        </div>
+
+        <div data-role="popup" id="legendPopup" data-dismissible="false" data-overlay-theme="a" data-corners="false" data-tolerance="30,15">
+            <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right"></a>
+            <img id="legendZoom" src="content/images/blank.gif" alt="">
+        </div>
+
+        <div data-role="popup" id="message-popup">
+            <p id="message-popup-text"></p>
+        </div>
+
+        <div data-role="popup" id="dataset-popup" data-overlay-theme="a" data-corners="false" data-tolerance="30,15">
+            <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right"></a>
+            <div data-role="header" data-theme="a" class="ui-corner-top">
+                <h3 id="dataset-popup-title" class="dataset-title-header"></h3>
+            </div>
+            <div id="dataset-popup-notes" style="max-width: 500px; padding: 10px; text-align: justify;">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
