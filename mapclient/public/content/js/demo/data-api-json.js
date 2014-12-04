@@ -1,4 +1,4 @@
-var path = '/';
+var path = '/maps/';
 
 $(function () {
     var vectorSource = new ol.source.GeoJSON({

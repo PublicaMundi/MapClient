@@ -1,5 +1,5 @@
 
-var path = '/';
+var path = '/maps/';
 var map = null;
 
 var vectorSource = new ol.source.GeoJSON({
