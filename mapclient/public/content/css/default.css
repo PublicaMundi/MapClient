@@ -119,6 +119,13 @@ body {
     padding: 4px 20px 0 0;
 }
 
+.base-layer-list-icon {
+    left: 5px;
+    margin-top: -12px !important;
+    position: absolute;
+    top: 50%;
+}
+
 /* jQuery Mobile */
 .no-border-radius.ui-btn-icon-notext.ui-corner-all {
     -webkit-border-radius: 0em !important;
@@ -131,7 +138,7 @@ ul.ui-listview li p {
 }
 
 .ui-listview > li img {
-    margin-top: 0.9em !important;
+    margin-top: 0.9em;
     max-width: 3.9em !important;
 }
 
@@ -269,10 +276,6 @@ p.remove-resource, a.remove-source {
     text-decoration: none !important;
 }
 
-.ui-panel-inner {
-    padding: 0 0.5em 0.5em;
-}
-
 .full-width-slider input {
     display: none;
 }
@@ -292,24 +295,6 @@ p.remove-resource, a.remove-source {
 .ui-dialog-contain {
     border: 1px solid #E9E9E9;
 }
-
-.base-layer {
-    cursor: pointer;
-    float: left;
-    margin-right: 5px;
-}
-
-    .base-layer img {
-        border: solid 2px transparent;
-    }
-
-.base-layer-selected {
-    cursor: pointer;
-}
-
-    .base-layer-selected img {
-        border: solid 2px #3388CC;
-    }
 
 .pm-popup {
     min-width: 17em;
@@ -373,6 +358,7 @@ span.topic {
     margin-top: 5px;
     max-width: 75px;
     font-size: 0.8em;
+    word-wrap: break-word;
 }
 
 h2.panel-section {
@@ -442,6 +428,10 @@ h2.panel-section-collaspible {
 }
 
 /* panel */
+.ui-panel-inner {
+    padding: 0 0.5em 0.5em;
+}
+
 @media (min-width:55em) {
     /* wrap on wide viewports once open */
     .ui-panel-page-content-open.ui-panel-page-content-position-left {

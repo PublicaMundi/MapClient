@@ -45,12 +45,13 @@
             }
         };
     </script>
-    <script type="text/javascript" data-main="content/js/main.js" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>
+    <!--<script type="text/javascript" data-main="content/js/main.js" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>-->
+    <script type="text/javascript" data-main="content/js/main.js" src="content/js/lib/requirejs/require.js"></script>
     <script type="text/javascript">
         var result = null;
 
         if (typeof requirejs === 'undefined') {
-            document.write(decodeURI("%3Cscript type='text/javascript' data-main='/content/js/main.js' src='/content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
+            document.write(decodeURI("%3Cscript type='text/javascript' data-main='content/js/main.js' src='content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
         }
     </script>
 </head>
@@ -95,14 +96,51 @@
         </div>
 
         <div data-role="panel" data-position="left" data-position-fixed="true" data-display="push" data-theme="a" id="view-layers" data-inset="false">
-            <h2 style="padding-right: 4px;">Base Layer<a style="float: right; margin-top: 0px !important;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
+            <h2>Base Layer<a style="float: right; margin-top: 0px !important; margin-right: 8px;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
             <div class="clearfix">
-                <div class="base-layer base-layer-selected">
-                    <img src="content/images/road.png" alt="" data-image-set="Road" />
-                </div>
-                <div class="base-layer">
-                    <img src="content/images/aerial.png" alt="" data-image-set="Aerial" />
-                </div>
+                <select name="base_layer" id="base_layer" data-native-menu="false" autocomplete="off">
+                    <option data-key=""
+                            data-type="osm"
+                            data-set="" data-img="content/images/road.png"
+                            value="osm" selected="selected">Open Street Maps</option>
+                    <option data-key=""
+                            data-type="mapquest"
+                            data-set="osm" data-img="content/images/road.png"
+                            value="mapquest">Map Quest - Open Street Maps</option>
+                    <option data-key=""
+                            data-type="mapquest"
+                            data-set="sat" data-img="content/images/aerial.png"
+                            value="mapquest">Map Quest - Satellite</option>
+                    <option data-key=""
+                            data-type="mapquest"
+                            data-set="hyb" data-img="content/images/aerial.png"
+                            value="mapquest">Map Quest - Hybrid</option>
+                    {% if config['mapclient.base.layer.key'] != '' %}
+                    <option data-key="{{config['mapclient.base.layer.key']}}"
+                            data-type="bing"
+                            data-set="Aerial"
+                            data-img="content/images/aerial.png"
+                            value="bing">Bing Map - Aerial</option>
+                    <option data-key="{{config['mapclient.base.layer.key']}}"
+                            data-type="bing"
+                            data-set="AerialWithLabels"
+                            data-img="content/images/aerial.png"
+                            value="bing">Bing Map - Aerial with Labels</option>
+                    <option data-key="{{config['mapclient.base.layer.key']}}"
+                            data-type="bing"
+                            data-set="Road"
+                            data-img="content/images/road.png"
+                            value="bing">Bing Map - Road</option>
+                    {% endif %}
+                    <option data-key=""
+                            data-type="stamen"
+                            data-set="toner" data-img="content/images/road.png"
+                            value="mapquest">Stamen - Toner</option>
+                    <option data-key=""
+                            data-type="stamen"
+                            data-set="watercolor" data-img="content/images/road.png"
+                            value="mapquest">Stamen - Watercolor</option>
+                </select>
             </div>
             <form>
                 <div id="select-visible" style="display: none;">
