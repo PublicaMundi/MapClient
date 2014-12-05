@@ -156,18 +156,9 @@
 
         var layers = [];
 
-        if(members.config.bing.key) {
-            layers.push(new ol.layer.Tile({
-                source: new ol.source.BingMaps({
-                    key: members.config.bing.key,
-                    imagerySet: 'Road'
-                })
-            }));
-        } else {
-            layers.push(new ol.layer.Tile({
-                source: new ol.source.MapQuest({layer: 'osm'})
-            }));
-        }
+       layers.push(new ol.layer.Tile({
+            source: new ol.source.OSM()
+        }));
 
         members.map.control = new ol.Map({
             target: members.config.map.target,
@@ -270,34 +261,46 @@
     };
 
     var attachBaseLayerSelectionEvents = function () {
-        $('.base-layer img').click(function () {
-            if ($(this).parent('div').hasClass('base-layer-selected')) {
-                return;
-            }
-            $('.base-layer').removeClass('base-layer-selected');
-            $(this).parent('div').addClass('base-layer-selected');
-
-            var newBaseLayer;
-            if(members.config.bing.key) {
-                newBaseLayer = new ol.layer.Tile({
-                    source: new ol.source.BingMaps({
-                        key: members.config.bing.key,
-                        imagerySet: $(this).data('image-set')
-                    })
-                });
-            } else {
-                switch($(this).data('image-set')) {
-                    case 'Road':
-                       newBaseLayer = new ol.layer.Tile({
-                            source: new ol.source.MapQuest({layer: 'osm' })
-                        });
-                        break;
-                    case 'Aerial':
-                        newBaseLayer = new ol.layer.Tile({
-                            source: new ol.source.MapQuest({layer: 'sat' })
-                        });
-                        break;
+        $('#base_layer-listbox-popup').on( "popupbeforeposition", function( event, ui ) {
+            var items = $('#base_layer-listbox-popup').find('li a');
+            var options = $('#base_layer').find('option');
+            for(var i=0; i < options.length; i++){
+                if($(items[i]).find('img').size()===0) {
+                    $(items[i]).css('padding-left', '35px');
+                    $(items[i]).append('<img src="' + $(options[i]).data('img') + '" alt="" class="base-layer-list-icon"/>');
                 }
+            }
+        });
+
+        var setBaseLayer = function(type, set) {
+            var newBaseLayer;
+            switch(type) {
+                case 'bing':
+                    if(members.config.bing.key) {
+                        newBaseLayer = new ol.layer.Tile({
+                            source: new ol.source.BingMaps({
+                                key: members.config.bing.key,
+                                imagerySet: set
+                            })
+                        });
+                    }
+                    break;
+                case 'stamen':
+                    newBaseLayer = new ol.layer.Tile({
+                        source: new ol.source.Stamen({layer: set })
+                    });
+                    break;
+                case 'mapquest':
+                    newBaseLayer = new ol.layer.Tile({
+                        source: new ol.source.MapQuest({layer: set })
+                    });
+                    break;
+                case 'osm':
+                    newBaseLayer = new ol.layer.Tile({
+                        source: new ol.source.OSM()
+                    });
+                default:
+                    console.log('Base layer of type ' + type + ' is not supported.');
             }
 
             var oldBaseLayer = members.map.control.getLayers().item(0);
@@ -306,6 +309,11 @@
             setTimeout(function () {
                 members.map.control.getLayers().remove(oldBaseLayer);
             }, 1000);
+        };
+
+        $('#base_layer').change(function(e) {
+            var selection = $('#base_layer option:selected')
+            setBaseLayer($(selection).data('type'), $(selection).data('set'));
         });
     };
 

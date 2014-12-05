@@ -26,7 +26,7 @@ beaker.session.secret = ${app_instance_secret}
 app_instance_uuid = ${app_instance_uuid}
 
 # Map Client
-mapclient.url.prefix = /mapclient
+mapclient.url.prefix = 
 mapclient.url.catalog = http://web.dev.publicamundi.eu/
 mapclient.base.layer.key = 
 
