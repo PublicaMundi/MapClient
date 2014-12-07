@@ -25,15 +25,21 @@ beaker.session.key = mapclient
 beaker.session.secret = ${app_instance_secret}
 app_instance_uuid = ${app_instance_uuid}
 
-# Map Client
+# Map Client - Application Settings
 mapclient.url.prefix = 
 mapclient.url.catalog = http://web.dev.publicamundi.eu/
-mapclient.base.layer.key = 
 
 # Data API
 dataapi.sqlalchemy.catalog = postgresql://user:password@host:port/database
 dataapi.sqlalchemy.vectorstore = postgresql://user:password@host:port/database
 dataapi.cors.enabled = true
+
+# Bing Maps application key
+mapclient.base.layer.key =
+
+# Map center expected to be in the form of X, Y
+mapclient.map.center = 2548716, 4500000
+mapclient.map.zoom = 7
 
 # If you would like to fine-tune the individual locations of the cache data dirs
 # for the Cache data, or the Session saves, un-comment the desired settings
@@ -60,22 +66,22 @@ keys = console
 keys = generic
 
 [logger_root]
-level = INFO
+level = WARN
 handlers = console
 
 [logger_routes]
-level = INFO
+level = WARN
 handlers =
 qualname = routes.middleware
 # "level = DEBUG" logs the route matched and routing variables.
 
 [logger_mapclient]
-level = DEBUG
+level = WARN
 handlers =
 qualname = mapclient
 
 [logger_sqlalchemy]
-level = INFO
+level = WARN
 handlers =
 qualname = sqlalchemy.engine
 # "level = INFO" logs SQL queries.

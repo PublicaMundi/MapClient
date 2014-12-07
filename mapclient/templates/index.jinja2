@@ -30,13 +30,25 @@
                         param: 'url'
                     },
                     bing: {
-                        key: '{{config['mapclient.base.layer.key']}}'
+                        {% if 'mapclient.base.layer.key' in config %}
+                            key: '{{config['mapclient.base.layer.key']}}'
+                        {% else %}
+                            key: null
+                        {% endif %}
                     },
                     imagePath: '/content/images/',
                     map: {
                         target: 'map',
-                        center: [3000000, 4600000],
-                        zoom: 7
+                        {% if 'mapclient.map.center' in config %}
+                            center: [{{config['mapclient.map.center']}}],
+                        {% else %}
+                            center: [3000000, 4600000],
+                        {% endif %}
+                        {% if 'mapclient.map.zoom' in config %}
+                            zoom: {{config['mapclient.map.zoom']}}
+                        {% else %}
+                            zoom: 7
+                        {% endif %}
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}'
