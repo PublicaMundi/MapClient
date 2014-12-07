@@ -141,7 +141,10 @@
     };
 
     var initializeMap = function () {
-        var minZoom = members.config.map.minZoom, maxZoom = members.config.map.maxZoom, zoom = members.config.map.zoom || members.config.map.minZoom;
+        var minZoom = members.config.map.minZoom, 
+            maxZoom = members.config.map.maxZoom, 
+            zoom = members.config.map.zoom || members.config.map.minZoom;
+
         if ((zoom < minZoom) || (zoom > maxZoom)) {
             zoom = minZoom;
         }
