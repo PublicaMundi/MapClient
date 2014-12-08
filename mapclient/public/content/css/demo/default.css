@@ -91,14 +91,14 @@ body {
 
 
 .progress-loader {
-    float: left;
-    margin-top: -8px;
-    padding-left: 163px;
+    position: absolute;
+    right: 163px;
+    top: -8px;
     display: none;
 }
 
 #accordion-container {
-    width: 400px;
+    width: 440px;
     position: absolute;
     top: 50px;
     left: 0px;
@@ -117,7 +117,7 @@ body {
     width: 400px;
     position: absolute;
     top: 50px;
-    left: 410px;
+    left: 450px;
     margin-top: 2px;
 }
 
@@ -238,6 +238,36 @@ body {
     word-wrap: break-word;
     vertical-align: top;
     border-bottom: 1px solid #dddddd;
+}
+
+.query-container {
+    position: relative;
+}
+
+.query-mode {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    z-index: 3;
+}
+
+.query-mode-option {
+    float: left;
+    border: 1px solid #555a64;
+    background: none repeat scroll 0 0 #555a64;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8em;
+    padding: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.query-mode-option-selected {
+    background: none repeat scroll 0 0 #FFFFFF;
+    color: black;
+    cursor: default !important;
 }
 /*
     jQuery UI custom rules

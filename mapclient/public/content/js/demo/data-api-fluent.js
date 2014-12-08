@@ -85,23 +85,28 @@ var renderFeatures = function (data) {
     }
 };
 
-var query = new PublicaMundi.Data.Query(path + 'api/query');
+try {
+    var query = new PublicaMundi.Data.Query(path + 'api/query');
 
-var point = {
-    "type": "Point",
-    "coordinates": [
-        2556034.848391745,
-        4949267.502643947
-    ]
-};
+    var point = {
+        "type": "Point",
+        "coordinates": [
+            2556034.848391745,
+            4949267.502643947
+        ]
+    };
 
-query.resource('00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd', 'table1').
-      resource('507076a5-8b40-4cd0-a519-632f375babf7', 'table2').
-      field('arot').field('tk').field('address').
-      field('table1', 'the_geom', 'polygon').
-      equal({ 'name': 'tk' }, '54625').
-      distanceGreaterOrEqual(point, { 'resource': 'table1', 'name': 'the_geom' }, 300).
-      distanceLessOrEqual(point, { 'resource': 'table1', 'name': 'the_geom' }, 600).
-      format(PublicaMundi.Data.Format.GeoJSON);
+    query.setCallback(renderFeatures);
 
-query.setCallback(renderFeatures);
+    query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38', 'table1').
+          greater({name : 'pop'}, 10000).
+          orderBy('pop', true).
+          format(PublicaMundi.Data.Format.GeoJSON);
+
+    console.log(query.toString());
+
+    query.execute();
+
+} catch(ex) {
+    console.log(ex.toString());
+}
