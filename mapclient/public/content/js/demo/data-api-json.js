@@ -222,6 +222,7 @@ $(function () {
 
     var queryIndex = 0;
     var setQuery = function(index) {
+        $('#query_size, #query_time').hide();
         if(index === 0) {
             $('#query_prev').removeClass('query-button-enabled').addClass('query-button-disabled');
         } else if(!$('#query_prev').hasClass('query-button-enabled')) {
