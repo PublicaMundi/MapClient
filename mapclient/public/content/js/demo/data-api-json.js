@@ -419,7 +419,7 @@ $(function () {
         $('.CodeMirror').eq(0).height($(window).height()-221);
         queryEditor.refresh();
 
-        $('.CodeMirror').eq(1).height($(window).height()-126).width($(window).width() - 454);
+        $('.CodeMirror').eq(1).height($(window).height()-126).width($(window).width() - 482);
         outputEditor.refresh();
     }
 
