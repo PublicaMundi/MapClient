@@ -34,6 +34,7 @@ dataapi.sqlalchemy.catalog = postgresql://user:password@host:port/database
 dataapi.sqlalchemy.vectorstore = postgresql://user:password@host:port/database
 dataapi.cors.enabled = true
 dataapi.error.details = false
+dataapi.timeout = 30000
 
 # Bing Maps application key
 mapclient.base.layer.key =

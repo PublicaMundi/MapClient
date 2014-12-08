@@ -8,7 +8,6 @@ $(function () {
         lineWrapping: true,
         tabSize: 8,
         height: "500px"
-
     });
 
     var outputEditor = CodeMirror.fromTextArea(document.getElementById("output"), {
@@ -40,14 +39,16 @@ $(function () {
         projection: 'EPSG:3857'
     });
 
-    var resourceShow = function(data, size) {
+    var resourceShow = function(data, execution) {
         $('#output').val(JSON.stringify(data, null, " "));
         $("#tabs").tabs("option", "active", 1);
         outputEditor.setValue($('#output').val());
 
-        if(size) {
-            $('#query_status').html(size.toFixed(2) + ' Kbs');
-            $('#query_status').show();
+        if(execution.size) {
+            $('#query_size').html(execution.size.toFixed(2) + ' Kbs').show();
+        }
+        if((execution.start) && (execution.end)) {
+            $('#query_time').html(((execution.end - execution.start)/1000.0).toFixed(2) + ' secs').show();
         }
 
         $('#resource_id').find('option').remove();
@@ -69,6 +70,12 @@ $(function () {
 
     $('#resource_show').click(function () {
         var url = path + 'api/resource_show';
+        var execution = {
+            size : null,
+            start : (new Date()).getTime(),
+            end : null
+        };
+        $('#query_size, #query_time').hide();
 
 /*
         $.ajax({
@@ -84,20 +91,22 @@ $(function () {
             url: url,
             context: this
         }).done(function(data, textStatus, jqXHR) {
-            var size = null;
+            execution.end = (new Date()).getTime();
             var contentLength = jqXHR.getResponseHeader('Content-Length');
             if(contentLength) {
-                size =  contentLength / 1024.0;
+                execution.size =  contentLength / 1024.0;
             }
-            resourceShow(data, size);
+            resourceShow(data, execution);
         });
 
     });
 
-    var describeResource = function(data, size) {
-        if(size) {
-            $('#query_status').html(size.toFixed(2) + ' Kbs');
-            $('#query_status').show();
+    var describeResource = function(data, execution) {
+        if(execution.size) {
+            $('#query_size').html(execution.size.toFixed(2) + ' Kbs').show();
+        }
+        if((execution.start) && (execution.end)) {
+            $('#query_time').html(((execution.end - execution.start)/1000.0).toFixed(2) + ' secs').show();
         }
 
         $('#output').val(JSON.stringify(data, null, " "));
@@ -107,8 +116,13 @@ $(function () {
 
     $('#resource_describe').click(function () {
         var id = $('#resource_id').val();
-
         var url = path + 'api/resource_describe/' + (id ? id : '');
+        var execution = {
+            size : null,
+            start : (new Date()).getTime(),
+            end : null
+        };
+        $('#query_size, #query_time').hide();
 
 /*
         $.ajax({
@@ -125,22 +139,24 @@ $(function () {
             url: url,
             context: this
         }).done(function (data, textStatus, jqXHR) {
-            var size = null;
+            execution.end = (new Date()).getTime();
             var contentLength = jqXHR.getResponseHeader('Content-Length');
             if(contentLength) {
-                size =  contentLength / 1024.0;
+                execution.size =  contentLength / 1024.0;
             }
-            describeResource(data, size);
+            describeResource(data, execution);
         });
     });
 
-    var renderFeatures = function(data, size) {
+    var renderFeatures = function(data, execution) {
         $('#output').val(JSON.stringify(data, null, " "));
         outputEditor.setValue($('#output').val());
 
-        if(size) {
-            $('#query_status').html(size.toFixed(2) + ' Kbs');
-            $('#query_status').show();
+        if(execution.size) {
+            $('#query_size').html(execution.size.toFixed(2) + ' Kbs').show();
+        }
+        if((execution.start) && (execution.end)) {
+            $('#query_time').html(((execution.end - execution.start)/1000.0).toFixed(2) + ' secs').show();
         }
 
         if('success' in data) {
@@ -168,9 +184,15 @@ $(function () {
         vectorSource.clear();
         select.getFeatures().clear();
 
-        $('#query_status').hide();
+        $('#query_size, #query_time').hide();
 
         var url = path + 'api/query';
+
+        var execution = {
+            size : null,
+            start : (new Date()).getTime(),
+            end : null
+        };
 /*
         $.ajax({
             url: url + '?query=' + $('#query').val(),
@@ -189,12 +211,12 @@ $(function () {
             dataType: "json",
             data: queryEditor.getValue(' ')
         }).done(function (data, textStatus, jqXHR) {
-            var size = null;
+            execution.end = (new Date()).getTime();
             var contentLength = jqXHR.getResponseHeader('Content-Length');
             if(contentLength) {
-                size =  contentLength / 1024.0;
+                execution.size =  contentLength / 1024.0;
             }
-            renderFeatures(data, size);
+            renderFeatures(data, execution);
         });
     };
 
@@ -248,7 +270,7 @@ $(function () {
         new ol.layer.Tile({
             source: new ol.source.OSM()
         }),
-        new ol.layer.Tile({
+        /*new ol.layer.Tile({
             source: new ol.source.TileWMS({
                 url: 'http://geoserver.dev.publicamundi.eu:8080/geoserver/wms',
                 params: {
@@ -259,7 +281,7 @@ $(function () {
                 }
 
             })
-        }),
+        }),*/
         vectorLayer
     ];
 
