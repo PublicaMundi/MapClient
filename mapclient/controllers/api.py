@@ -497,7 +497,7 @@ class ApiController(BaseController):
             'message': None,
             'records': []
         }
-        output_format = FORMAT_JSON
+        output_format = FORMAT_GEOJSON
         count_geom_columns = 0;
 
         metadata = {

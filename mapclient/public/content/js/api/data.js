@@ -493,7 +493,7 @@
         return this;
     };
 
-    PublicaMundi.Data.Query.prototype.reset = function (resource) {
+    PublicaMundi.Data.Query.prototype.reset = function () {
         this.query = {
             resources: [],
             fields: [],
