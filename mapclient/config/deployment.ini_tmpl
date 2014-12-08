@@ -33,6 +33,7 @@ mapclient.url.catalog = http://web.dev.publicamundi.eu/
 dataapi.sqlalchemy.catalog = postgresql://user:password@host:port/database
 dataapi.sqlalchemy.vectorstore = postgresql://user:password@host:port/database
 dataapi.cors.enabled = true
+dataapi.error.details = false
 
 # Bing Maps application key
 mapclient.base.layer.key =

@@ -1,0 +1,255 @@
+* html .clearfix {
+    -ms-zoom: 1;
+    zoom: 1;
+}
+
+﻿.clearfix:after {
+    visibility: hidden;
+    display: block;
+    content: " ";
+    clear: both;
+    height: 0;
+}
+
+/* IE6 */
+*:first-child + html .clearfix {
+    -ms-zoom: 1;
+    zoom: 1;
+}
+
+body {
+    overflow: hidden;
+}
+
+#block-ui {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 999999;
+    overflow: hidden;
+}
+
+#loader-icon {
+    left: 50%;
+    margin-left: -110px;
+    margin-top: -36px;
+    position: absolute;
+    top: 50%;
+}
+
+#content {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+#header {
+    position: absolute;
+    top: 0px;
+    height: 45px;
+    left: 0px;
+    width: 100%;
+    border: 0px none !important;
+    padding: 4px;
+}
+
+.actions {
+    float: left;
+    margin-right: -4px;
+}
+
+.action-container {
+    float: left;
+    padding-right: 5px;
+}
+
+.logo-container {
+    float: right;
+    height: 25px;
+    margin-right: 12px;
+    margin-top: 15px;
+    position: relative;
+    width: 160px;
+}
+
+.logo-publicamundi {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url(../../images/geodata-biglogo.png );
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+
+.progress-loader {
+    float: left;
+    margin-top: -8px;
+    padding-left: 163px;
+    display: none;
+}
+
+#accordion-container {
+    width: 400px;
+    position: absolute;
+    top: 50px;
+    left: 0px;
+}
+
+#queries {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+}
+
+#tabs-container {
+    min-width: 400px;
+    width: 400px;
+    position: absolute;
+    top: 50px;
+    left: 410px;
+    margin-top: 2px;
+}
+
+#map {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.query-run{ 
+    left: 100px;
+    position: absolute;
+    top: 50%;
+    margin-top: -7px;
+}
+
+.query-status {
+    background: none repeat scroll 0 0 #555a64;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8em;
+    left: 130px;
+    margin-top: -12px;
+    padding: 4px;
+    position: absolute;
+    top: 50%;
+    display: none;
+}
+.query-index-container {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    margin-top: -7px;
+}
+
+.query-index {
+    float: left;
+    font-size: 0.8em;
+}
+
+.query-button {
+    float: left;
+}
+
+.query-button.query-button-disabled {
+    opacity: 0.3;
+    cursor: default !imporant;
+}
+
+.query-button.query-button-enabled {
+    opacity: 1;
+    cursor: pointer !important;
+}
+
+#query-notes {
+    height: 100px;
+    border-bottom: 1px solid #AAAAAA;
+    font-size: 0.8em;
+    color: #555A64;
+    padding: 4px 8px 4px 4px;
+    text-align: justify;
+}
+
+.notebox
+{
+    border-radius: 4px;
+    margin: 0px;
+    padding: 4px;
+    text-align: justify;
+    background: #FFF6BF;
+    color: #514721;
+    border: Solid 1px #FFD324;
+    font-family: Tahoma;
+    font-weight: normal;
+    font-size: 0.8em;
+}
+
+.feature-dialog-content {
+    max-height: 300px;
+    overflow: auto;
+}
+
+.feature-table {
+    border-collapse: collapse;
+    width: 98%;
+}
+
+.feature-row {
+    font-size: 0.8em;
+}
+
+.feature-prop-key {
+    width: 120px;
+    word-wrap: break-word;
+    vertical-align: top;
+    font-weight: bold;
+    border-bottom: 1px solid #dddddd;
+}
+
+.feature-prop-value {
+    max-width: 200px;
+    word-wrap: break-word;
+    vertical-align: top;
+    border-bottom: 1px solid #dddddd;
+}
+/*
+    jQuery UI custom rules
+*/
+.ui-accordion .ui-accordion-content {
+    border-top: 0 none;
+    overflow: auto;
+    padding: 0 !important;
+}
+
+.ui-tabs .ui-tabs-panel {
+    padding: 0.2em !important;
+}
+
+.ui-widget-header {
+    background: none !important;
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+    background: none !important;
+}
+
+
+.ui-selectmenu-button span.ui-selectmenu-text {
+    padding: 0.3em 2.1em 0.3em 1em !important;
+}
+
+.ui-dialog .ui-dialog-content {
+    padding: 0.5em 0 !important;
+}

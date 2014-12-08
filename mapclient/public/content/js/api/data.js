@@ -109,14 +109,7 @@
         }
         this.endpoint = endpoint;
         this.callback = null;
-        this.query = {
-            resources: [],
-            fields: [],
-            filters: [],
-            offset: 0,
-            limit: -1,
-            format: PublicaMundi.Data.Format.GeoJSON
-        };
+        this.reset();
     };
 
     PublicaMundi.Data.Query.prototype.toString = function () {
@@ -377,7 +370,63 @@
         return this;
     };
 
-    PublicaMundi.Data.Query.prototype.setCallback = function (callback) {
+    PublicaMundi.Data.Query.prototype.orderBy = function (resource, name, desc) {
+        var index;
+
+        obj = {
+            name: '',
+            desc: false
+        };
+        switch (typeof resource) {
+            case 'object':
+                if (resource.hasOwnProperty('name')) {
+                    obj.name = resource.name;
+                } else {
+                    throw new PublicaMundi.Data.SyntaxException('Sorting field name is not defined.');
+                }
+                if (resource.hasOwnProperty('resource')) {
+                    obj.resource = resource.resource;
+                }
+                if ((resource.hasOwnProperty('desc')) && (typeof resource.desc === 'boolean')) {
+                    obj.desc = resource.desc;
+                }
+                break;
+            case 'string':
+                switch (typeof name) {
+                    case 'undefined':
+                        obj.name = resource;
+                        break;
+                    case 'string':
+                        obj.name = name;
+                        obj.resource = resource;
+                        break;
+                    default:
+                        throw new PublicaMundi.Data.SyntaxException('Sorting field name is malformed.');
+                }
+                if (typeof desc === 'boolean') {
+                    obj.desc = desc;
+                }
+
+                var resourceExists = false;
+                if (obj.resource) {
+                    for (index in this.query.resources) {
+                        if ((this.query.resources[index].name === obj.resource) || (this.query.resources[index].alias === obj.resource)) {
+                            resourceExists = true;
+                            break;
+                        }
+                    }
+                    if (!resourceExists) {
+                        throw new PublicaMundi.Data.SyntaxException('Resource ' + obj.resource + ' is does not exist.');
+                    }
+                }
+
+                this.query.sort.push(obj);
+                break;
+        }
+        return this;
+    };
+
+    PublicaMundi.Data.Query.prototype.callback = function (callback) {
         if (typeof callback === 'function') {
             this.callback = callback;
         }
@@ -389,6 +438,7 @@
             resources: [],
             fields: [],
             filters: [],
+            sort: [],
             offset: 0,
             limit: -1,
             format: PublicaMundi.Data.Format.GeoJSON
