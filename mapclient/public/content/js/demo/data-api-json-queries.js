@@ -4,7 +4,12 @@ var queries = [
         description: 'Selects all cities with population greater than <b>10000</b>.',
         query:
         {
-            resources: ['97569331-a2fb-45eb-92c9-064ef4f70d38'],
+            resources: [
+                {
+                    name : '97569331-a2fb-45eb-92c9-064ef4f70d38',
+                    alias : 'table1'
+                }
+            ],
             filters: [{
                 operator: 'GREATER',
                 arguments: [
@@ -14,7 +19,28 @@ var queries = [
                     10000
                 ]
             }],
-            format: 'geojson'
+            sort: [
+                {
+                    name: 'pop',
+                    desc: true
+                }
+            ],
+            offset: 20,
+            limit: 50
+        },
+        method: function(callback) {
+var query = new PublicaMundi.Data.Query(endpoint);
+
+query.setCallback(callback);
+
+query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38', 
+               'table1').
+      greater({name : 'pop'}, 10000).
+      orderBy('pop', true).
+      skip(20).
+      take(50);
+
+query.execute();
         }
     },
     {
@@ -40,6 +66,23 @@ var queries = [
                 ]
             }],
             format: 'geojson'
+        },
+        method: function(callback) {
+var query = new PublicaMundi.Data.Query(endpoint);
+
+query.setCallback(callback);
+
+query.resource('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6').
+      field('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 'AROT').
+      field('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 'the_geom', 'polygon').
+      areaGreaterOrEqual({
+        resource: 'd0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 
+        name : 'the_geom'
+      }, 15000.0).
+      format(PublicaMundi.Data.Format.GeoJSON);
+
+query.execute();
+
         }
     }, {
         description: 'Selects fields from  datasets \'Urban and rural regions\' and \'Blue flag beaches (2010)\'. The population of every region must be less than <b>3000</b> and the distance between a region and a beach must be less than <b>5000</b>. Moreover, all results should be inside a specific region.',
@@ -103,6 +146,46 @@ var queries = [
               }
             ],
             "format": "geojson"
+        },
+        method: function(callback) {
+var query = new PublicaMundi.Data.Query(endpoint);
+
+var polygon = {
+        "type": "Polygon", 
+        "coordinates": [
+            [
+                [2687295.037100175, 4520261.073751386], 
+                [2687295.037100175, 4368610.009633597], 
+                [2914771.6332768593, 4368610.009633597], 
+                [2914771.6332768593, 4520261.073751386], 
+                [2687295.037100175, 4520261.073751386]]
+        ]
+};
+
+query.setCallback(callback);
+
+query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38').
+      resource('ad815665-ec88-4e81-a27a-8d72cffa7dd2').
+      field('name_eng').field('city_eng').
+      field('nisos_eng').field('dimos_eng').
+      field('pop').field('NOMOS').
+      field('ad815665-ec88-4e81-a27a-8d72cffa7dd2', 'the_geom').
+      field('DESCRIPT').field('REGION').
+      less({ name : 'pop'}, 3000).
+      distanceLess({
+        resource: '97569331-a2fb-45eb-92c9-064ef4f70d38', 
+        name : 'the_geom'
+      }, {
+        resource: 'ad815665-ec88-4e81-a27a-8d72cffa7dd2', 
+        name : 'the_geom'
+      }, 5000).
+      contains( polygon, {
+          resource: 'ad815665-ec88-4e81-a27a-8d72cffa7dd2',
+          name: 'the_geom'
+      }).
+      format(PublicaMundi.Data.Format.GeoJSON);
+
+query.execute();
         }
     }, {
         description: 'Select geometries from the road network for Municipality of Kalamaria is provided that is inside a specific polygon ',
@@ -151,5 +234,33 @@ var queries = [
               }
             ],
             "format": "geojson"
+        },
+        method: function(callback) {
+var query = new PublicaMundi.Data.Query(endpoint);
+
+var polygon = {
+        "type": "Polygon", 
+        "coordinates": [
+            [
+                [2554722.9073085627, 4951114.104686448],
+                [2554722.9073085627, 4950158.641832884],
+                [2556232.5386171946, 4950158.641832884],
+                [2556232.5386171946, 4951114.104686448],
+                [2554722.9073085627, 4951114.104686448]
+            ]
+        ]
+};
+
+query.setCallback(callback);
+
+query.resource('9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6').
+      field('NAME_LABEL').field('the_geom').
+      contains( polygon, {
+          resource: '9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6',
+          name: 'the_geom'
+      }).
+      format(PublicaMundi.Data.Format.GeoJSON);
+
+query.execute();
         }
     }];

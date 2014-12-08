@@ -53,7 +53,7 @@
                     obj.resource = arg.resource;
                 }
                 return obj;
-            case 'string':
+            case 'string': case 'number':
                 return arg;
             default:
                 throw new PublicaMundi.Data.SyntaxException('Type of argument ' + index + ' is invalid.');
@@ -306,6 +306,21 @@
         this.query.filters.push(filter);
         return this;
     };
+
+    PublicaMundi.Data.Query.prototype.distanceLess = function (arg1, arg2, arg3) {
+        var filter = {
+            operator: operators.DISTANCE,
+            arguments: [
+                getArgumentGeometry(arg1),
+                getArgumentGeometry(arg2),
+                operators.LESS,
+                getArgumentNumber(arg3)
+            ]
+        };
+        this.query.filters.push(filter);
+        return this;
+    };
+
     PublicaMundi.Data.Query.prototype.distanceGreaterOrEqual = function (arg1, arg2, arg3) {
         var filter = {
             operator: operators.DISTANCE,
@@ -313,6 +328,20 @@
                 getArgumentGeometry(arg1),
                 getArgumentGeometry(arg2),
                 operators.GREATER_OR_EQUAL,
+                getArgumentNumber(arg3)
+            ]
+        };
+        this.query.filters.push(filter);
+        return this;
+    };
+
+    PublicaMundi.Data.Query.prototype.distanceGreater = function (arg1, arg2, arg3) {
+        var filter = {
+            operator: operators.DISTANCE,
+            arguments: [
+                getArgumentGeometry(arg1),
+                getArgumentGeometry(arg2),
+                operators.GREATER,
                 getArgumentNumber(arg3)
             ]
         };
@@ -333,6 +362,19 @@
         return this;
     };
 
+    PublicaMundi.Data.Query.prototype.areaLess = function (arg1, arg2) {
+        var filter = {
+            operator: operators.AREA,
+            arguments: [
+                getArgumentGeometry(arg1),
+                operators.LESS,
+                getArgumentNumber(arg2)
+            ]
+        };
+        this.query.filters.push(filter);
+        return this;
+    };
+
     PublicaMundi.Data.Query.prototype.areaGreaterOrEqual = function (arg1, arg2) {
         var filter = {
             operator: operators.AREA,
@@ -345,6 +387,20 @@
         this.query.filters.push(filter);
         return this;
     };
+
+    PublicaMundi.Data.Query.prototype.areaGreater = function (arg1, arg2) {
+        var filter = {
+            operator: operators.AREA,
+            arguments: [
+                getArgumentGeometry(arg1),
+                operators.GREATER,
+                getArgumentNumber(arg2)
+            ]
+        };
+        this.query.filters.push(filter);
+        return this;
+    };
+
 
     PublicaMundi.Data.Query.prototype.contains = function (arg1, arg2) {
         var filter = {
@@ -400,6 +456,10 @@
                         obj.name = name;
                         obj.resource = resource;
                         break;
+                    case 'boolean':
+                        obj.name = resource;
+                        obj.desc = name;
+                        break;
                     default:
                         throw new PublicaMundi.Data.SyntaxException('Sorting field name is malformed.');
                 }
@@ -426,7 +486,7 @@
         return this;
     };
 
-    PublicaMundi.Data.Query.prototype.callback = function (callback) {
+    PublicaMundi.Data.Query.prototype.setCallback = function (callback) {
         if (typeof callback === 'function') {
             this.callback = callback;
         }
@@ -461,6 +521,12 @@
     PublicaMundi.Data.Query.prototype.execute = function (callback) {
         callback = callback || this.callback;
 
+        var execution = {
+            size : null,
+            start : (new Date()).getTime(),
+            end : null
+        };
+
         $.ajax({
             type: "POST",
             url: this.endpoint,
@@ -468,9 +534,15 @@
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             data: JSON.stringify(this.query)
-        }).done(function (data) {
+        }).done(function (data, textStatus, jqXHR) {
+            execution.end = (new Date()).getTime();
+            var contentLength = jqXHR.getResponseHeader('Content-Length');
+            if(contentLength) {
+                execution.size =  contentLength / 1024.0;
+            }
+
             if (typeof callback === 'function') {
-                callback.call(this, data);
+                callback.call(this, data, execution);
             }
         });
 

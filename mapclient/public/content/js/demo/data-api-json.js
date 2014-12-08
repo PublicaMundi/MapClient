@@ -1,6 +1,11 @@
-var path = '/maps/';
+$(function () {    
+    var queryIndex = 0;
 
-$(function () {
+    var QueryMode = {
+        JSON : 'json',
+        FLUENT : 'fluent'
+    };
+
     var queryEditor = CodeMirror.fromTextArea(document.getElementById("query"), {
         lineNumbers: true,
         mode: "text/javascript",
@@ -18,6 +23,8 @@ $(function () {
         tabSize: 8,
         readOnly: true
     });
+
+    $('#query_exec').tooltip();
 
     $.widget( "custom.iconselectmenu", $.ui.selectmenu, {
         _renderItem: function( ul, item ) {
@@ -76,7 +83,7 @@ $(function () {
             end : null
         };
         $('#query_size, #query_time').hide();
-
+        $('.progress-loader').show();
 /*
         $.ajax({
             url: url,
@@ -84,6 +91,8 @@ $(function () {
             context: this,
         }).done(function (data) {
            resourceShow(data);
+        }).always(function() {
+           $('.progress-loader').hide();
         });
 */
 
@@ -97,6 +106,8 @@ $(function () {
                 execution.size =  contentLength / 1024.0;
             }
             resourceShow(data, execution);
+        }).always(function() {
+            $('.progress-loader').hide();
         });
 
     });
@@ -123,7 +134,7 @@ $(function () {
             end : null
         };
         $('#query_size, #query_time').hide();
-
+        $('.progress-loader').show();
 /*
         $.ajax({
             url: url,
@@ -133,6 +144,8 @@ $(function () {
            describeResource(data);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.log('Failed to load dataset ' + entry.url);
+        }).always(function() {
+            $('.progress-loader').hide();
         });
 */
         $.ajax({
@@ -145,10 +158,14 @@ $(function () {
                 execution.size =  contentLength / 1024.0;
             }
             describeResource(data, execution);
+        }).always(function() {
+            $('.progress-loader').hide();
         });
     });
 
     var renderFeatures = function(data, execution) {
+        $('.progress-loader').hide();
+
         $('#output').val(JSON.stringify(data, null, " "));
         outputEditor.setValue($('#output').val());
 
@@ -200,28 +217,44 @@ $(function () {
             context: this,
         }).done(function (data) {
            renderFeatures(data);
+        }).always(function() {
+            $('.progress-loader').hide();
         });
 */
 
-        $.ajax({
-            type: "POST",
-            url: url,
-            context: this,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            data: queryEditor.getValue(' ')
-        }).done(function (data, textStatus, jqXHR) {
-            execution.end = (new Date()).getTime();
-            var contentLength = jqXHR.getResponseHeader('Content-Length');
-            if(contentLength) {
-                execution.size =  contentLength / 1024.0;
-            }
-            renderFeatures(data, execution);
-        });
+        var mode = $('.query-mode-option-selected').data('mode');
+        switch(mode) {
+            case QueryMode.JSON:
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    context: this,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: queryEditor.getValue(' ')
+                }).done(function (data, textStatus, jqXHR) {
+                    execution.end = (new Date()).getTime();
+                    var contentLength = jqXHR.getResponseHeader('Content-Length');
+                    if(contentLength) {
+                        execution.size =  contentLength / 1024.0;
+                    }
+
+                    renderFeatures(data, execution);
+                }).always(function() {
+                    $('.progress-loader').hide();
+                });
+                break;
+            case QueryMode.FLUENT:
+                if(typeof queries[queryIndex].method === 'function' ) {
+                    queries[queryIndex].method(renderFeatures);
+                }
+                break;
+        }
     };
 
-    var queryIndex = 0;
     var setQuery = function(index) {
+        var mode = $('.query-mode-option-selected').data('mode');
+
         $('#query_size, #query_time').hide();
         if(index === 0) {
             $('#query_prev').removeClass('query-button-enabled').addClass('query-button-disabled');
@@ -237,10 +270,26 @@ $(function () {
 
         $('#query_index').html(index+1);
 
-        $('#query').val(JSON.stringify(queries[index].query, null, "  "));
         $('#query-notes').html(queries[index].description);
+        switch(mode) {
+            case QueryMode.JSON:
+                $('#query').val(JSON.stringify(queries[index].query, null, "  "));
+                break;
+            case QueryMode.FLUENT:
+                $('#query').val(queries[index].method.toString());
+                break;
+        }
+
         queryEditor.setValue($('#query').val());
         queryEditor.refresh();
+
+        if(mode === QueryMode.FLUENT) {
+            queryEditor.execCommand('goDocEnd');
+            queryEditor.execCommand('deleteLine');
+            queryEditor.execCommand('goDocStart');
+            queryEditor.execCommand('deleteLine');
+            queryEditor.refresh();
+        }
     };
 
     setQuery(queryIndex);
@@ -260,8 +309,26 @@ $(function () {
     });
 
     $('#query_exec').click(function(e) {
+        $('.progress-loader').show();
         executeQuery();
     });
+
+    $('.query-mode-option').click(function(e) {
+        if($(this).hasClass('query-mode-option-selected')) {
+            return;
+        }
+        $('.query-mode-option').removeClass('query-mode-option-selected');
+        $(this).addClass('query-mode-option-selected');
+        switch($(this).data('mode')) {
+            case QueryMode.JSON:
+                setQuery(queryIndex);
+                break;
+            case QueryMode.FLUENT:
+                setQuery(queryIndex);
+                break;
+        }
+    });
+
 
     var vectorLayer = new ol.layer.Vector({
         source: vectorSource
@@ -342,10 +409,10 @@ $(function () {
         $('#accordion-container').height($(window).height()-70);
         $('#accordion').accordion('refresh');
 
-        $('#tabs-container').height($(window).height()-71).width($(window).width() - 430);
+        $('#tabs-container').height($(window).height()-71).width($(window).width() - 470);
         $('#tabs').tabs( "refresh" );
 
-        $('#map').height($(window).height()-130).width($(window).width() - 445);
+        $('#map').height($(window).height()-130).width($(window).width() - 485);
 
         map.updateSize();
 
