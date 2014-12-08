@@ -9,6 +9,7 @@ from mapclient.lib.base import BaseController, render
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 from sqlalchemy.engine import ResultProxy
+from sqlalchemy.exc import ProgrammingError, IntegrityError, DBAPIError, DataError
 
 import json
 import geojson
@@ -43,6 +44,14 @@ COMPARE_EXPRESSIONS = ['=', '<>', '>', '>=', '<', '<=']
 SPATIAL_OPERATORS = [OP_AREA, OP_DISTANCE, OP_CONTAINS, OP_INTERSECTS]
 
 ALL_OPERATORS = [OP_EQ, OP_NOT_EQ, OP_GT, OP_GET, OP_LT, OP_LET, OP_AREA, OP_DISTANCE, OP_CONTAINS, OP_INTERSECTS]
+
+# See http://www.postgresql.org/docs/9.3/static/errcodes-appendix.html
+_PG_ERR_CODE = {
+    'query_canceled': '57014',
+    'undefined_object': '42704',
+    'syntax_error': '42601',
+    'permission_denied': '42501'
+}
 
 class DataApiException(Exception):
     def __init__(self, message):
@@ -480,7 +489,7 @@ class ApiController(BaseController):
         engine_data = None
         connection_data = None
         srid = 3857
-        timeout = 10000
+        timeout = config['dataapi.timeout'] if 'dataapi.timeout' in config else 10000
         offset = 0
         limit = 1000
         result = {
@@ -847,10 +856,22 @@ class ApiController(BaseController):
                             record[field] = r[field]
                     result['records'].append(record)
 
-        except DataApiException as dEx:
+        except DataApiException as apiEx:
             return self._format_response({
                 'success': False,
-                'message': dEx.message
+                'message': apiEx.message
+            }, callback)
+        except DBAPIError as dbEx:
+            log.error(dbEx)
+
+            message = 'Unhandled exception has occured.'
+            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+                message = 'Execution exceeded timeout.'
+
+            return self._format_response({
+                'success': False,
+                'message': message,
+                'details': (dbEx.message if config['dataapi.error.details'] else '')
             }, callback)
         except Exception as ex:
             log.error(ex)

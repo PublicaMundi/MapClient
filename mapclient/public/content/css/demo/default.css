@@ -60,7 +60,8 @@ body {
 
 .actions {
     float: left;
-    margin-right: -4px;
+    margin-left: -4px;
+    min-width: 820px;
 }
 
 .action-container {
@@ -72,7 +73,7 @@ body {
     float: right;
     height: 25px;
     margin-right: 12px;
-    margin-top: 15px;
+    margin-top: 9px;
     position: relative;
     width: 160px;
 }
@@ -135,7 +136,7 @@ body {
     margin-top: -7px;
 }
 
-.query-status {
+.query-size {
     background: none repeat scroll 0 0 #555a64;
     border-radius: 4px;
     color: white;
@@ -147,6 +148,20 @@ body {
     top: 50%;
     display: none;
 }
+
+.query-time {
+    background: none repeat scroll 0 0 #555a64;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8em;
+    left: 230px;
+    margin-top: -12px;
+    padding: 4px;
+    position: absolute;
+    top: 50%;
+    display: none;
+}
+
 .query-index-container {
     position: absolute;
     right: 5px;
@@ -247,7 +262,7 @@ body {
 
 
 .ui-selectmenu-button span.ui-selectmenu-text {
-    padding: 0.3em 2.1em 0.3em 1em !important;
+    padding: 0.3em 2.1em 0.4em 1em !important;
 }
 
 .ui-dialog .ui-dialog-content {
