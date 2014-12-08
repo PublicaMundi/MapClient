@@ -5,62 +5,99 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Data API - Internal Format</title>
+    <link rel="shortcut icon" href="../content/images/icons/geodatagovgr.ico" />
+    <link rel="stylesheet" href="../content/css/lib/jquery-ui/jquery-ui.min.css" />
     <link rel="stylesheet" href="../content/css/lib/ol3/ol.css" />
+    <link rel="stylesheet" href="../content/css/demo/default.css" />
+
+    <link rel="stylesheet" href="../content/css/lib/codemirror/codemirror.css" />
+
     <script type="text/javascript" src="../content/js/lib/jquery/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="../content/js/lib/jquery-ui/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../content/js/lib/ol3/ol.js"></script>
+    <script type="text/javascript" src="../content/js/lib/codemirror/codemirror.js"></script>
+    <script type="text/javascript" src="../content/js/lib/codemirror/javascript.js"></script>
+
     <script type="text/javascript" src="../content/js/api/data.js"></script>
+
+    <script type="text/javascript" src="../content/js/demo/data-api-json-queries.js"></script>
     <script type="text/javascript" src="../content/js/demo/data-api-json.js"></script>
 </head>
 <body>
-    <table>
-        <tr>
-            <td>
-                <select type="text" id="resource_id" style="width: 400px;" autocomplete="off"></select>
-            </td>
-            <td>
-                <button id="resource_show" type="button">Show Resources</button>
-            </td>
-            <td>
-                <button id="resource_describe" type="button">Show Resource</button>
-            </td>
-            <td>
-                <button id="resource_query" type="button">Query</button>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span for="query">Query</span>
-            </td>
-            <td colspan="3" />
-        </tr>
-        <tr>
-            <td>
-                <select type="text" id="query_id" style="width: 400px;" autocomplete="off">
-                    <option value="0">Distance</option>
-                    <option value="1">Area</option>
-                    <option value="2">Contains</option>
-                    <option value="3">Intersects</option>
-                </select>
-            </td>
-            <td rowspan="4" colspan="3">
-                <div id="map" style="width: 550px; height: 685px;"></div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <textarea id="query" rows="20" cols="60" autocomplete="off"></textarea>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span>Output</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <textarea id="response" rows="20" cols="60" autocomplete="off"></textarea>
-            </td>
-        </tr>
-    </table>
+    <div id="block-ui">
+        <div id="loader-icon">
+            <img src="../content/images/geodata-biglogo.png" alt="" />
+        </div>
+    </div>
+    <div id="content">
+        <div id="header">
+            <div class="actions">
+                <div class="action-container">
+                    <button class="action" id="resource_show" type="button">Show Resources</button>
+                </div>
+                <div class="action-container">
+                    <select type="text" id="resource_id" style="width: 400px;" autocomplete="off"></select>
+                </div>
+                <div class="action-container">
+                    <button class="action" id="resource_describe" type="button">Get Resource Metadata</button>
+                </div>
+            </div>
+            <div class="logo-container">
+                <div class="logo-publicamundi"></div>
+                <div class="progress-loader">
+                    <img src="../content/images/ajax-loader.gif" alt="" />
+                </div>
+            </div>
+        </div>
+        <div id="accordion-container">
+            <div id="accordion">
+                <h3>Query
+                    <div id="query_exec" class="query-run">
+                        <img src="../content/images/demo/run.png" alt="" />
+                    </div>
+                    <div id="query_status" class="query-status">
+
+                    </div>
+                    <div class="query-index-container">
+                        <div id="query_prev" class="query-button query-button-disabled">
+                            <img src="../content/images/demo/prev.png" alt="" />
+                        </div>
+                        <div id="query_index" class="query-index"></div>
+                        <div id="query_next" class="query-button query-button-enabled">
+                            <img src="../content/images/demo/next.png" alt="" />
+                        </div>
+                    </div>
+                </h3>
+                <div>
+                    <div id="query-notes">
+                        
+                    </div>
+                    <div>
+                        <textarea id="query" rows="20" cols="60" autocomplete="off"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tabs-container">
+            <div id="tabs">
+                <ul>
+                    <li><a href="#tabs-1">Map</a></li>
+                    <li><a href="#tabs-2">Output</a></li>
+                </ul>
+                <div id="tabs-1">
+                    <div id="map" style="width: 1059px; height: 685px;"></div>
+                </div>
+                <div id="tabs-2">
+                    <textarea id="output" rows="20" cols="60" autocomplete="off"></textarea>
+                </div>
+            </div>
+        </div>
+   </div>
+   <div style="display: none;">
+        <div id="feature-dialog" title="Feature Information">
+            <div class="feature-dialog-content">
+            </div>
+        </div>
+    </div>
 </body>
 </html>

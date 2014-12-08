@@ -111,7 +111,14 @@ class ApiController(BaseController):
         arg2 = f['arguments'][1]
 
         arg1_is_field = self._is_field(metadata, mapping, arg1)
+        arg1_type = None
+        if arg1_is_field:
+            arg1_type = self._get_field_type(metadata, mapping, arg1)
+
         arg2_is_field = self._is_field(metadata, mapping, arg2)
+        arg2_type = None
+        if arg2_is_field:
+            arg2_type = self._get_field_type(metadata, mapping, arg2)
 
         arg1_is_field_geom = self._is_field_geom(metadata, mapping, arg1)
         arg2_is_field_geom = self._is_field_geom(metadata, mapping, arg2)
@@ -134,13 +141,27 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            return ('(' +aliased_arg1 + ' ' + expression + ' %s)', arg2)
+            convert_to = ''
+            if arg1_type == 'varchar' and isinstance(arg2, numbers.Number):
+                if isinstance(arg2, int):
+                    convert_to = '::int'
+                if isinstance(arg2, float):
+                    convert_to = '::float'
+
+            return ('(' +aliased_arg1 + convert_to + ' ' + expression + ' %s)', arg2)
         elif not arg1_is_field and arg2_is_field:
             aliased_arg2 = '{table}."{field}"'.format(
                 table = metadata[mapping[arg2['resource']]]['alias'],
                 field = arg2['name']
             )
-            return ('(' + aliased_arg2 + ' ' + expression + ' %s)', arg1)
+            convert_to = ''
+            if arg2_type == 'varchar' and isinstance(arg1, numbers.Number):
+                if isinstance(arg1, int):
+                    convert_to = '::int'
+                if isinstance(arg1, float):
+                    convert_to = '::float'
+
+            return ('(' + aliased_arg2 + convert_to  + ' ' + expression + ' %s)', arg1)
         else:
             return ('(%s ' + expression + ' %s)', arg1, arg2)
 
@@ -389,6 +410,12 @@ class ApiController(BaseController):
 
         return True
 
+    def _get_field_type(self, metadata, mapping, f):
+        if not self._is_field(metadata, mapping, f):
+            return None
+
+        return metadata[mapping[f['resource']]]['fields'][f['name']]['type'] 
+
     def _is_field_geom(self, metadata, mapping, f):
         if not self._is_field(metadata, mapping, f):
             return False
@@ -470,7 +497,8 @@ class ApiController(BaseController):
         parsed_query = {
             'resources' : {},
             'fields': {},
-            'filters' : []
+            'filters' : [],
+            'sort' : []
         }
 
         try:
@@ -479,20 +507,14 @@ class ApiController(BaseController):
                 query = json.loads(request.body, cls=ShapelyJsonDecoder, encoding=request.charset)
             else:
                 if not 'query' in request.params:
-                    return self._format_response({
-                        'success': False,
-                        'message': 'Parameter query is required.'
-                    }, callback)
+                    raise DataApiException('Parameter query is required.')
 
                 query = json.loads(request.params['query'], cls=ShapelyJsonDecoder, encoding=request.charset)
 
             # Set format
             if 'format' in query:
                 if not query['format'] in [FORMAT_JSON, FORMAT_GEOJSON]:
-                    return self._format_response({
-                        'success': False,
-                        'message': 'Output format {format} is not supported.'.format(format = query['format'])
-                    }, callback)
+                    raise DataApiException('Output format {format} is not supported.'.format(format = query['format']))
 
                 output_format = query['format']
 
@@ -505,32 +527,25 @@ class ApiController(BaseController):
             # Get limit
             if 'limit' in query:
                 if not isinstance(query['limit'], numbers.Number):
-                    raise DataApiException('Parameter limit must be number.')
+                    raise DataApiException('Parameter limit must be a number.')
                 if query['limit'] < limit and query['limit'] > 0 :
                     limit = query['limit']
 
             # Get offset
             if 'offset' in query:
                 if not isinstance(query['offset'], numbers.Number):
-                    raise DataApiException('Parameter offset must be number.')
+                    raise DataApiException('Parameter offset must be a number.')
                 if query['offset'] >= 0:
                     offset = query['offset']
 
             # Get resources
             if not 'resources' in query:
-                return self._format_response({
-                    'success': False,
-                    'message': 'No resource selected.'
-                }, callback)
-            
+                raise DataApiException('No resource selected.')
 
             if not type(query['resources']) is list:
-                return self._format_response({
-                    'success': False,
-                    'message': 'Parameter resource should be a list with at least one resource.'
-                }, callback)
+                raise DataApiException('Parameter resource should be a list with at least one item.')
 
-            db_resources = self._resource_show(connection_ckan)
+            db_resources = self._get_resources(connection_ckan)
 
             resource_mapping = {}
             
@@ -545,17 +560,16 @@ class ApiController(BaseController):
                     if 'name' in resource:
                         resource_name = resource['name']
                     else:
-                        return self._format_response({
-                            'success': False,
-                            'message': 'Resource name is missing.'
-                        }, callback)
+                        raise DataApiException('Resource name is missing.')
                     if 'alias' in resource:
                         resource_alias = resource['alias']
                     else:
                         resource_alias = resource_name
-                else:
+                elif isinstance(resource, basestring):
                     resource_name = resource
                     resource_alias = resource
+                else:
+                    raise DataApiException('Resource parameter is malformed. Instance of string or dictionary is expected.')
 
                 resource_mapping[resource_name] = resource_name
                 resource_mapping[resource_alias] = resource_name
@@ -581,12 +595,9 @@ class ApiController(BaseController):
                         'alias' : db_resource['alias']
                     }
                 else:
-                    return self._format_response({
-                        'success': False,
-                        'message': 'Resource {resource} does not exist.'.format(
-                            resource = resource_name
-                        )
-                    }, callback)
+                    raise DataApiException('Resource {resource} does not exist.'.format(
+                        resource = resource_name
+                    ))
            
             # If no fields are selected, all fields are added to the response.
             # This may result in some fields names being ambiguous.
@@ -594,10 +605,7 @@ class ApiController(BaseController):
             if not 'fields' in query:
                 addAllFields = True
             elif not type(query['fields']) is list:
-                return self._format_response({
-                    'success': False,
-                    'message': 'Parameter fields should be a list with at least one field.'
-                }, callback)
+                raise DataApiException('Parameter fields should be a list.')
             elif len(query['fields']) == 0:
                 addAllFields = True
 
@@ -611,117 +619,166 @@ class ApiController(BaseController):
                         })
 
             # Get fields
-            if len(query['fields']) > 0:
-                for i in range(0, len(query['fields'])):
-                    query_field = query['fields'][i]
+            for i in range(0, len(query['fields'])):
+                field_resource = None
+                field_name = None
+                field_alias = None
 
-                    if not 'alias' in query_field:
-                        query_field['alias'] = query_field['name']
-
-                    # Set resource if not set
-                    if not 'resource' in query_field:
-                        resources = self._get_resources_by_field_name(metadata, query_field['name'])
-                        if len(resources) == 0:
-                            return self._format_response({
-                                'success': False,
-                                'message': u'Field {field} does not exist.'.format(
-                                    field = query_field['name']
-                                )
-                            }, callback)
-                        elif len(resources) == 1:
-                            query_field['resource'] = resources[0]
-                        else:
-                            return self._format_response({
-                                'success': False,
-                                'message': u'Field {field} is ambiguous for resources {resources}.'.format(
-                                    field = query_field['name'],
-                                    resources = u','.join(resources)
-                                )
-                            }, callback)
-
-                    if not query_field['resource'] in resource_mapping or not resource_mapping[query_field['resource']] in metadata:
-                        return self._format_response({
-                            'success': False,
-                            'message': u'Resource {resource} for field {field} does not exist.'.format(
-                                resource = query_field['resource'],
-                                field = query_field['name']
-                            )
-                        }, callback)
-
-                    db_resource = metadata[resource_mapping[query_field['resource']]]
-
-                    if query_field['name'] in db_resource['fields']:
-                        db_field = db_resource['fields'][query_field['name']]
-
-                        if query_field['alias'] in parsed_query['fields']:
-                            return self._format_response({
-                                'success': False,
-                                'message': 'Field {field} in resource {resource} is ambiguous.'.format(
-                                    field = db_field['name'],
-                                    resource = query_field['resource']
-                                )
-                            }, callback)
-
-                        parsed_query['fields'][query_field['alias']] = {
-                            'fullname' : '{table}."{field}"'.format(
-                                table = db_resource['alias'],
-                                field = db_field['name']
-                            ),
-                            'name' : db_field['name'],
-                            'alias' : query_field['alias'],
-                            'type' : db_field['type'],
-                            'is_geom' : True if db_field['name'] == db_resource['geometry_column'] else False,
-                            'srid' :  db_resource['srid'] if db_field['name'] == db_resource['geometry_column'] else None
-                        }
+                if type(query['fields'][i]) is dict:
+                    if 'name' in query['fields'][i]:
+                        field_name = query['fields'][i]['name']
                     else:
-                        return self._format_response({
-                            'success': False,
-                            'message': 'Field {field} does not exist in resource {resource}.'.format(
-                                field = query_field['name'],
-                                resource = query_field['resource']
-                            )
-                        }, callback)
-            else:
-                # TODO : Allow users to select whole tables
-                return self._format_response({
-                    'success': False,
-                    'message': 'At least one field must be selected.'.format(
-                        resource = resource
-                    )
-                }, callback)
+                        raise DataApiException('Field name is missing.')
+                    if 'alias' in query['fields'][i]:
+                        field_alias = query['fields'][i]['alias']
+                    else:
+                        field_alias = field_name
+                    if 'resource' in query['fields'][i]:
+                        field_resource = query['fields'][i]['resource']
+                elif isinstance(query['fields'][i], basestring):
+                    field_name = query['fields'][i]
+                    field_alias = query['fields'][i]
+                else:
+                    raise DataApiException('Field is malformed. Instance of string or dictionary is expected.')
 
+                # Set resource if not set
+                if field_resource is None:
+                    resources = self._get_resources_by_field_name(metadata, field_name)
+                    if len(resources) == 0:
+                        raise DataApiException(u'Field {field} does not exist.'.format(
+                            field = field_name
+                        ))
+                    elif len(resources) == 1:
+                        field_resource = resources[0]
+                    else:
+                        raise DataApiException(u'Field {field} is ambiguous for resources {resources}.'.format(
+                            field = field_name,
+                            resources = u','.join(resources)
+                        ))
+
+                if not field_resource in resource_mapping or not resource_mapping[field_resource] in metadata:
+                    raise DataApiException(u'Resource {resource} for field {field} does not exist.'.format(
+                        resource = field_resource,
+                        field = field_name
+                    ))
+
+                db_resource = metadata[resource_mapping[field_resource]]
+
+                if field_name in db_resource['fields']:
+                    db_field = db_resource['fields'][field_name]
+
+                    if field_alias in parsed_query['fields']:
+                       raise DataApiException(u'Field {field} in resource {resource} is ambiguous.'.format(
+                            field = db_field['name'],
+                            resource = field_resource
+                        ))
+
+                    parsed_query['fields'][field_alias] = {
+                        'fullname' : '{table}."{field}"'.format(
+                            table = db_resource['alias'],
+                            field = db_field['name']
+                        ),
+                        'name' : db_field['name'],
+                        'alias' : field_alias,
+                        'type' : db_field['type'],
+                        'is_geom' : True if db_field['name'] == db_resource['geometry_column'] else False,
+                        'srid' :  db_resource['srid'] if db_field['name'] == db_resource['geometry_column'] else None
+                    }
+                else:
+                    raise DataApiException(u'Field {field} does not exist in resource {resource}.'.format(
+                        field = field_name,
+                        resource = field_resource
+                    ))
+
+            # Check the number of geometry columns
             if output_format == FORMAT_GEOJSON:
                 count_geom_columns = reduce(lambda x, y: x+y, [1 if parsed_query['fields'][field]['is_geom'] else 0 for field in parsed_query['fields'].keys()])
                 if count_geom_columns != 1:
-                    return self._format_response({
-                        'success': False,
-                        'message': 'Format {format} requires only one geometry column'.format(
-                            format = output_format
-                        )
-                    }, callback)
+                    raise DataApiException(u'Format {format} requires only one geometry column'.format(
+                        format = output_format
+                    ))
 
             # Get constraints
             if 'filters' in query and not type(query['filters']) is list:
-                return self._format_response({
-                    'success': False,
-                    'message': 'Parameter filters should be a list with at least one field.'
-                }, callback)
+                raise DataApiException(u'Parameter filters should be a list with at least one item.')
 
             if 'filters' in query and len(query['filters']) > 0:
                 for f in query['filters']:
-                    try:
-                        parsed_query['filters'].append(self._create_filter(metadata, resource_mapping, f, srid))
-                    except DataApiException as ex:
-                        return self._format_response({
-                            'success': False,
-                            'message': ex.message
-                        }, callback)
+                    parsed_query['filters'].append(self._create_filter(metadata, resource_mapping, f, srid))
+
+            # Get order by
+            if 'sort' in query:
+                if not type(query['sort']) is list:
+                    raise DataApiException('Parameter sort should be a list.')
+                elif len(query['sort']) > 0:
+                    for i in range(0, len(query['sort'])):
+                        # Get sort field properties
+                        sort_resource = None
+                        sort_name = None
+                        sort_alias = None
+                        sort_desc = False
+
+                        if type(query['sort'][i]) is dict:
+                            if 'name' in query['sort'][i]:
+                                sort_name = query['sort'][i]['name']
+                                sort_alias = sort_name
+                            else:
+                                raise DataApiException('Sorting field name is missing.')
+                            if 'resource' in query['sort'][i]:
+                                sort_resource = query['sort'][i]['resource']
+                            if 'desc' in query['sort'][i] and isinstance(query['sort'][i]['desc'], bool):
+                                sort_desc = query['sort'][i]['desc']
+                        elif isinstance(query['sort'][i], basestring):
+                            sort_name = query['sort'][i]
+                            sort_alias = sort_name
+                        else:
+                            raise DataApiException('Sorting field is malformed. Instance of string or dictionary is expected.')
+
+                        # Check if a field name or an alias is specified. In the latter case, set the database field name
+                        if sort_name in parsed_query['fields']:
+                            if parsed_query['fields'][sort_name]['name'] != sort_name:
+                               sort_name = parsed_query['fields'][sort_name]['name'] 
+
+                        # Set resource if missing
+                        if sort_resource is None:
+                            resources = self._get_resources_by_field_name(metadata, sort_name)
+
+                            if len(resources) == 0:
+                                raise DataApiException(u'Sorting field {field} does not exist.'.format(
+                                    field = sort_name
+                                ))
+                            elif len(resources) == 1:
+                                sort_resource = resources[0]
+                            else:
+                                raise DataApiException(u'Sorting field {field} is ambiguous for resources {resources}.'.format(
+                                    field = sort_name,
+                                    resources = u','.join(resources)
+                                ))
+
+                        # Check if resource exists in metadata
+                        if not sort_resource in resource_mapping or not resource_mapping[sort_resource] in metadata:
+                            raise DataApiException(u'Resource {resource} for sorting field {field} does not exist.'.format(
+                                resource = sort_resource,
+                                field = sort_name
+                            ))
+
+                        parsed_query['sort'].append('{table}."{field}" {desc}'.format(
+                            table = metadata[resource_mapping[sort_resource]]['alias'],
+                            field = sort_name,
+                            desc = 'desc' if sort_desc else ''
+                        ))
 
             # Build SQL command
             fields = []
-            for field in parsed_query['fields'].keys():
+            tables = []
+            wheres = []
+            values = ()
+            where_clause = ''
+            orderby_clause = ''
+
+            # Select clause fields
+            for field in parsed_query['fields']:
                 if parsed_query['fields'][field]['is_geom'] and parsed_query['fields'][field]['srid'] != srid:
-                    parsed_query['fields'][field]['fullname']
                     fields.append('ST_Transform({geom}, {srid}) as "{alias}"'.format(
                         geom = parsed_query['fields'][field]['fullname'],
                         srid = srid,
@@ -733,37 +790,33 @@ class ApiController(BaseController):
                         alias = parsed_query['fields'][field]['alias']
                     ))
 
-            tables = [ '"' + parsed_query['resources'][r]['table'] + '" as ' + parsed_query['resources'][r]['alias'] for r in parsed_query['resources'].keys()]
+            # From clause tables
+            tables = [ '"' + parsed_query['resources'][r]['table'] + '" as ' + parsed_query['resources'][r]['alias'] for r in parsed_query['resources']]                  
 
-            for resource in parsed_query['resources'].keys():
-                if not metadata[resource]['geometry_column'] is None and\
-                   not metadata[resource]['srid'] is None:
-                    pass
-                    
-            wheres = []
-            values = ()
-            where_clause = None
-
+            # Where clause
             if len(parsed_query['filters']) > 0:
-                for where_and_value in parsed_query['filters']:
-                    wheres.append(where_and_value[0])
-                    values += where_and_value[1:]
+                for filter_tuple in parsed_query['filters']:
+                    wheres.append(filter_tuple[0])
+                    values += filter_tuple[1:]
 
             if len(wheres) > 0: 
-                where_clause = u'WHERE ' +u' AND '.join(wheres)
+                where_clause = u'where ' + u' AND '.join(wheres)
 
-            if where_clause is None:
-                where_clause = ''
+            # Order by clause
+            if len(parsed_query['sort']) > 0:
+                orderby_clause = u'order by ' +u', '.join(parsed_query['sort'])
 
-            sql = "select distinct {fields} from {tables} {where} limit {limit} offset {offset}".format(
+            # Build SQL
+            sql = "select distinct {fields} from {tables} {where} {orderby} limit {limit} offset {offset};".format(
                 fields = u','.join(fields),
                 tables = u','.join(tables),
                 where = where_clause,
+                orderby = orderby_clause,
                 limit = limit,
                 offset = offset
             )
 
-            connection_data.execute(u'SET LOCAL statement_timeout TO {0}'.format(timeout))
+            connection_data.execute(u'SET LOCAL statement_timeout TO {0};'.format(timeout))
             records = connection_data.execute(sql, values)
  
             if output_format == FORMAT_GEOJSON:
@@ -801,6 +854,11 @@ class ApiController(BaseController):
             }, callback)
         except Exception as ex:
             log.error(ex)
+            return self._format_response({
+                'success': False,
+                'message': 'Unhandled exception has occured.',
+                'details': (ex.message if config['dataapi.error.details'] else '')
+            }, callback)
         finally:
             if not connection_ckan is None:
                 connection_ckan.close()
@@ -816,7 +874,7 @@ class ApiController(BaseController):
 
         return self._format_response(result, callback)
 
-    def _resource_show(self, connection):
+    def _get_resources(self, connection):
         resources = None
         result = {}
 
@@ -828,26 +886,29 @@ class ApiController(BaseController):
                 from 
                     (
                     select	id as resource_id,
-                        json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
-                        json_extract_path_text((extras::json),'geometry') as geometry_type,
-                        json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id
+            				json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
+            				json_extract_path_text((extras::json),'geometry') as geometry_type,
+				            json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
+            				resource_group_id as group_id
                     from	resource as child
-                    where	format = 'data_table' and 
-                            state = 'active' and
-                            json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
+                    where	format = 'data_table' 
+            				and state = 'active'
+            				and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
                     ) as resource_db
                     inner join
                     (
                     select	id as resource_id,
-                        json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
-                        json_extract_path_text((extras::json),'geometry') as ggeometry_type,
-                        json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id
+                            json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
+                            json_extract_path_text((extras::json),'geometry') as ggeometry_type,
+                            json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
+			                resource_group_id as group_id
                     from	resource as child
-                    where	format = 'wms' and 
-                            state = 'active' and
-                            json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
+                    where	format = 'wms'
+            				and state = 'active'
+            				--and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
                     ) as resource_wms
-                    on resource_db.resource_id = resource_wms.resource_parent_id;
+                            on resource_db.group_id = resource_wms.group_id;
+                            --on resource_db.resource_id = resource_wms.resource_parent_id;
             """
 
             resources = connection.execute(sql)
@@ -886,7 +947,7 @@ class ApiController(BaseController):
 
             connection = engine.connect()
 
-            resources = self._resource_show(connection)
+            resources = self._get_resources(connection)
             
             result = {
                 "success" : True,
@@ -981,21 +1042,29 @@ class ApiController(BaseController):
         fields = None
 
         try:
-            engine = create_engine(config['dataapi.sqlalchemy.vectorstore'], echo=True)
-            connection = engine.connect()
-
-            fields = self._resource_describe(connection, id)
-            
-            result = {
-                "success" : True,
-                "message" : None,
-                "resource": {
-                    "id" : id,
-                    "fields" : fields['fields'],
-                    "srid": fields['srid'],
-                    "geometry_column" : fields['geometry_column']
+            print id
+            if id is None:
+                result = {
+                    "success" : False,
+                    "message" : u'Resource id is missing.',
+                    "resource": None
                 }
-            }
+            else:
+                engine = create_engine(config['dataapi.sqlalchemy.vectorstore'], echo=True)
+                connection = engine.connect()
+
+                fields = self._resource_describe(connection, id)
+                
+                result = {
+                    "success" : True,
+                    "message" : None,
+                    "resource": {
+                        "id" : id,
+                        "fields" : fields['fields'],
+                        "srid": fields['srid'],
+                        "geometry_column" : fields['geometry_column']
+                    }
+                }
         except Exception as ex:
             log.error(ex)
             result = {

@@ -1,18 +1,69 @@
 var path = '/maps/';
 
 $(function () {
+    var queryEditor = CodeMirror.fromTextArea(document.getElementById("query"), {
+        lineNumbers: true,
+        mode: "text/javascript",
+        matchBrackets: true,
+        lineWrapping: true,
+        tabSize: 8,
+        height: "500px"
+
+    });
+
+    var outputEditor = CodeMirror.fromTextArea(document.getElementById("output"), {
+        lineNumbers: true,
+        mode: "text/javascript",
+        matchBrackets: true,
+        lineWrapping: true,
+        tabSize: 8,
+        readOnly: true
+    });
+
+    $.widget( "custom.iconselectmenu", $.ui.selectmenu, {
+        _renderItem: function( ul, item ) {
+            var li = $('<li>', { text: item.label } );
+            if ( item.disabled ) {
+                li.addClass( "ui-state-disabled" );
+            }
+            $( "<span>", {
+                style: item.element.attr( "data-style" ),
+                "class": "ui-icon " + item.element.attr( "data-class" )
+            }).appendTo( li );
+            return li.appendTo( ul );
+        }
+    });
+
+    $('#resource_id').selectmenu().selectmenu('disable');
+
     var vectorSource = new ol.source.GeoJSON({
         projection: 'EPSG:3857'
     });
 
-    var resourceShow = function(data) {
-        $('#response').val(JSON.stringify(data, null, " "));
+    var resourceShow = function(data, size) {
+        $('#output').val(JSON.stringify(data, null, " "));
+        $("#tabs").tabs("option", "active", 1);
+        outputEditor.setValue($('#output').val());
 
+        if(size) {
+            $('#query_status').html(size.toFixed(2) + ' Kbs');
+            $('#query_status').show();
+        }
+
+        $('#resource_id').find('option').remove();
         for (var id in data.resources) {
             $('#resource_id').append($('<option>', {
                 value: id,
                 text: id
             }));
+        }
+        if($('#resource_id').find('option').size() === 0) {
+            $('#resource_id').selectmenu().selectmenu('disable');
+        } else {
+            $('#resource_id').selectmenu().selectmenu('enable');
+            var value = $('#resource_id').find('option').eq(0).val();
+            $('#resource_id').val(value);
+            $('#resource_id').selectmenu('refresh');
         }
     };
 
@@ -32,14 +83,32 @@ $(function () {
         $.ajax({
             url: url,
             context: this
-        }).done(function (data) {
-            resourceShow(data);
+        }).done(function(data, textStatus, jqXHR) {
+            var size = null;
+            var contentLength = jqXHR.getResponseHeader('Content-Length');
+            if(contentLength) {
+                size =  contentLength / 1024.0;
+            }
+            resourceShow(data, size);
         });
 
     });
 
+    var describeResource = function(data, size) {
+        if(size) {
+            $('#query_status').html(size.toFixed(2) + ' Kbs');
+            $('#query_status').show();
+        }
+
+        $('#output').val(JSON.stringify(data, null, " "));
+        $("#tabs").tabs("option", "active", 1);
+        outputEditor.setValue($('#output').val());
+    };
+
     $('#resource_describe').click(function () {
-        var url = path + 'api/resource_describe/' + $('#resource_id').val();
+        var id = $('#resource_id').val();
+
+        var url = path + 'api/resource_describe/' + (id ? id : '');
 
 /*
         $.ajax({
@@ -47,7 +116,7 @@ $(function () {
             dataType: 'jsonp',
             context: this,
         }).done(function (data) {
-           $('#response').val(JSON.stringify(data, null, " "));
+           describeResource(data);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.log('Failed to load dataset ' + entry.url);
         });
@@ -55,13 +124,32 @@ $(function () {
         $.ajax({
             url: url,
             context: this
-        }).done(function (data) {
-            $('#response').val(JSON.stringify(data, null, " "));
+        }).done(function (data, textStatus, jqXHR) {
+            var size = null;
+            var contentLength = jqXHR.getResponseHeader('Content-Length');
+            if(contentLength) {
+                size =  contentLength / 1024.0;
+            }
+            describeResource(data, size);
         });
     });
 
-    var renderFeatures = function(data) {
-        $('#response').val(JSON.stringify(data, null, " "));
+    var renderFeatures = function(data, size) {
+        $('#output').val(JSON.stringify(data, null, " "));
+        outputEditor.setValue($('#output').val());
+
+        if(size) {
+            $('#query_status').html(size.toFixed(2) + ' Kbs');
+            $('#query_status').show();
+        }
+
+        if('success' in data) {
+            if(!data.success) {
+                $("#tabs").tabs("option", "active", 1);
+                return;
+            }
+        }
+
         var format = new ol.format.GeoJSON();
         var features = format.readFeatures(data, {
             dataProjection: 'EPSG:3857',
@@ -71,12 +159,16 @@ $(function () {
         vectorSource.clear();
         vectorSource.addFeatures(features);
 
-        // map.getView().fitExtent(vectorSource.getExtent(), map.getSize());
+        map.getView().fitExtent(vectorSource.getExtent(), map.getSize());
+
+        $("#tabs").tabs("option", "active", 0);
     };
 
-    $('#resource_query').click(function () {
+    var executeQuery = function() {
         vectorSource.clear();
         select.getFeatures().clear();
+
+        $('#query_status').hide();
 
         var url = path + 'api/query';
 /*
@@ -88,190 +180,64 @@ $(function () {
            renderFeatures(data);
         });
 */
+
         $.ajax({
             type: "POST",
             url: url,
             context: this,
             contentType: "application/json; charset=utf-8",
             dataType: "json",
-            data: $('#query').val()
-        }).done(function (data) {
-            renderFeatures(data);
+            data: queryEditor.getValue(' ')
+        }).done(function (data, textStatus, jqXHR) {
+            var size = null;
+            var contentLength = jqXHR.getResponseHeader('Content-Length');
+            if(contentLength) {
+                size =  contentLength / 1024.0;
+            }
+            renderFeatures(data, size);
         });
+    };
+
+    var queryIndex = 0;
+    var setQuery = function(index) {
+        if(index === 0) {
+            $('#query_prev').removeClass('query-button-enabled').addClass('query-button-disabled');
+        } else if(!$('#query_prev').hasClass('query-button-enabled')) {
+            $('#query_prev').addClass('query-button-enabled');
+        }
+
+        if(index === queries.length-1) {
+            $('#query_next').removeClass('query-button-enabled').addClass('query-button-disabled');
+        } else if(!$('#query_next').hasClass('query-button-enabled')) {
+            $('#query_next').addClass('query-button-enabled');
+        }
+
+        $('#query_index').html(index+1);
+
+        $('#query').val(JSON.stringify(queries[index].query, null, "  "));
+        $('#query-notes').html(queries[index].description);
+        queryEditor.setValue($('#query').val());
+        queryEditor.refresh();
+    };
+
+    setQuery(queryIndex);
+
+    $('#query_prev').click(function(e) {
+        if(queryIndex > 0) {
+            queryIndex--;
+            setQuery(queryIndex);
+        }
     });
 
-    // "{"type":"Point","coordinates":[2556034.848391745, 4949267.502643947]}"
-    var queries = [{
-        resources: ['00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                     '507076a5-8b40-4cd0-a519-632f375babf7'],
-        fields: [{
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'arot'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'tk'
-        }, {
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'the_geom',
-            alias: 'polygon'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'address'
-        }],
-        filters: [{
-            operator: 'EQUAL',
-            arguments: [
-                {
-                    resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-                    name: 'tk'
-                },
-                '54625'
-            ]
-        }, {
-            operator: 'DISTANCE',
-            arguments: [
-                {
-                    'type': 'Point',
-                    'coordinates': [2556034.848391745, 4949267.502643947]
-                }, {
-                    resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                    name: 'the_geom'
-                },
-                "LESS_OR_EQUAL",
-                600.0
-            ]
-        }, {
-            operator: 'DISTANCE',
-            arguments: [
-                {
-                    'type': 'Point',
-                    'coordinates': [2556034.848391745, 4949267.502643947]
-                }, {
-                    resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                    name: 'the_geom'
-                },
-                "GREATER_OR_EQUAL",
-                300.0
-            ]
-        }],
-        format: 'geojson'
-    }, {
-        resources: ['00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                     '507076a5-8b40-4cd0-a519-632f375babf7'],
-        fields: [{
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'arot'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'tk'
-        }, {
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'the_geom',
-            alias: 'polygon'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'address'
-        }],
-        filters: [{
-            operator: 'EQUAL',
-            arguments: [
-                {
-                    resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-                    name: 'tk'
-                },
-                '54625'
-            ]
-        }, {
-            operator: 'AREA',
-            arguments: [{
-                resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                name: 'the_geom'
-            },
-                "GREATER_OR_EQUAL",
-                15000.0
-            ]
-        }],
-        format: 'geojson'
-    }, {
-        resources: ['00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                     '507076a5-8b40-4cd0-a519-632f375babf7'],
-        fields: [{
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'arot'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'tk'
-        }, {
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'the_geom',
-            alias: 'polygon'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'address'
-        }],
-        filters: [{
-            operator: 'EQUAL',
-            arguments: [
-                {
-                    resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-                    name: 'tk'
-                },
-                '54625'
-            ]
-        }, {
-            operator: 'CONTAINS',
-            arguments: [{
-                "type":"Polygon","coordinates":[[[2554722.9073085627,4951114.104686448],[2554722.9073085627,4950158.641832884],[2556232.5386171946,4950158.641832884],[2556232.5386171946,4951114.104686448],[2554722.9073085627,4951114.104686448]]]
-            }, {
-                resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                name: 'the_geom'
-            }]
-        }],
-        format: 'geojson'
-    }, {
-        resources: ['00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                     '507076a5-8b40-4cd0-a519-632f375babf7'],
-        fields: [{
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'arot'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'tk'
-        }, {
-            resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-            name: 'the_geom',
-            alias: 'polygon'
-        }, {
-            resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-            name: 'address'
-        }],
-        filters: [{
-            operator: 'EQUAL',
-            arguments: [
-                {
-                    resource: '507076a5-8b40-4cd0-a519-632f375babf7',
-                    name: 'tk'
-                },
-                '54625'
-            ]
-        }, {
-            operator: 'INTERSECTS',
-            arguments: [{
-                "type":"Polygon","coordinates":[[[2554722.9073085627,4951114.104686448],[2554722.9073085627,4950158.641832884],[2556232.5386171946,4950158.641832884],[2556232.5386171946,4951114.104686448],[2554722.9073085627,4951114.104686448]]]
-            }, {
-                resource: '00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
-                name: 'the_geom'
-            }]
-        }],
-        format: 'geojson'
-    }];
+    $('#query_next').click(function(e) {
+        if(queryIndex < queries.length-1) {
+            queryIndex++;
+            setQuery(queryIndex);
+        }
+    });
 
-    $('#query').val(JSON.stringify(queries[0], null, " "));
-
-    $('#query_id').change(function (e) {
-        var index = $("#query_id option:selected").first().val();
-
-        $('#query').val(JSON.stringify(queries[index], null, " "));
+    $('#query_exec').click(function(e) {
+        executeQuery();
     });
 
     var vectorLayer = new ol.layer.Vector({
@@ -279,22 +245,15 @@ $(function () {
     });
 
     var layers = [
-        /*new ol.layer.Tile({
-            source: new ol.source.MapQuest({layer: 'sat'})
-        }),*/
         new ol.layer.Tile({
             source: new ol.source.OSM()
         }),
-        // http://geoserver.dev.publicamundi.eu:8080/geoserver/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&TRANSPARENT=true&LAYERS=publicamundi%3A00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd&WIDTH=256&HEIGHT=256&CRS=EPSG%3A900913&STYLES=&BBOX=2553608.2409511693%2C4950673.447974294%2C2553913.98906431%2C4950979.196087435
         new ol.layer.Tile({
-
             source: new ol.source.TileWMS({
-
                 url: 'http://geoserver.dev.publicamundi.eu:8080/geoserver/wms',
-
                 params: {
                     'VERSION': '1.3.0',
-                    'LAYERS': 'publicamundi:00f51ed5-3bd0-40b4-b2a4-76ad5a324bdd',
+                    'LAYERS': 'publicamundi:d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6',
 
                     projection: ol.proj.get('EPSG:900913')
                 }
@@ -312,19 +271,31 @@ $(function () {
         if (e.target.getArray().length === 0) {
             // this means it's changed to no features selected
             window.features = null;
+            if($('#feature-dialog').hasClass('ui-dialog-content')) {
+                $('#feature-dialog').dialog('close');
+            }   
         } else {
             // this means there is at least 1 feature selected
             var features = e.target;
             var feature = features.getArray()[0];
 
             var text = [];
+            text.push('<table class="feature-table">');
             var keys = feature.getKeys();
             for (var i = 0; i < keys.length; i++) {
                 if (keys[i] != feature.getGeometryName()) {
-                    text.push(keys[i] + ' : ' + feature.get(keys[i]));
+                    text.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' + feature.get(keys[i]) + '</td></tr>');
                 }
             }
-            alert(text.join('\n'));
+            text.push('</table>');
+
+            $('#feature-dialog .feature-dialog-content').html(text.join('\n'));
+            if(!$('#feature-dialog').is(":visible")) {
+                $('#feature-dialog').dialog({
+                    width: 400,
+                    position: { my: "right-15 top+15", at: "right top", of: '#map' }
+                });
+            }
         }
     });
 
@@ -333,7 +304,7 @@ $(function () {
         target: 'map',
         view: new ol.View({
             center: [2555281.3085910575, 4950157.678740002],
-            zoom: 14
+            zoom: 15
         })
     });
 
@@ -341,4 +312,48 @@ $(function () {
 
     window.map = map;
     window.vector = vectorLayer;
+
+    window.outputEditor = outputEditor;
+
+    var resize = function() {
+        $('#accordion-container').height($(window).height()-70);
+        $('#accordion').accordion('refresh');
+
+        $('#tabs-container').height($(window).height()-71).width($(window).width() - 430);
+        $('#tabs').tabs( "refresh" );
+
+        $('#map').height($(window).height()-130).width($(window).width() - 445);
+
+        map.updateSize();
+
+        $('.CodeMirror').eq(0).height($(window).height()-221);
+        queryEditor.refresh();
+
+        $('.CodeMirror').eq(1).height($(window).height()-126).width($(window).width() - 454);
+        outputEditor.refresh();
+    }
+
+    $('#accordion').accordion({
+        heightStyle: 'fill'
+    });
+
+    $('#tabs').tabs({
+        heightStyle: 'fill',
+        activate: function( event, ui ) {
+            switch(ui.newTab.index()) {
+                case 1:
+                    outputEditor.refresh();
+                    break;
+            }
+        }
+    });
+
+    $('button.action').button();
+
+    resize();
+    $(window).resize(resize);
+
+    setTimeout(function () {
+        $('#block-ui').fadeOut(300).hide();
+    }, 1000);
 });
