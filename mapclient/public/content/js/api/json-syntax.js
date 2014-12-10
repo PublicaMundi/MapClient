@@ -35,7 +35,7 @@ var query = {
     ],
 
     // Filter expressions
-    fitlers : [
+    filters : [
         // Filter expressed as objects
         {
             // (Required) Scalar operator. Valid values : 'EQUAL', 'NOT_EQUAL', 'GREATER', 'GREATER_OR_EQUAL', 'LESS', 'LESS_OR_EQUAL',
