@@ -240,7 +240,7 @@ body {
     border-bottom: 1px solid #dddddd;
 }
 
-.query-container {
+#query-container {
     position: relative;
 }
 
@@ -262,12 +262,18 @@ body {
     margin-right: 15px;
     cursor: pointer;
     z-index: 3;
+    opacity: 0.3;
+}
+
+.query-mode-option:hover {
+    opacity: 1;
 }
 
 .query-mode-option-selected {
     background: none repeat scroll 0 0 #FFFFFF;
     color: black;
     cursor: default !important;
+    opacity: 1;
 }
 /*
     jQuery UI custom rules
