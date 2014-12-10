@@ -8,11 +8,16 @@ $(function () {
 
     var queryEditor = CodeMirror.fromTextArea(document.getElementById("query"), {
         lineNumbers: true,
-        mode: "text/javascript",
+        mode: {name: "javascript", globalVars: true},
         matchBrackets: true,
         lineWrapping: true,
         tabSize: 8,
-        height: "500px"
+        extraKeys: {"Ctrl-Space": "autocomplete"}
+    });
+    queryEditor.on('keyup', function(sender, e) {
+        if(e.key==='.') {
+            queryEditor.showHint(e);
+        }
     });
 
     var outputEditor = CodeMirror.fromTextArea(document.getElementById("output"), {
@@ -22,6 +27,25 @@ $(function () {
         lineWrapping: true,
         tabSize: 8,
         readOnly: true
+    });
+
+    var jsonSyntaxEditor = CodeMirror.fromTextArea(document.getElementById("json-syntax"), {
+        lineNumbers: true,
+        mode: "text/javascript",
+        matchBrackets: true,
+        lineWrapping: true,
+        tabSize: 8,
+        readOnly: true
+    });
+
+    $.ajax({
+        url: '../content/js/api/json-syntax.js',
+        context: this,
+        dataType: 'text'
+    }).done(function(data, textStatus, jqXHR) {
+        $('#json-syntax').val(data);
+        jsonSyntaxEditor.setValue($('#json-syntax').val());        
+        jsonSyntaxEditor.refresh();
     });
 
     $('#query_exec').tooltip();
@@ -246,7 +270,18 @@ $(function () {
                 break;
             case QueryMode.FLUENT:
                 if(typeof queries[queryIndex].method === 'function' ) {
-                    queries[queryIndex].method(renderFeatures);
+                    try {
+                        var dynamicFunction = null;
+                        eval('dynamicFunction = function(callback) { ' + queryEditor.getValue() + '};');  
+
+                        if(typeof dynamicFunction === 'function') {
+                            dynamicFunction.call(this, renderFeatures);
+                        }
+                    } catch (e) {
+                        console.log(e.toString());
+                    }
+                   
+                    //queries[queryIndex].method(renderFeatures);
                 }
                 break;
         }
@@ -416,10 +451,13 @@ $(function () {
 
         map.updateSize();
 
-        $('.CodeMirror').eq(0).height($(window).height()-221);
+        $('#query-container .CodeMirror').height($(window).height()-221);
         queryEditor.refresh();
 
-        $('.CodeMirror').eq(1).height($(window).height()-126).width($(window).width() - 482);
+        $('#tabs-2 .CodeMirror').height($(window).height()-126).width($(window).width() - 482);
+        outputEditor.refresh();
+
+        $('#tabs-3 .CodeMirror').height($(window).height()-126).width($(window).width() - 482);
         outputEditor.refresh();
     }
 
@@ -433,6 +471,9 @@ $(function () {
             switch(ui.newTab.index()) {
                 case 1:
                     outputEditor.refresh();
+                    break;
+                case 2:
+                    jsonSyntaxEditor.refresh();
                     break;
             }
         }

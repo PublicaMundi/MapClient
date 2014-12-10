@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../content/css/demo/default.css" />
 
     <link rel="stylesheet" href="../content/css/lib/codemirror/codemirror.css" />
+    <link rel="stylesheet" href="../content/css/lib/codemirror/show-hint.css" />
 
     <script type="text/javascript" src="../content/js/lib/jquery/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="../content/js/lib/jquery-ui/jquery-ui.min.js"></script>
@@ -19,6 +20,9 @@
     <script type="text/javascript" src="../content/js/lib/codemirror/javascript.js"></script>
 
     <script type="text/javascript" src="../content/js/api/data.js"></script>
+
+    <script type="text/javascript" src="../content/js/lib/codemirror/show-hint.js"></script>
+    <script type="text/javascript" src="../content/js/lib/codemirror/data-api-hint.js"></script>
 
     <script type="text/javascript" src="../content/js/demo/data-api-config.js"></script>
     <script type="text/javascript" src="../content/js/demo/data-api-queries.js"></script>
@@ -74,7 +78,7 @@
                     <div id="query-notes">
                         
                     </div>
-                    <div class="query-container">
+                    <div id="query-container">
                         <textarea id="query" rows="20" cols="60" autocomplete="off"></textarea>
                         <div class="query-mode">
                             <div id="query_mode_json" class="query-mode-option query-mode-option-selected" data-mode="json">
@@ -93,12 +97,16 @@
                 <ul>
                     <li><a href="#tabs-1">Map</a></li>
                     <li><a href="#tabs-2">Output</a></li>
+                    <li><a href="#tabs-3">JSON Syntax</a></li>
                 </ul>
                 <div id="tabs-1">
                     <div id="map" style="width: 1059px; height: 685px;"></div>
                 </div>
                 <div id="tabs-2">
                     <textarea id="output" rows="20" cols="60" autocomplete="off"></textarea>
+                </div>
+                <div id="tabs-3">
+                    <textarea id="json-syntax" rows="20" cols="60" autocomplete="off"></textarea>
                 </div>
             </div>
         </div>
