@@ -109,7 +109,7 @@
         </div>
 
         <div data-role="panel" data-position="left" data-position-fixed="true" data-display="push" data-theme="a" id="view-layers" data-inset="false">
-            <h2>Base Layer<a style="float: right; margin-top: 0px !important; margin-right: 8px;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
+            <h2>Base Layer<a style="float: right; margin-top: 0px !important; margin-right: 5px;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
             <div class="clearfix">
                 <select name="base_layer" id="base_layer" data-native-menu="false" autocomplete="off">
                     <option data-key=""
@@ -124,10 +124,12 @@
                             data-type="mapquest"
                             data-set="sat" data-img="content/images/aerial.png"
                             value="mapquest">Map Quest - Satellite</option>
+                    <!-- 
                     <option data-key=""
                             data-type="mapquest"
                             data-set="hyb" data-img="content/images/aerial.png"
                             value="mapquest">Map Quest - Hybrid</option>
+                    -->
                     {% if config['mapclient.base.layer.key'] != '' %}
                     <option data-key="{{config['mapclient.base.layer.key']}}"
                             data-type="bing"
