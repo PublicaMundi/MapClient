@@ -901,42 +901,65 @@ class ApiController(BaseController):
 
         try:
             sql = u"""
-                select	resource_db.resource_id as db_resource_id,
-                        resource_wms.resource_id as wms_resource_id,
-                        resource_db.geometry_type as geometry_type
-                from 
-                    (
-                    select	id as resource_id,
-            				json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
-            				json_extract_path_text((extras::json),'geometry') as geometry_type,
-				            json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
-            				resource_group_id as group_id
-                    from	resource as child
-                    where	format = 'data_table' 
-            				and state = 'active'
-            				and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
-                    ) as resource_db
-                    inner join
-                    (
-                    select	id as resource_id,
-                            json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
-                            json_extract_path_text((extras::json),'geometry') as ggeometry_type,
-                            json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
-			                resource_group_id as group_id
-                    from	resource as child
-                    where	format = 'wms'
-            				and state = 'active'
-            				--and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
-                    ) as resource_wms
-                            on resource_db.group_id = resource_wms.group_id;
-                            --on resource_db.resource_id = resource_wms.resource_parent_id;
+                    select  resource_db.resource_id as db_resource_id,
+                            package_revision.title as package_title,
+                            package_revision.notes as package_notes,
+                            resource_db.resource_name as resource_name,
+                            resource_wms.resource_id as wms_resource_id,
+                            resource_db.geometry_type as geometry_type,
+                            resource_wms.wms_server as wms_server,
+                            resource_wms.wms_layer as wms_layer
+                    from 
+                        (
+                        select  id as resource_id,
+                                json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
+                                json_extract_path_text((extras::json),'geometry') as geometry_type,
+                                json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
+                                resource_group_id as group_id,
+                                name as resource_name
+                        from	resource_revision
+                        where	format = 'data_table'
+                                and current = True
+                                and state = 'active'
+                                and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
+                        ) as resource_db
+                        left outer join
+                            (
+                            select	id as resource_id,
+                                    json_extract_path_text((extras::json),'vectorstorer_resource') as vector_storer,
+                                    json_extract_path_text((extras::json),'geometry') as ggeometry_type,
+                                    json_extract_path_text((extras::json),'parent_resource_id') as resource_parent_id,
+                                    resource_group_id as group_id,
+                                    json_extract_path_text((extras::json),'wms_server') as wms_server,
+                                    json_extract_path_text((extras::json),'wms_layer') as wms_layer
+                            from	resource_revision
+                            where	format = 'wms'
+                                    and current = True
+                                    and state = 'active'
+                                    and json_extract_path_text((extras::json),'vectorstorer_resource')  = 'True'
+                            ) as resource_wms
+                                on	resource_db.group_id = resource_wms.group_id
+                                    and resource_db.resource_id = resource_wms.resource_parent_id
+                        left outer join resource_group_revision
+                                on	resource_group_revision.id = resource_db.group_id
+                                    and resource_group_revision.state = 'active'
+                                    and resource_group_revision.current = True
+                        left outer join	package_revision
+                                on	resource_group_revision.package_id = package_revision.id
+                                    and package_revision.state = 'active'
+                                    and package_revision.current = True;
             """
 
             resources = connection.execute(sql)
             for resource in resources:
                 result[resource['db_resource_id'].decode('utf-8')] = {
                     'table': resource['db_resource_id'].decode('utf-8'),
-                    'wms': resource['wms_resource_id'].decode('utf-8'),
+                    'resource_name' : resource['resource_name'].decode('utf-8'),
+                    'package_title' : resource['package_title'].decode('utf-8'),
+                    'package_notes' : resource['package_notes'].decode('utf-8'),
+                    'wms': None if resource['wms_resource_id'] is None else resource['wms_resource_id'].decode('utf-8'),
+                    'wms_server': None if resource['wms_server'] is None else resource['wms_server'].decode('utf-8'),
+                    'wms_layer': None if resource['wms_layer'] is None else resource['wms_layer'].decode('utf-8'),
                     'geometry_type': resource['geometry_type']
                 }
         finally:

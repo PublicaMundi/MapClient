@@ -14,15 +14,14 @@
             return previousValue;
         }
         var bbox = currentValue.extent;
-
         switch(currentValue.crs) {
-            case  PublicaMundi.Maps.CRS.Mercator:
+            case  PublicaMundi.Maps.CRS.Mercator: case PublicaMundi.Maps.CRS.Google:
                 return currentValue.extent;
                 break;
             case PublicaMundi.Maps.CRS.WGS84:
                 var bottomLeft = ol.proj.transform([bbox[1], bbox[0]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
                 var topRight = ol.proj.transform([bbox[3], bbox[2]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
-                bbox = [bottomLeft[1], bottomLeft[0], topRight[1], topRight[0]];
+                bbox = [bottomLeft[0], bottomLeft[1], topRight[0], topRight[1]];
                 if (_isBoundingBoxFinite(bbox)) {
                     return bbox;
                 }
