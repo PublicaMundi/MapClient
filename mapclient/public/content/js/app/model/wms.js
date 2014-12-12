@@ -1,12 +1,42 @@
 ﻿define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMundi) {
 
+    var _isBoundingBoxFinite = function (bbox) {
+        for (var i = 0; i < bbox.length; i++) {
+            if (!isFinite(bbox[i])) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     var _bboxReduce = function (previousValue, currentValue, index, array) {
         if (previousValue) {
             return previousValue;
         }
-        if (currentValue.crs === PublicaMundi.Maps.CRS.Mercator) {
-            return currentValue.extent;
+        var bbox = currentValue.extent;
+
+        switch(currentValue.crs) {
+            case  PublicaMundi.Maps.CRS.Mercator:
+                return currentValue.extent;
+                break;
+            case PublicaMundi.Maps.CRS.WGS84:
+                var bottomLeft = ol.proj.transform([bbox[1], bbox[0]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+                var topRight = ol.proj.transform([bbox[3], bbox[2]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+                bbox = [bottomLeft[1], bottomLeft[0], topRight[1], topRight[0]];
+                if (_isBoundingBoxFinite(bbox)) {
+                    return bbox;
+                }
+                break;
+            case 'CRS:84':
+                var bottomLeft = ol.proj.transform([bbox[0], bbox[1]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+                var topRight = ol.proj.transform([bbox[2], bbox[3]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+                bbox = [bottomLeft[0], bottomLeft[1], topRight[0], topRight[1]];
+                if (_isBoundingBoxFinite(bbox)) {
+                    return bbox;
+                }
+                break;
         }
+        return null;
     };
 
     PublicaMundi.Maps.Resources.WmsMetadataReader = PublicaMundi.Class(PublicaMundi.Maps.Resources.ResourceMetadataReader, {
@@ -147,7 +177,7 @@
                 return {
                     type: PublicaMundi.Maps.Resources.Types.WMS,
                     title: resource.name,
-                    url: resource.url
+                    url: (resource.wms_server || resource.url) + '?LAYERS=' + (resource.wms_layer || '')
                 };
             }
             return null;
@@ -174,13 +204,12 @@
                     params.MAP = params[param];
                 }
             }
-
             layer.__object = new ol.layer.Tile({
                 title: layer.title,
                 source: new ol.source.TileWMS({
                     url: layer.base,
                     params: params,
-                    projection: ol.proj.get('EPSG:900913')
+                    projection: 'EPSG:3857'
                 }),
             });
             layer.__object.setOpacity(layer.viewer.opacity / 100.0);
