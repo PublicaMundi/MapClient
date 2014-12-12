@@ -233,7 +233,7 @@
 
         attachCatalogEvents();
 
-        attachDatasetEvents();
+        attachSearchEvents();
 
         attachLayerActionEvents();
     };
@@ -320,19 +320,21 @@
         });
     };
 
-    var attachCatalogEvents = function () {
+    var showTopics = function() {
+        $($('#catalog-return')).hide();
 
-        $('#catalog-return').click(function (e) {
-            $(this).hide();
+        $('#catalog-header').html('Catalog');
 
-            $('#catalog-header').html('Catalog');
-
-            $('#datasets').fadeOut(200, function () {
-                $('#topics').fadeIn(200, function () {
-                    $("#view-layers").trigger("updatelayout");
-                });
+        $('#datasets').fadeOut(200, function () {
+            $('#topics').fadeIn(200, function () {
+                $("#view-layers").trigger("updatelayout");
             });
         });
+    };
+
+    var attachCatalogEvents = function () {
+
+        $('#catalog-return').click(showTopics);
 
         $('#toggle-catalog').click(function (e) {
             if ($(this).hasClass('ui-icon-minus')) {
@@ -356,9 +358,33 @@
         });
     };
 
-    var attachDatasetEvents = function () {
+    var attachSearchEvents = function () {
+        var searchTimeout = null;
+        var xhr = null;
+
         $('#topics').on('click', 'div.topic', function (e) {
             members.ckan.getTopicById($(this).data('id'));
+        });
+
+        $('#search').change(function() {
+            if(!$(this).val()) {
+                showTopics();
+            }
+        });
+
+        $('#search').keyup(function() {
+            if(searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            searchTimeout = setTimeout(function() {
+                var text = $('#search').val();
+                if(text) {
+                    members.ckan.search(text);
+                } else {
+                    showTopics();
+                }
+            }, 750);
         });
     };
 
@@ -548,8 +574,15 @@
         }
     };
 
+    var onCatalogSearch = function(sender, topic) {
+        refreshCatalog(topic, false);
+    };
 
     var onTopicLoaded = function (sender, topic) {
+        refreshCatalog(topic, true);
+    };
+
+    var refreshCatalog = function (topic, showErrorPopup) {
         var content, temp, d, r, dataset, resource, totalResourceCount = 0, datasetResourceCount = 0;
 
         // Get all resources from all datasets and create HTML
@@ -636,15 +669,20 @@
                 $('#catalog-return').show();
                 $("#view-layers").trigger("updatelayout");
             });
-        } else {
+        } else if (showErrorPopup) {
             $('#message-popup-text').html('No datasets found');
-            $('#message-popup').popup('open')
+            $('#message-popup').popup('open');
+            setTimeout(function() {
+                $('#message-popup').popup('close');
+            }, 600);
         }
     };
 
     members.ckan.on('topic:refresh', onTopicRefresh);
 
     members.ckan.on('topic:loaded', onTopicLoaded);
+
+    members.ckan.on('catalog:search', onCatalogSearch);
 
     PublicaMundi.initialize = function () {
         initializeParameters();
@@ -664,6 +702,7 @@
             if ($('#view-layers').hasClass('ui-panel-closed')) {
                 $('#view-layers').panel('toggle');
             }
+            $('#search').focus();
         }, 500);
 
         initializePreview();

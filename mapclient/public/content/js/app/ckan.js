@@ -10,9 +10,86 @@
             }
 
             this.values.topics = null;
+            this.values.results = null;
+
+            this.values.xhr = null;
 
             this.event('topic:refresh');
             this.event('topic:loaded');
+
+            this.event('catalog:search');
+        },
+        search: function(text) {
+            // Example : http://labs.geodata.gov.gr/api/3/action/package_search?q=
+            var self = this;
+
+            var uri = new URI(this.values.config.ckan.endpoint);
+            uri.segment(['api', '3', 'action', 'package_search']);
+            uri.addQuery({ 'q': text });
+
+            if ((this.values.xhr) && (this.values.xhr.readyState !== 4)) {
+                this.values.xhr.abort();
+                this.values.xhr = null;
+            }
+
+            this.values.results = [{
+                caption : 'Search',
+                datasets : []
+            }];
+
+            this.values.xhr = $.ajax({
+                url: uri.toString(),
+                context: this,
+            }).done(function (response) {
+                self.values.xhr = null;
+
+                var datasets = [], p, r;
+
+                if ((response.success) && (response.result)) {
+                    var packages = response.result.results;
+                    for (p = 0; p < packages.length; p++) {
+                        var dataset = packages[p];
+
+                        datasets.push({
+                            id: dataset.id,
+                            name: dataset.name,
+                            title: dataset.title,
+                            notes: dataset.notes,
+                            spatial_extent: dataset.spatial,
+                            organization: {
+                                id: dataset.organization.id,
+                                name: dataset.organization.name,
+                                title: dataset.organization.title,
+                                description: dataset.organization.description,
+                                image: dataset.organization.image_url
+                            },
+                            resources: []
+                        });
+
+                        for (r = 0; r < dataset.resources.length; r++) {
+                            resource = dataset.resources[r];
+                            if(resource.format === 'wms') {
+                                datasets[p].resources.push({
+                                    id: resource.id,
+                                    name: resource.name,
+                                    description: resource.description,
+                                    format: resource.format,
+                                    size: resource.size,
+                                    mimetype: resource.mimetype,
+                                    url: resource.url
+                                });
+                            }
+                        }
+                    }
+                }
+
+                this.values.results[0].datasets = datasets;
+
+                self.trigger('catalog:search', this.values.results[0]);
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log('Failed to search CKAN catalog : ' + uri.toString());
+            });
         },
         getTopics: function () {
             var self = this;
@@ -36,6 +113,7 @@
                             title: value.title,
                             description: value.description,
                             image: value.image_display_url,
+                            datasets: []
                         };
                     });
                 }
@@ -97,15 +175,17 @@
                         for (r = 0; r < dataset.resources.length; r++) {
                             resource = dataset.resources[r];
 
-                            topic.datasets[p].resources.push({
-                                id: resource.id,
-                                name: resource.name,
-                                description: resource.description,
-                                format: resource.format,
-                                size: resource.size,
-                                mimetype: resource.mimetype,
-                                url: resource.url
-                            });
+                            if(resource.format === 'wms') {
+                                topic.datasets[p].resources.push({
+                                    id: resource.id,
+                                    name: resource.name,
+                                    description: resource.description,
+                                    format: resource.format,
+                                    size: resource.size,
+                                    mimetype: resource.mimetype,
+                                    url: resource.url
+                                });
+                            }
                         }
                     }
                 }
@@ -113,7 +193,7 @@
                 if (this.values.topics) {
                     for (t = 0; t < this.values.topics.length; t++) {
                         if (this.values.topics[t].id === topic.id) {
-                            this.values.topics[t].datasets = topic.datasets;
+                            this.values.topics[t] = topic;
                             break;
                         }
                     }
@@ -124,10 +204,15 @@
             });
         },
         getDatasetById: function (id) {
-            var t, d, topic;
-            if (this.values.topics) {
-                for (t = 0; t < this.values.topics.length; t++) {
-                    topic = this.values.topics[t];
+            var t, d, topic, sets = [this.values.topics, this.values.results];
+
+            for(var index in sets) {
+                if(!sets[index]) {
+                    continue;
+                }
+                var arr = sets[index];
+                for (t = 0; t < arr.length; t++) {
+                    topic = arr[t];
                     if (topic.datasets) {
                         for (d = 0; d < topic.datasets.length; d++) {
                             if (topic.datasets[d].id === id) {
@@ -140,10 +225,15 @@
             return null;
         },
         getResourceById: function (id) {
-            var t, d, r, topic, dataset;
-            if (this.values.topics) {
-                for (t = 0; t < this.values.topics.length; t++) {
-                    topic = this.values.topics[t];
+            var t, d, r, topic, dataset, sets = [this.values.topics, this.values.results];
+
+            for(var index in sets) {
+                if(!sets[index]) {
+                    continue;
+                }
+                var arr = sets[index];
+                for (t = 0; t < arr.length; t++) {
+                    topic = arr[t];
                     if (topic.datasets) {
                         for (d = 0; d < topic.datasets.length; d++) {
                             dataset = topic.datasets[d];

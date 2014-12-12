@@ -86,10 +86,10 @@
                         <img src="content/images/ajax-loader.gif" alt="" />
                     </div>
                 </div>
-                <div class="nav-button-right">
+                <div class="nav-button-right" style="display: none;">
                     <a href="#actions" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-action ui-corner-all"></a>
                 </div>
-                <div class="nav-button-right">
+                <div class="nav-button-right" style="display: none;">
                     <a href="#query" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-edit ui-corner-all"></a>
                 </div>
             </div>
@@ -164,7 +164,10 @@
                         <option value="Selected">Selected</option>
                     </select>
                 </div>
-                <input data-type="search" id="searchAllLayers">
+                <div style="display: none;">
+                    <input data-type="search" id="searchAllLayers" style="display: none;">
+                </div>
+                <input type="search" name="full-text-search" id="search" value="" placeholder="Search for resources ...">
             </form>
 
             <h2 class="panel-section">Resources</h2>
