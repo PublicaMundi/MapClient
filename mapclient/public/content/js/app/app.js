@@ -150,7 +150,7 @@
         }
 
         var view = new ol.View({
-            projection: PublicaMundi.Maps.CRS.Google,
+            projection: PublicaMundi.Maps.CRS.Mercator,
             center: members.config.map.center || [0, 0],
             zoom: zoom,
             minZoom: minZoom,

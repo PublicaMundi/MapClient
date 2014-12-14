@@ -126,15 +126,25 @@
                     query: URI.buildQuery(defaults)
                 });
 
-                for (var i = 0; i < result.Capability.Layer.Layer.length; i++) {
+                // TODO : Handle all cases
+                var layers = [];
+                if((typeof result.Capability !== 'undefined') && (typeof result.Capability.Layer !== 'undefined')) {
+                    if((typeof result.Capability.Layer.Layer !== 'undefined') && ($.isArray(result.Capability.Layer.Layer))) {
+                        layers = result.Capability.Layer.Layer;
+                    } else {
+                        layers.push(result.Capability.Layer);
+                    }
+                }
+
+                for (var i = 0; i < layers.length; i++) {
                     var layer = {
-                        key: result.Capability.Layer.Layer[i].Name,
+                        key: layers[i].Name,
                         type: PublicaMundi.Maps.Resources.Types.WMS,
-                        name: result.Capability.Layer.Layer[i].Name,
+                        name: layers[i].Name,
                         base: metadata.base,
-                        title: result.Capability.Layer.Layer[i].Title,
-                        bbox: result.Capability.Layer.Layer[i].BoundingBox.reduce(_bboxReduce, null),
-                        queryable: result.Capability.Layer.Layer[i].queryable,
+                        title: layers[i].Title,
+                        bbox: layers[i].BoundingBox.reduce(_bboxReduce, null),
+                        queryable: layers[i].queryable,
                         legend: null,
                         version: metadata.parameters.version,
                         loader: {
@@ -147,10 +157,11 @@
                         }
                     };
 
-                    if ((result.Capability.Layer.Layer[i].Style) &&
-                        (result.Capability.Layer.Layer[i].Style.length > 0) &&
-                        (result.Capability.Layer.Layer[i].Style[0].LegendURL.length > 0)) {
-                        layer.legend = result.Capability.Layer.Layer[i].Style[0].LegendURL[0].OnlineResource;
+                    if ((layers[i].Style) &&
+                        (layers[i].Style.length > 0) &&
+                        (layers[i].Style[0].LegendURL) &&
+                        (layers[i].Style[0].LegendURL.length > 0)) {
+                        layer.legend = layers[i].Style[0].LegendURL[0].OnlineResource;
                     }
 
                     metadata.layers.push(layer);
