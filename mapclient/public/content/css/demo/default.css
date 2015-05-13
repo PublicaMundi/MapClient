@@ -136,12 +136,19 @@ body {
     margin-top: -7px;
 }
 
+.query-export{ 
+    left: 130px;
+    position: absolute;
+    top: 50%;
+    margin-top: -7px;
+}
+
 .query-size {
     background: none repeat scroll 0 0 #555a64;
     border-radius: 4px;
     color: white;
     font-size: 0.8em;
-    left: 130px;
+    left: 155px;
     margin-top: -12px;
     padding: 4px;
     position: absolute;
@@ -154,7 +161,7 @@ body {
     border-radius: 4px;
     color: white;
     font-size: 0.8em;
-    left: 230px;
+    left: 255px;
     margin-top: -12px;
     padding: 4px;
     position: absolute;

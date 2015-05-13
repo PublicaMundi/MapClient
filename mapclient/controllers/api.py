@@ -20,11 +20,22 @@ import shapely.geometry
 import shapely.geometry.base
 
 import numbers
+import os
+import tempfile
+import shutil
+import zipfile
+import uuid
+import string
+
+from mapclient.lib.ogr2ogr import main as ogr_export
 
 log = logging.getLogger(__name__)
 
 FORMAT_JSON = 'json'
 FORMAT_GEOJSON = 'geojson'
+
+ACTION_QUERY = 'query'
+ACTION_EXPORT = 'export'
 
 OP_EQ = 'EQUAL'
 OP_NOT_EQ = 'NOT_EQUAL'
@@ -469,10 +480,149 @@ class ApiController(BaseController):
 
         return resources
 
+    #https://gist.github.com/seanh/93666
+    def _format_filename(self, filename):
+        """Take a string and return a valid filename constructed from the string.
+    Uses a whitelist approach: any characters not present in valid_chars are
+    removed. Also spaces are replaced with underscores.
+     
+    Note: this method may produce invalid filenames such as ``, `.` or `..`
+    When I use this method I prepend a date string like '2009_01_15_19_46_32_'
+    and append a file extension like '.txt', so I avoid the potential of using
+    an invalid filename.
+     
+    """
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        filename = ''.join(c for c in filename if c in valid_chars)
+        filename = filename.replace(' ','_') # I don't like spaces in filenames.
+        return filename
+    
+    def download(self):
+        method = request.environ["REQUEST_METHOD"]
+        
+        if method == 'GET' and 'code' in request.params and request.params['code'] in session:
+            response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
+            response.headers['Content-Disposition'] = 'attachment; filename="export.zip"'
+            
+            filename = session[request.params['code']]
+
+            with open(filename, 'r') as f:
+                shutil.copyfileobj(f, response)
+            
+            shutil.rmtree(os.path.dirname(filename))
+            
+            del session[request.params['code']]
+
+    def export(self):
+        try:
+            result = self._execute_collection(ACTION_EXPORT)
+            
+            files = result['files']
+            
+            result = {
+                'data': result['data'],
+                'success': True,
+                'message': None
+            }
+            
+            path = tempfile.mkdtemp()
+            token = str(uuid.uuid4())
+
+            index = 1
+            for i in range(0, len(result['data'])):
+                filename = 'export' + str(index)
+                if not files is None and files[i]:
+                    filename = files[i]
+
+                if len(result['data'][i]['features']) > 0:
+                    self._export_partial_result(self._format_response(result['data'][i], None, FORMAT_GEOJSON), path, filename)
+                    index+=1
+            
+            f_output_zipped = os.path.join(path, 'exported-layers.zip')
+            
+            self._zip_folder(path, f_output_zipped)
+            
+            session[token] = f_output_zipped
+            session.save()
+            
+            response = { 'success' : True, 'code' : token, 'message' : None }
+                   
+            return json.dumps(response, encoding='utf-8')
+        
+        except DataApiException as apiEx:
+            return self._format_response({
+                'success': False,
+                'message': apiEx.message
+            }, None)
+        except DBAPIError as dbEx:
+            log.error(dbEx)
+
+            message = 'Unhandled exception has occured.'
+            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+                message = 'Execution exceeded timeout.'
+
+            return self._format_response({
+                'success': False,
+                'message': message,
+                'details': (dbEx.message if config['dataapi.error.details'] else '')
+            }, None)
+        except Exception as ex:
+            log.error(ex)
+            return self._format_response({
+                'success': False,
+                'message': 'Unhandled exception has occured.',
+                'details': (ex.message if config['dataapi.error.details'] else '')
+            }, None)
+        
     def query(self):
+        try:
+            result = self._execute_collection(ACTION_QUERY)
+            
+            
+            output_format = result['format']
+            callback = result['callback']
+           
+            result = {
+                'data': result['data'],
+                'success': True,
+                'message': None
+            }
+            
+            if output_format == FORMAT_GEOJSON:
+                return self._format_response(result, callback, output_format)
+
+            return self._format_response(result, callback)
+        
+        except DataApiException as apiEx:
+            return self._format_response({
+                'success': False,
+                'message': apiEx.message
+            }, callback)
+        except DBAPIError as dbEx:
+            log.error(dbEx)
+
+            message = 'Unhandled exception has occured.'
+            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
+                message = 'Execution exceeded timeout.'
+
+            return self._format_response({
+                'success': False,
+                'message': message,
+                'details': (dbEx.message if config['dataapi.error.details'] else '')
+            }, callback)
+        except Exception as ex:
+            log.error(ex)
+            return self._format_response({
+                'success': False,
+                'message': 'Unhandled exception has occured.',
+                'details': (ex.message if config['dataapi.error.details'] else '')
+            }, callback)
+        
+    def _execute_collection(self, action):
         query = None
         callback = None
-
+        output_format = FORMAT_GEOJSON
+        
         method = request.environ["REQUEST_METHOD"]
         
         if method == 'POST':
@@ -483,21 +633,81 @@ class ApiController(BaseController):
                 callback = request.params['callback']
             else:
                 response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    
+
+        # Parse request
+        if method == 'POST':
+            query = json.loads(request.body, cls=ShapelyJsonDecoder, encoding=request.charset)
+        else:
+            if not 'query' in request.params:
+                raise DataApiException('Parameter query is required.')
+
+            query = json.loads(request.params['query'], cls=ShapelyJsonDecoder, encoding=request.charset)
+
+        # Set format
+        if 'format' in query:
+            if not query['format'] in [FORMAT_JSON, FORMAT_GEOJSON]:
+                raise DataApiException('Output format {format} is not supported.'.format(format = query['format']))
+
+            output_format = query['format']
+
+        # Get queue
+        if not 'queue' in query:
+            raise DataApiException('Parameter queue is required.')
+
+        if not type(query['queue']) is list or len(query['queue']) == 0:
+            raise DataApiException('Parameter queue should be a list with at least one item.')
+
+        # Check filenames
+        files = None
+        if action == ACTION_EXPORT and 'files' in query:
+            if not type(query['files']) is list:
+                raise DataApiException('Parameter files should be a list with at least one item.')
+            if len(query['queue']) <> len(query['files']):
+                raise DataApiException('Arrays queue and files should be of the same length.')
+            for i in range(0, len(query['files'])):
+                query['files'][i] = self._format_filename(query['files'][i])
+            if  len(query['files'])!=len(set(query['files'])):
+                raise DataApiException('Filenames must be unique.')
+            files = query['files']
+
+        result = []
+        for q in query['queue']:
+            partial_result = self._execute(q, output_format)
+        
+            if output_format == FORMAT_GEOJSON:
+                partial_result = {
+                    'features': partial_result['records'], 
+                    'type': 'FeatureCollection'
+                }
+            
+            result.append(partial_result)
+
+        return {
+            'data': result,
+            'success': True,
+            'message': None,
+            'format': output_format,
+            'callback': callback,
+            'files': files
+        }
+
+    def _execute(self, query, output_format):  
         engine_ckan = None
         connection_ckan = None
+        
         engine_data = None
         connection_data = None
+        
         srid = 3857
         timeout = config['dataapi.timeout'] if 'dataapi.timeout' in config else 10000
         offset = 0
-        limit = 1000
+        limit = 10000
         result = {
             'success': True,
             'message': None,
             'records': []
         }
-        output_format = FORMAT_GEOJSON
+
         count_geom_columns = 0;
 
         metadata = {
@@ -511,22 +721,6 @@ class ApiController(BaseController):
         }
 
         try:
-            # Parse request
-            if method == 'POST':
-                query = json.loads(request.body, cls=ShapelyJsonDecoder, encoding=request.charset)
-            else:
-                if not 'query' in request.params:
-                    raise DataApiException('Parameter query is required.')
-
-                query = json.loads(request.params['query'], cls=ShapelyJsonDecoder, encoding=request.charset)
-
-            # Set format
-            if 'format' in query:
-                if not query['format'] in [FORMAT_JSON, FORMAT_GEOJSON]:
-                    raise DataApiException('Output format {format} is not supported.'.format(format = query['format']))
-
-                output_format = query['format']
-
             # Initialize database
             engine_ckan = create_engine(config['dataapi.sqlalchemy.catalog'], echo=True)
             engine_data = create_engine(config['dataapi.sqlalchemy.vectorstore'], echo=True)
@@ -855,46 +1049,32 @@ class ApiController(BaseController):
                         else:
                             record[field] = r[field]
                     result['records'].append(record)
-
-        except DataApiException as apiEx:
-            return self._format_response({
-                'success': False,
-                'message': apiEx.message
-            }, callback)
-        except DBAPIError as dbEx:
-            log.error(dbEx)
-
-            message = 'Unhandled exception has occured.'
-            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
-                message = 'Execution exceeded timeout.'
-
-            return self._format_response({
-                'success': False,
-                'message': message,
-                'details': (dbEx.message if config['dataapi.error.details'] else '')
-            }, callback)
-        except Exception as ex:
-            log.error(ex)
-            return self._format_response({
-                'success': False,
-                'message': 'Unhandled exception has occured.',
-                'details': (ex.message if config['dataapi.error.details'] else '')
-            }, callback)
         finally:
             if not connection_ckan is None:
                 connection_ckan.close()
             if not connection_data is None:
                 connection_data.close()
 
-        if output_format == FORMAT_GEOJSON:
-            featureCollection = {
-                'features': result['records'], 
-                'type': 'FeatureCollection'
-            }
-            return self._format_response(featureCollection, callback, output_format)
+        return result
 
-        return self._format_response(result, callback)
+    def _export_partial_result(self, text, path, filename):
+        # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
+        
+        f_input = os.path.join(path, filename + '.geojson')
+        f_output = os.path.join(path, filename + '.shp')
+        
+        with open(f_input, "w") as text_file:
+            text_file.write(text)
 
+        ogr_export(['', '-t_srs', 'EPSG:4326', '-s_srs', 'EPSG:3857', '-f', 'ESRI Shapefile', f_output, f_input])
+
+    def _zip_folder(self, path, filename):       
+        shapeFiles = [ f for f in os.listdir(path) if (os.path.splitext(f)[-1].lower() <> '.geojson') ]
+
+        with zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED) as compressedFile:
+            for f in shapeFiles:
+                 compressedFile.write(os.path.join(path,f), f)
+                 
     def _get_resources(self, connection):
         resources = None
         result = {}

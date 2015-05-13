@@ -1,44 +1,67 @@
 ﻿define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
     "use strict";
 
-    // Private members
     var members = {
+		ui: {
+			section: 'group'
+		},
         config: module.config(),
         ckan: null,
+        resources: null,
         map: {
             control: null,
             interactions: {
-                bbox: null
+                zoom: {
+                    control: null
+                },
+                bbox: {
+                    control: null,
+                    feature: null,
+                    overlay: null
+                }
             }
         },
-        resources: null,
-        views: null,
-        view: null,
-        preview: null
+        tools: {
+            length: null,
+            area: null,
+            export: null
+        },
+        actions: {
+            export: null
+        },
+        query: null,
+        resource: null
     };
+	
+ 	var getQueryableResourceMetadata = function() {
+        var url = (members.config.path ? members.config.path + '/' : '') + 'api/resource_show';
 
-    members.resources = new PublicaMundi.Maps.Resources.ResourceManager({
-        config: module.config()
-    });
+		return new Promise(function(resolve, reject) {
+			$.ajax({
+				url: url,
+				context: this
+			}).done(function(data, textStatus, jqXHR) {
+				var resources = [];
+				
+				if((data) && (data.success)) {
+					 for (var id in data.resources) {
+						if((data.resources[id].wms_layer) && (data.resources[id].wms_server)) {
+							resources.push(data.resources[id]);
+						}
+					}
+				}
 
-    members.views = new PublicaMundi.Maps.Resources.UI.ViewManager({
-        config: module.config()
-    });
-
-    members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
-        config: module.config()
-    });
-
-    var supsendUI = function () {
-        $('.progress-loader').show();
-    };
-
-    var resumeUI = function () {
-        $('.progress-loader').fadeOut(400).hide();
-    };
-
+				resolve(resources);
+			}).fail(function (jqXHR, textStatus, errorThrown) {
+				console.log('Failed to load DATA API resource metadata: ' + url);
+					
+				reject(errorThrown);
+			});
+		});
+	};
+	
     var initializeParameters = function () {
-        var resource = window.resource;
+        var resource = module.config().resource;
 
         // Set default values
         members.config.geolocation = true;
@@ -81,65 +104,93 @@
                 uri.segment(['api', '3', 'action', 'resource_show']);
                 uri.addQuery({ id: resource });
 
-                members.preview = uri.toString();
+                members.resource = uri.toString();
             }
         }
     };
 
-    var initializeLayout = function () {
-        var types = members.resources.getResourceTypes();
+	var createBaseLayer = function(type, set) {
+		var layer = null;
+		switch(type) {
+			case 'bing':
+				if(members.config.bing.key) {
+					layer = new ol.layer.Tile({
+						source: new ol.source.BingMaps({
+							key: members.config.bing.key,
+							imagerySet: set
+						})
+					});
+				}
+				break;
+			case 'stamen':
+				layer = new ol.layer.Tile({
+					source: new ol.source.Stamen({layer: set })
+				});
+				break;
+			case 'mapquest':
+				layer = new ol.layer.Tile({
+					source: new ol.source.MapQuest({layer: set })
+				});
+				break;
+			case 'osm':
+				layer = new ol.layer.Tile({
+					source: new ol.source.OSM()
+				});
+				break;
+			case 'ktimatologio':
+				/* http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx?				   
+				   SERVICE=WMS&VERSION=1.1.0&
+				   REQUEST=GetMap&
+				   FORMAT=image%2Fpng&
+				   TRANSPARENT=true&
+				   LAYERS=KTBASEMAP&
+				   WIDTH=256&HEIGHT=256&SRS=EPSG%3A900913&
+				   STYLES=&
+				   BBOX=2504688.542848654%2C4852834.0517692715%2C2661231.576776695%2C5009377.085697313					    
+			   */
+				var params = {
+					'SERVICE': 'WMS',
+					'VERSION': '1.1.0',
+					'LAYERS': 'KTBASEMAP'
+				};
 
-        var content = [];
+				var source = new ol.source.TileWMS({
+					url: 'http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',
+					params: params,
+					projection: 'EPSG:900913'
+				});
+				
+				var fn = source.tileUrlFunction;
+				
+				source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
+					var url = fn(tileCoord, pixelRatio, projection);
+					var parts = URI.parse(url) || {};											
+					var params = (parts.query ? URI.parseQuery(parts.query) : {});
 
-        content.push('<div data-role="popup" id="actions" data-theme="a"><ul data-role="listview" data-inset="true" style="min-width: 210px;">');
-        content.push('<li data-role="list-divider">Select resource type</li>');
+					params.SRS = 'EPSG:900913';						
 
-        for (var i = 0; i < types.length; i++) {
-            content.push('<li data-icon="false"><a class="link-create-layer" data-type="' + types[i].type + '" href="#">' + types[i].title + '</a></li>');
-        }
+					var fixedUrl = URI.build({
+						protocol: (parts.protocol ? parts.protocol : 'http'),
+						hostname: parts.hostname,
+						port: (parts.port === '80' ? '' : parts.port),
+						path: parts.path,
+						query: URI.buildQuery(params)
+					});
+					
+					return fixedUrl;
+				}
+				
+				layer = new ol.layer.Tile({
+					source: source
+				});
+				break;
+			default:
+				console.log('Base layer of type ' + type + ' is not supported.');
+		}
 
-        content.push('</ul></div>');
-
-        $('#main').append(content.join(''));
-
-        $('#actions').popup();
-        $('#actions ul').listview();
-
-        var action = null;
-
-        $('.link-create-layer').click(function () {
-            $('#actions').popup('close');
-
-            var type = $(this).data('type');
-
-            var view = members.views.createView({
-                resourceType: type,
-                viewType: PublicaMundi.Maps.Resources.UI.Views.CREATE,
-                target: 'main'
-            });
-
-            view.on('create', function (sender, options) {
-                supsendUI();
-                members.resources.addResource(options);
-            });
-
-            view.on('cancel', function (sender) {
-
-            });
-
-            members.view = view;
-        });
-
-        $('#actions').popup({
-            afterclose: function (event, ui) {
-                if (members.view) {
-                    members.view.show();
-                    members.view = null;
-                }
-            }
-        });
-    };
-
+		return layer;
+	};
+  
     var initializeMap = function () {
         var minZoom = members.config.map.minZoom, 
             maxZoom = members.config.map.maxZoom, 
@@ -159,14 +210,39 @@
 
         var layers = [];
 
-       layers.push(new ol.layer.Tile({
-            source: new ol.source.OSM()
-        }));
+		var selection = $('#base_layer option:selected')
+		var layer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
+            
+		layers.push(layer);
+		layers.push(new ol.layer.Tile({
+			source: new ol.source.OSM(),
+			opacity: ($('#base-layer-opacity').val() / 100.0)
+		}));
 
+        var interactions = ol.interaction.defaults();
+        
+        interactions.removeAt(interactions.getLength() -1);
+
+        members.map.interactions.zoom.control = new ol.interaction.DragZoom({
+            condition: ol.events.condition.shiftKeyOnly,
+            style: new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: [255, 255, 255, 0.4]
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#3399CC',
+                    width: 2
+                })
+            })
+        });
+
+        interactions.push(members.map.interactions.zoom.control);
+        
         members.map.control = new ol.Map({
             target: members.config.map.target,
             view: view,
             controls: [],
+            interactions: interactions,
             ol3Logo: false,
             layers: layers
         });
@@ -195,264 +271,471 @@
         });
         members.map.control.addControl(mousePositionControl);
 
-        $('#pos_epsg').change(function () {
+        $('#pos_epsg').selectpicker().change(function () {
             mousePositionControl.setProjection(ol.proj.get($('#pos_epsg option:selected').val()));
+            $('[data-id="pos_epsg"]').blur();
         });
 
+		// Scale line control
+		var scaleLineControl = new ol.control.ScaleLine({
+			target: document.getElementById('scale-line')
+		});
+		members.map.control.addControl(scaleLineControl);
+
+        // Feature overlays       
+        members.map.interactions.bbox.overlay = new ol.FeatureOverlay({
+            style: [
+                new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: [255, 255, 255, 0.4]
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#27AE60',
+                        width: 2
+                    })
+                })
+            ]
+        });
+        members.map.interactions.bbox.overlay.setMap(members.map.control);
+        
         // BBOX draw
-        members.map.interactions.bbox = new ol.interaction.DragBox({
+        members.map.interactions.bbox.control = new ol.interaction.DragBox({
             condition: ol.events.condition.shiftKeyOnly,
             style: new ol.style.Style({
                 fill: new ol.style.Fill({
                     color: [255, 255, 255, 0.4]
                 }),
                 stroke: new ol.style.Stroke({
-                    color: '#3399CC',
+                    color: '#27AE60',
                     width: 2
                 })
             })
         });
 
-        members.map.control.addInteraction(members.map.interactions.bbox);
+        members.map.interactions.bbox.control.on('change:active', function (e) {
 
-        members.map.interactions.bbox.on('boxend', function (e) {
-            var extent = members.map.interactions.bbox.getGeometry().getExtent();
-            var geom = members.map.interactions.bbox.getGeometry();
+        });
+        
+        members.map.interactions.bbox.control.on('boxstart', function (e) {            
+            members.map.interactions.bbox.overlay.getFeatures().clear();
+            members.map.interactions.bbox.feature = null;
+        });
+        
+        members.map.interactions.bbox.control.on('boxend', function (e) {            
+            var geom = members.map.interactions.bbox.control.getGeometry();
             var feature = new ol.Feature({ name: 'bbox', geometry: geom });
-            var format = new ol.format.GeoJSON();
 
-            console.log(extent);
-            console.log(JSON.stringify(format.writeFeatures([feature])));
+            members.map.interactions.bbox.overlay.getFeatures().clear();
+            members.map.interactions.bbox.overlay.addFeature(feature);
+
+            members.map.interactions.bbox.feature = feature;
         });
+
+        members.map.control.addInteraction(members.map.interactions.bbox.control);
+        members.map.interactions.bbox.control.setActive(false);
     };
+  
+    var initializeUI = function() {
+        // Layout management
+        var resize = function() {
+            $('#dialog-container').height($(window).height()-50).width(($(window).width()-5));
+        };
+        
+        resize();
+        $(window).resize(resize);
+        
+        // CKAN catalog
+		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
+			endpoint: module.config().ckan.endpoint
+		});
 
-    var attachEvents = function () {
-        attachLayerFilterEvents();
+        // Resources
+		members.resources = new PublicaMundi.Maps.Resources.ResourceManager({
+			proxy: PublicaMundi.getProxyUrl(module.config().proxy)
+		});
 
-        attachBaseLayerSelectionEvents();
+        // UI components
+		members.components = {};
 
-        attachCatalogEvents();
+		members.components.layerTreeGroup = new PublicaMundi.Maps.LayerTree({
+			element: 'layer-tree-group',
+			map: members.map,
+			ckan: members.ckan,
+			resources: members.resources,
+			mode: PublicaMundi.Maps.LayerTreeViewMode.ByGroup,
+			visible: true
+		});
+		
+		members.components.layerTreeOrganization = new PublicaMundi.Maps.LayerTree({
+			element: 'layer-tree-organization',
+			map: members.map,
+			ckan: members.ckan,
+			resources: members.resources,
+			mode: PublicaMundi.Maps.LayerTreeViewMode.ByOrganization,
+			visible: false
+		});
 
-        attachSearchEvents();
-
-        attachLayerActionEvents();
-    };
-
-    var attachLayerFilterEvents = function () {
-        $('#catalog').filterable("option", "filterCallback", function (index, searchValue) {
-            var selectedOnly = $('#filter-selected option:selected').val() || 'All';
-            if (selectedOnly === 'Selected') {
-                var layer = members.resources.getLayerById($(this).attr('id'));
-                if (layer) {
-                    return !layer.viewer.visible;
-                }
-            }
-            return (("" + ($.mobile.getAttribute(this, "filtertext") || $(this).text())).toLowerCase().indexOf(searchValue) === -1);
+        members.components.layerTreeSearch = new PublicaMundi.Maps.LayerTree({
+			element: 'layer-tree-search',
+			map: members.map,
+			ckan: members.ckan,
+			resources: members.resources,
+			mode: PublicaMundi.Maps.LayerTreeViewMode.ByFilter,
+			visible: false
         });
-        $("#filter-selected").bind("change", function (event, ui) {
-            $('#catalog').filterable("refresh");
+
+		members.components.layerSelection = new PublicaMundi.Maps.LayerSelection({
+			element: 'layer-selection',
+			map: members.map,
+			ckan: members.ckan,
+			resources: members.resources
+		});
+        
+        members.components.dialog1 = new PublicaMundi.Maps.Dialog({
+            title: 'Επιλογή θέσης',
+            element: 'dialog-1',
+            target : 'dialog-container',
+            visible: false,
+            width: 400
         });
 
-        $('#catalog').on("filterablefilter", function (event, ui) {
-            var parents = $(ui.items).find('ul').parents('.ui-collapsible');
-            for (var i = 0; i < parents.length; i++) {
-                var count = $(parents[i]).find('li:not(.ui-screen-hidden)').size();
-
-                $(parents[i]).find('span.ui-li-count-resource').html(count);
-            }
+        // UI actions
+        members.actions.export = new PublicaMundi.Maps.Action({
+            element: 'action-export',
+            name: 'export',
+            image: 'content/images/download-w.png',
+            title: 'Εξαγωγή σε ShapeFile',
+            visible: false
         });
-    };
+        
+        members.actions.export.on('action:execute', function() {
+            if(this.isBusy()) {
+                return;
+            };
 
-    var attachBaseLayerSelectionEvents = function () {
-        $('#base_layer-listbox-popup').on( "popupbeforeposition", function( event, ui ) {
-            var items = $('#base_layer-listbox-popup').find('li a');
-            var options = $('#base_layer').find('option');
-            for(var i=0; i < options.length; i++){
-                if($(items[i]).find('img').size()===0) {
-                    $(items[i]).css('padding-left', '35px');
-                    $(items[i]).append('<img src="' + $(options[i]).data('img') + '" alt="" class="base-layer-list-icon"/>');
-                }
-            }
-        });
+            var feature = members.tools.export.getFeature();
 
-        var setBaseLayer = function(type, set) {
-            var newBaseLayer;
-            switch(type) {
-                case 'bing':
-                    if(members.config.bing.key) {
-                        newBaseLayer = new ol.layer.Tile({
-                            source: new ol.source.BingMaps({
-                                key: members.config.bing.key,
-                                imagerySet: set
-                            })
-                        });
+            if(feature) {
+                var format = new ol.format.GeoJSON();
+                var polygon = JSON.parse(format.writeGeometry(feature.getGeometry()));
+
+                var layers = members.resources.getSelectedLayers();
+                var resources = members.query.resources;
+
+                var quyarable = [];
+                for(var i=0; i<layers.length; i++) {
+                    for(var j=0; j<resources.length; j++) {
+                        if(layers[i].resource_id == resources[j].wms) {
+                            quyarable.push({
+                                table: resources[j].table,
+                                title: layers[i].title
+                            });
+                            break;
+                        }
                     }
-                    break;
-                case 'stamen':
-                    newBaseLayer = new ol.layer.Tile({
-                        source: new ol.source.Stamen({layer: set })
-                    });
-                    break;
-                case 'mapquest':
-                    newBaseLayer = new ol.layer.Tile({
-                        source: new ol.source.MapQuest({layer: set })
-                    });
-                    break;
-                case 'osm':
-                    newBaseLayer = new ol.layer.Tile({
-                        source: new ol.source.OSM()
-                    });
-                default:
-                    console.log('Base layer of type ' + type + ' is not supported.');
-            }
+                }
 
-            var oldBaseLayer = members.map.control.getLayers().item(0);
+                if(quyarable.length > 0) {
+                    this.suspendUI();
+                                            
+                    var query = members.query.request;
+                    
+                    query.reset().format(PublicaMundi.Data.Format.GeoJSON)
+
+                    var files= [];
+                    for(var i=0; i<quyarable.length; i++) {
+                        files.push(quyarable[i].title);
+                        
+                        query.resource(quyarable[i].table).
+                              contains(
+                                polygon, {
+                                    resource: quyarable[i].table, 
+                                    name : 'the_geom'
+                                });
+                        if(i < (quyarable.length-1)) {
+                            query.queue();
+                        }
+                    }
+                    query.export(downloadShapeFile, files);
+                }
+            }
+        });
+                
+        // UI tools
+        members.tools.length = new PublicaMundi.Maps.MeasureTool({
+            element: 'tool-length',
+            name: 'length',
+            images: {
+                enabled: 'content/images/ruler-w.png',
+                disabled: 'content/images/ruler.png'
+            },
+            title: 'Μέτρηση απόστασης',
+            map: members.map.control,
+            type: PublicaMundi.Maps.MeasureToolType.Length
+        });
+        
+        members.tools.area = new PublicaMundi.Maps.MeasureTool({
+            element: 'tool-area',
+            name: 'area',
+            images: {
+                enabled: 'content/images/surface-w.png',
+                disabled: 'content/images/surface.png'
+            },
+            title: 'Μέτρηση εμβαδού',
+            map: members.map.control,
+            type: PublicaMundi.Maps.MeasureToolType.Area
+        });
+        
+        members.tools.export = new PublicaMundi.Maps.ExportTool({
+            element: 'tool-export',
+            name: 'export',
+            images: {
+                enabled: 'content/images/polygon-w.png',
+                disabled: 'content/images/polygon.png'
+            },
+            title: 'Σχεδίαση πολυγώνου',
+            map: members.map.control,
+            actions: [members.actions.export]
+        });
+        
+        var handleToolToggle = function(args) {
+            var name = args.name;
+            for(var item in members.tools) {
+                if((args.active) && (args.name != members.tools[item].getName())) {
+                    members.tools[item].setActive(false);
+                }
+            }
+        };
+        
+        members.tools.length.on('tool:toggle', handleToolToggle)
+        members.tools.area.on('tool:toggle', handleToolToggle)
+        members.tools.export.on('tool:toggle', handleToolToggle)
+        
+        // Left sliding panel
+		$('body').on('click', '.panel-left-hidden', function(e) {
+			$('.panel-left-handler').trigger('click');
+		});
+		
+        $('.panel-left-handler').click(function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			
+			if($('.panel-left').hasClass('panel-left-visible')) {
+				$('.panel-left').removeClass('panel-left-visible');
+				$('.panel-left').addClass('panel-left-hidden');
+				$('.panel-left-handler').addClass('panel-left-handler-toggle');
+				$('.panel-left').find('.panel-content').addClass('panel-content-hidden');
+				switch(members.ui.section) {
+					case 'group':
+						$('.panel-left-label').css({
+							bottom: 125,
+							right: -80
+						});
+						$('.panel-left-label').find('img').attr('src', 'content/images/comments.png');
+						$('.panel-left-label').find('span').html('Θεματικές Ενότητες');
+						break;
+					case 'organization':
+						$('.panel-left-label').css({
+							bottom: 90,
+							right: -47
+						});
+						$('.panel-left-label').find('img').attr('src', 'content/images/organization.png');
+						$('.panel-left-label').find('span').html('Οργανισμοί');
+						break;
+					case 'search':
+						$('.panel-left-label').css({
+							bottom: 90,
+							right: -44
+						});
+						$('.panel-left-label').find('img').attr('src', 'content/images/search.png');
+						$('.panel-left-label').find('span').html('Αναζήτηση');
+						break;
+				}
+				$('.panel-left-label').show();
+			} else {
+				$('.panel-left').removeClass('panel-left-hidden');
+				$('.panel-left').addClass('panel-left-visible');
+				$('.panel-left-handler').removeClass('panel-left-handler-toggle');
+				$('.panel-left').find('.panel-content').removeClass('panel-content-hidden');
+				$('.panel-left-label').hide();
+			}
+		});
+
+        // Left sliding panel accordion events
+        $('#layer-selection-header').click(function() {
+            $('#layer-selection').slideDown(400);
+            $('#tools').slideUp(400);
+        });
+        
+        $('#tools-header').click(function() {
+            $('#tools').slideDown(400);
+            $('#layer-selection').slideUp(400);
+        });
+        
+        // Tooltips
+        $('.selected-layer-opacity-label, .img-text').tooltip();
+
+        // Tab control
+		$('#organization, #group, #search').click(function() {
+			if($(this).data('selected')) {
+				return;
+			}
+			
+			var id = $(this).attr('id');
+			
+			$(this).data('selected', true).removeClass('active').addClass('inactive');
+			$('#' + members.ui.section).data('selected', false).removeClass('inactive').addClass('active');
+			$('#' + members.ui.section + '-label').addClass('section-label-hidden');
+			$('#' + id + '-label').removeClass('section-label-hidden');
+			
+			members.ui.section = id;
+			
+			if(id === 'organization') {
+				members.components.layerTreeGroup.hide();
+                members.components.layerTreeSearch.hide();
+				members.components.layerTreeOrganization.show();
+			} else if (id === 'group') {
+				members.components.layerTreeOrganization.hide();
+                members.components.layerTreeSearch.hide();
+				members.components.layerTreeGroup.show();
+			} if (id === 'search') {
+                members.components.layerTreeGroup.hide();
+				members.components.layerTreeOrganization.hide();
+                members.components.layerTreeSearch.show();
+			}
+		});
+		
+        // Layer handling events
+		var layerAdded = function(args) {
+			members.components.layerSelection.add(args.id, args.title, args.legend);
+		};
+		
+		var layerRemoved  = function(args) {
+			members.components.layerSelection.remove(args.id);
+		}
+		
+		members.components.layerTreeGroup.on('layer:added', layerAdded);
+		members.components.layerTreeGroup.on('layer:removed', layerRemoved);
+        
+		members.components.layerTreeOrganization.on('layer:added', layerAdded);
+        members.components.layerTreeOrganization.on('layer:removed', layerRemoved);
+        
+        members.components.layerTreeSearch.on('layer:added', layerAdded);
+        members.components.layerTreeSearch.on('layer:removed', layerRemoved);
+
+        // Interaction events
+        members.components.layerTreeSearch.on('bbox:draw', function(args) {
+            disableAllTools();
+            disableAllInteractions('bbox');
+        });
+
+        members.components.layerTreeSearch.on('bbox:apply', function(args) {
+            disableAllInteractions('zoom');
+            
+            this.setQueryBoundingBox(members.map.interactions.bbox.feature);
+            
+            enableAllTools();
+        });
+
+        members.components.layerTreeSearch.on('bbox:cancel', function(args) {
+            disableAllInteractions('zoom');
+            
+            members.map.interactions.bbox.overlay.getFeatures().clear();
+            
+            var feature = this.getQueryBoundingBox();
+            if(feature) {
+                members.map.interactions.bbox.overlay.addFeature(feature);
+                members.map.interactions.bbox.feature = feature;
+            } else {
+                members.map.interactions.bbox.feature = null;
+            }
+            
+            enableAllTools();
+        });
+        
+        members.components.layerTreeSearch.on('bbox:remove', function(args) {
+            members.map.interactions.bbox.overlay.getFeatures().clear();
+            members.map.interactions.bbox.feature = null;
+            
+            this.setQueryBoundingBox(null);
+        });
+        
+		var layerSelectionRemoved  = function(args) {
+			members.components.layerTreeGroup.remove(args.id);
+		}
+		
+		members.components.layerSelection.on('layer:removed', layerSelectionRemoved);
+	};
+
+    var attachEvents = function () {	
+        attachBaseLayerSelectionEvents();
+	};
+    	
+    var attachBaseLayerSelectionEvents = function () {	
+        $('#base_layer').selectpicker().change(function(e) {	
+			var selection = $('#base_layer option:selected')
+            var newBaseLayer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
+            
+			var oldBaseLayer = members.map.control.getLayers().item(0);
 
             members.map.control.getLayers().insertAt(0, newBaseLayer);
             setTimeout(function () {
                 members.map.control.getLayers().remove(oldBaseLayer);
             }, 1000);
-        };
-
-        $('#base_layer').change(function(e) {
-            var selection = $('#base_layer option:selected')
-            setBaseLayer($(selection).data('type'), $(selection).data('set'));
+            
+            $('[data-id="base_layer"]').blur();
         });
+        
+        $('#base-layer-opacity').change(function() {
+			members.map.control.getLayers().item(1).setOpacity($(this).val() / 100.0);
+		});
     };
 
-    var showTopics = function() {
-        $($('#catalog-return')).hide();
-
-        $('#catalog-header').html('Catalog');
-
-        $('#datasets').fadeOut(200, function () {
-            $('#topics').fadeIn(200, function () {
-                $("#view-layers").trigger("updatelayout");
-            });
-        });
+    var disableAllTools = function() {
+        for(var item in members.tools) {
+            if(members.tools[item]) {
+                members.tools[item].setEnabled(false);
+            }
+        }
+    }
+    
+    var enableAllTools = function() {
+        for(var item in members.tools) {
+            if(members.tools[item]) {
+                members.tools[item].setEnabled(true);
+            }
+        }
+    }
+    
+    var disableAllInteractions = function(name) {
+        for(var item in members.map.interactions) {
+            members.map.interactions[item].control.setActive(false);
+        }
+        
+        if(name) {
+            enableInteraction(name);
+        }
     };
 
-    var attachCatalogEvents = function () {
-
-        $('#catalog-return').click(showTopics);
-
-        $('#toggle-catalog').click(function (e) {
-            if ($(this).hasClass('ui-icon-minus')) {
-                $(this).removeClass('ui-icon-minus').addClass('ui-icon-plus');
-                $('#catalog').hide();
-                $("#view-layers").trigger("updatelayout");
-            } else {
-                $(this).removeClass('ui-icon-plus').addClass('ui-icon-minus');
-                $('#catalog').show();
-                $("#view-layers").trigger("updatelayout");
-            }
-        });
-
-        $('#catalog').on('click', '.btn-dataset-resource-add', function (e) {
-            var resource = members.ckan.getResourceById($(this).data('resource'));
-
-            if (!members.resources.addResourceFromCatalog(resource)) {
-                $('#message-popup-text').html('Preview is not supported for format ' + resource.format);
-                $('#message-popup').popup('open')
-            }
-        });
+    var enableInteraction = function(name) {
+        members.map.interactions[name].control.setActive(true);
     };
 
-    var attachSearchEvents = function () {
-        var searchTimeout = null;
-        var xhr = null;
+    var downloadShapeFile = function(data, execution) {
+        members.actions.export.resumeUI();
 
-        $('#topics').on('click', 'div.topic', function (e) {
-            members.ckan.getTopicById($(this).data('id'));
-        });
-
-        $('#search').change(function() {
-            if(!$(this).val()) {
-                showTopics();
-            }
-        });
-
-        $('#search').keyup(function() {
-            if(searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-
-            searchTimeout = setTimeout(function() {
-                var text = $('#search').val();
-                if(text) {
-                    members.ckan.search(text);
-                } else {
-                    showTopics();
-                }
-            }, 750);
-        });
-    };
-
-    var attachLayerActionEvents = function () {
-        $('#view-layers').on('change', '.layer-selector :checkbox', function (e) {
-            if ($(this).is(':checked')) {
-                members.resources.createLayer(members.map.control, $(this).data('layer'));
-            } else {
-                members.resources.destroyLayer(members.map.control, $(this).data('layer'));
-            }
-        });
-
-        $('#view-layers').on('click', 'img.legend', function (e) {
-            if ($('#legendPopup-screen').is(":visible")) {
-                $('#legendPopup').popup('close');
-            }
-            var nWidth = $(this).prop('naturalWidth');
-            var sWidth = $(this).width();
-            var nHeight = $(this).prop('naturalHeight');
-            var sHeight = $(this).height();
-            var pHeight = $(this).parent().height();
-
-            if ((nWidth > sWidth) || (nHeight > sHeight) || (nHeight > pHeight)) {
-                $('#legendZoom').attr('src', $(this).attr('src'));
-                $('#legendPopup').popup('open');
-            }
-        });
-
-        $('#view-layers').on('click', '.btn-layer-config', function () {
-            var layer = members.resources.getLayerById($(this).data('layer'));
-
-            if (!layer) {
-                return;
-            }
-
-            var parameters = {
-                map: members.map.control,
-                metadata: layer,
-                layer: layer.__object
-            };
-
-            var view = members.views.createView({
-                resourceType: layer.type,
-                viewType: PublicaMundi.Maps.Resources.UI.Views.CONFIG,
-                target: 'main'
-            });
-
-            view.on('save', function (sender, settings) {
-                layer.viewer.opacity = settings.opacity;
-                if (settings.style) {
-                    layer.viewer.style = settings.style;
-                }
-            });
-
-            view.on('discard', function (sender) {
-
-            });
-
-            view.show(parameters);
-        });
-    };
-
-    var initializePreview = function () {
-        if (!members.preview) {
+        if(data.success) {
+            jQuery('#export-download-frame').remove();
+            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + members.config.api.endpoint + 'api/download?code=' + data.code + '"></iframe></div>');
+        }
+    }
+    
+    var initializeResourcePreview = function () {
+        if (!members.resource) {
             return;
         }
 
-        var url = members.preview;
+        var url = members.resource;
 
         $.ajax({
             url: url,
@@ -460,252 +743,57 @@
             context: this,
         }).done(function (response) {
             if ((response.success) && (response.result)) {
-                members.resources.addResourceFromCatalog(response.result);
+                members.resources.addResourceFromCatalog(members.map.control, response.result);
             }
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.log('Failed to load resource ' + url);
         });
     };
 
-    var onResourceAdded = function (sender, resource) {
-        var selectedLayers = [];
-
-        var layerFactory = members.resources.getLayerFactory(resource.metadata.type);
-
-        var content = [], selector;
-
-        if (resource.metadata.isLayer) {
-            content.push('<ul id="' + resource.id + '" data-role="listview" data-inset="true" data-filter-theme="a" data-divider-theme="a" style="border-top: 1px solid #dddddd; position: relative;">');
-            content.push('<li id="' + resource.metadata.layers[0].id + '" class="li-' + resource.metadata.type.toLowerCase() + '">');
-            content.push(layerFactory.renderLayerGroup(resource));
-            content.push('</li>');
-            content.push('</ul>');
-
-            selectedLayers.push(resource.metadata.layers[0].id);
-
-            selector = '#' + resource.id
-        } else {
-            content.push('<div data-role="collapsible" id="' + resource.id + '">');
-
-            content.push(layerFactory.renderLayerGroup(resource));
-
-            content.push('<ul data-role="listview" data-filter-theme="a" data-divider-theme="a">');
-
-            for (var i = 0; i < resource.metadata.layers.length; i++) {
-                var layer = resource.metadata.layers[i];
-
-                content.push('<li id="' + layer.id + '" class="li-' + resource.metadata.type.toLowerCase() + '">');
-
-                content.push(layerFactory.renderLayerItem(resource, layer));
-
-                content.push('</li>');
-
-                if ($.inArray(layer.name, resource.metadata.parameters.selected) !== -1) {
-                    selectedLayers.push(layer.id);
-                }
-            }
-            content.push('</ul></div>');
-
-            selector = '#' + resource.id + ' ul';
-        }
-
-        $('#services').append(content.join(''));
-        $(selector).listview();
-
-        $('#' + resource.id + '_rl').click(function (e) {
-            members.resources.removeResource($(this).data('resource'));
-        });
-
-        if ($('#view-layers').hasClass('ui-panel-closed')) {
-            $('#view-layers').panel('toggle');
-        }
-
-        $('#' + resource.id).collapsible().collapsible('expand');
-
-        for (var l = 0; l < selectedLayers.length; l++) {
-            $('.layer-selector :checkbox[data-layer="' + selectedLayers[l] + '"]').trigger('click');
-        }
-
-        $('#catalog').filterable("refresh");
-
-        $('.ui-mobile').scrollTop($('#' + resource.id).position().top)
-        resumeUI();
-    };
-
-    var onResourceRemoved = function (sender, resource) {
-        for (var i = 0; i < resource.metadata.layers.length; i++) {
-            var layer = resource.metadata.layers[i];
-            if (layer.__object) {
-                members.map.control.removeLayer(layer.__object);
-            }
-        }
-
-        $('#' + resource.id).collapsible('destroy').remove();
-
-        $('#catalog').filterable("refresh");
-    };
-
-    members.resources.on('resource:add', onResourceAdded);
-
-    members.resources.on('resource:remove', onResourceRemoved);
-
-    var onTopicRefresh = function (sender, topics) {
-        var topic, title, i, content = [];
-
-        $('#topics').html('');
-
-        if ((Array.isArray(topics)) && (topics.length > 0)) {
-            for (i = 0; i < topics.length; i++) {
-                topic = topics[i];
-
-                content.push('<div class="topic" data-id="' + topic.id + '" data-topic="' + topic.name + '">');
-
-                if (topic.image) {
-                    content.push('<img class="topic" src="' + topic.image + '" title="' + (topic.description ? topic.description : topic.title) + '"></img>');
-                    title = topic.title;
-                    if (title.length > 20) {
-                        title = title.substring(0, 20) + ' ...';
-                    }
-                    content.push('<span class="topic">' + title + '</span>');
-                }
-                content.push('</div>');
-            }
-            $('#topics').html(content.join(''));
-        }
-    };
-
-    var onCatalogSearch = function(sender, topic) {
-        refreshCatalog(topic, false);
-    };
-
-    var onTopicLoaded = function (sender, topic) {
-        refreshCatalog(topic, true);
-    };
-
-    var refreshCatalog = function (topic, showErrorPopup) {
-        var content, temp, d, r, dataset, resource, totalResourceCount = 0, datasetResourceCount = 0;
-
-        // Get all resources from all datasets and create HTML
-        content = [];
-        content.push('<ul id="dataset-listview" data-role="listview" class="ui-listview-outer" data-inset="true">');
-        for (d = 0; d < topic.datasets.length; d++) {
-            dataset = topic.datasets[d];
-            datasetResourceCount = 0;
-            temp = [];
-
-            temp.push('<li id="li_' + dataset.id + '" data-role="collapsible" data-iconpos="left" data-shadow="false" data-corners="false" style="padding: 0px !important;">');
-            temp.push('<h3><p style="padding-right: 20px; font-size: 1em !important; font-weight: bold">' + dataset.title + '</p>');
-            if (dataset.notes) {
-                temp.push('<a data-dataset="' + dataset.id + '" style="position: absolute; margin-top: -11px; top: 50%; right: 4px;" href="#" class="ui-btn ui-btn-icon-notext ui-icon-info ui-corner-all dataset-info"></a>');
-            }
-            temp.push('</h3>');
-
-            temp.push('<ul id="ul_' + dataset.id + '" data-role="listview" data-shadow="false" data-inset="true" data-corners="false">');
-
-            for (r = 0; r < dataset.resources.length; r++) {
-                resource = dataset.resources[r];
-
-                if ((resource.format) && (PublicaMundi.Maps.Resources.Types[resource.format.toUpperCase()])) {
-                    datasetResourceCount++;
-                    totalResourceCount++;
-                } else {
-                    // Resource type is not supported
-                    continue;
-                }
-
-                temp.push('<li>');
-
-                temp.push('<p style="font-size: 0.75em;"><span class="layer-title">' + resource.name +
-'</span><a class="ui-btn ui-btn-icon-notext ui-icon-action btn-dataset-resource-add" data-resource="' + resource.id + '" href="#" style="position: absolute; right: 4px; top: 10px;"></a></p>');
-                if (resource.size) {
-                    temp.push('<p style=""><span class="layer-title">Size : ' + (resource.size / 1024.0).toFixed(2) + ' Kb</span></p>');
-                }
-
-                temp.push('</li>');
-            }
-            temp.push('</ul></li>');
-
-            if (datasetResourceCount > 0) {
-                content = content.concat(temp);
-            }
-        }
-        content.push('</ul>');
-
-        if (totalResourceCount > 0) {
-            $('#topics').fadeOut(200, function () {
-                $('#catalog-header').html('Catalog : ' + topic.caption);
-
-                $('#datasets').html(content.join(''));
-
-                $('.dataset-info').click(function (e) {
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-
-                    var dataset = members.ckan.getDatasetById($(this).data('dataset'));
-                    if (dataset.notes) {
-                        setTimeout(function () {
-                            $('#dataset-popup-title').html(dataset.title);
-                            $('#dataset-popup-notes').html(dataset.notes);
-                            $('#dataset-popup').popup('open');
-                        }, 150);
-                    }
-                });
-
-                // Initialize jQuery Mobile widgets
-                for (d = 0; d < topic.datasets.length; d++) {
-                    dataset = topic.datasets[d];
-                    $('#ul_' + dataset.id).listview();
-                    $('#li_' + dataset.id).collapsible();
-
-                    for (r = 0; r < dataset.resources.length; r++) {
-                        resource = dataset.resources[r];
-                        $('#ul_' + resource.id).listview();
-                        $('#li_' + resource.id).collapsible();
-                    }
-                }
-                $('#dataset-listview').listview();
-
-                $('#datasets').show();
-                $('#catalog-return').show();
-                $("#view-layers").trigger("updatelayout");
-            });
-        } else if (showErrorPopup) {
-            $('#message-popup-text').html('No datasets found');
-            $('#message-popup').popup('open');
-            setTimeout(function() {
-                $('#message-popup').popup('close');
-            }, 600);
-        }
-    };
-
-    members.ckan.on('topic:refresh', onTopicRefresh);
-
-    members.ckan.on('topic:loaded', onTopicLoaded);
-
-    members.ckan.on('catalog:search', onCatalogSearch);
-
     PublicaMundi.initialize = function () {
         initializeParameters();
 
-        initializeLayout();
-
         initializeMap();
 
+		initializeUI();
+		
         attachEvents();
 
-        members.ckan.getTopics();
+		$('#loading-text').html('Initializing Catalog ... 0%');
+		
+        members.ckan.loadGroups().then(function(groups) {
+			$('#loading-text').html('Initializing Catalog ... 50%');
+			members.ckan.loadOrganizations().then(function(organization) {
+				$('#loading-text').html('Initializing Catalog ... 100%');
 
-        setTimeout(function () {
-            $('#block-ui').fadeOut(500).hide();
-            $('body').css('overflow-y', 'auto');
+				members.components.layerTreeGroup.refresh();
+				members.components.layerTreeOrganization.refresh();
 
-            if ($('#view-layers').hasClass('ui-panel-closed')) {
-                $('#view-layers').panel('toggle');
-            }
-            $('#search').focus();
-        }, 500);
+				$('#loading-text').html('Loading Metadata ... 0%');
+				getQueryableResourceMetadata().then(function(resources) {
+					var url = (members.config.path ? members.config.path + '/' : '') + members.config.api.endpoint;
+					
+					members.query = {
+						resources: resources,
+						request: new PublicaMundi.Data.Query(members.config.api.endpoint)
+					};
+					
+					$('#loading-text').html('Loading Metadata ... 100%');
+					
+					setTimeout(function () {
+						$('#block-ui').fadeOut(500).hide();
+						$('body').css('overflow-y', 'auto');
 
-        initializePreview();
+						if ($('#view-layers').hasClass('ui-panel-closed')) {
+							$('#view-layers').panel('toggle');
+						}
+						$('#search').focus();
+						
+						initializeResourcePreview();
+					}, 500);
+				});
+			});
+		});
 
         // Debug ...
         window.members = members;

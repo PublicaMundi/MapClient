@@ -1,9 +1,7 @@
-(function (global) {
-    if (typeof PublicaMundi === 'undefined') {
-        PublicaMundi = {};
-    }
-
-    PublicaMundi.Data = {};
+define(['jquery', 'shared'], function ($, PublicaMundi) {
+    "use strict";
+    
+	PublicaMundi.define('Data');
 
     PublicaMundi.Data.Format = {
         JSON: 'json',
@@ -107,13 +105,15 @@
         if (typeof endpoint !== 'string') {
             throw new PublicaMundi.Data.SyntaxException('Service endpoint is not set.');
         }
+
         this.endpoint = endpoint;
         this.callback = null;
+                
         this.reset();
     };
 
     PublicaMundi.Data.Query.prototype.toString = function () {
-        return JSON.stringify(this.query, null, ' ');
+        return JSON.stringify(this.request, null, ' ');
     };
 
     PublicaMundi.Data.Query.prototype.resource = function (resource, alias) {
@@ -158,7 +158,7 @@
     PublicaMundi.Data.Query.prototype.field = function (resource, name, alias) {
         var index;
 
-        obj = {
+        var obj = {
             name: ''
         };
         switch (typeof resource) {
@@ -401,7 +401,6 @@
         return this;
     };
 
-
     PublicaMundi.Data.Query.prototype.contains = function (arg1, arg2) {
         var filter = {
             operator: operators.CONTAINS,
@@ -429,7 +428,7 @@
     PublicaMundi.Data.Query.prototype.orderBy = function (resource, name, desc) {
         var index;
 
-        obj = {
+        var obj = {
             name: '',
             desc: false
         };
@@ -494,30 +493,43 @@
     };
 
     PublicaMundi.Data.Query.prototype.reset = function () {
-        this.query = {
+        this.request= {
+            queue: [],
+            files: [],
+            format: PublicaMundi.Data.Format.GeoJSON
+        };
+        
+        this.queue();
+
+        return this;
+    };
+    
+    PublicaMundi.Data.Query.prototype.queue = function () {
+        this.request.queue.push({
             resources: [],
             fields: [],
             filters: [],
             sort: [],
             offset: 0,
-            limit: -1,
-            format: PublicaMundi.Data.Format.GeoJSON
-        };
+            limit: -1
+        });
 
+        this.query = this.request.queue[this.request.queue.length -1];
+        
         return this;
     };
 
     PublicaMundi.Data.Query.prototype.format = function (format) {
         for (var prop in PublicaMundi.Data.Format) {
             if (PublicaMundi.Data.Format[prop] === format) {
-                this.query.format = format;
+                this.request.format = format;
                 return this;
             }
         }
 
         throw new PublicaMundi.Data.SyntaxException('Format is not supported.');
-    };
-
+    };  
+    
     PublicaMundi.Data.Query.prototype.execute = function (callback) {
         callback = callback || this.callback;
 
@@ -529,11 +541,11 @@
 
         $.ajax({
             type: "POST",
-            url: this.endpoint,
+            url: this.endpoint + 'api/query',
             context: this,
             contentType: "application/json; charset=utf-8",
             dataType: "json",
-            data: JSON.stringify(this.query)
+            data: JSON.stringify(this.request)
         }).done(function (data, textStatus, jqXHR) {
             execution.end = (new Date()).getTime();
             var contentLength = jqXHR.getResponseHeader('Content-Length');
@@ -549,6 +561,46 @@
         return this;
     };
 
+    PublicaMundi.Data.Query.prototype.export = function (callback, files) {
+        callback = callback || this.callback;
+
+        files = files || [];
+        if(files.length > 0) {
+            if(files.length != this.request.queue.length) {
+                throw new PublicaMundi.Data.SyntaxException('Filenames and queries arrays must be of the same length.');
+            } else {
+                this.request.files = files;
+            }
+        }
+
+        var execution = {
+            size : null,
+            start : (new Date()).getTime(),
+            end : null
+        };
+
+        $.ajax({
+            type: "POST",
+            url: this.endpoint + 'api/export',
+            context: this,
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            data: JSON.stringify(this.request)
+        }).done(function (data, textStatus, jqXHR) {
+            execution.end = (new Date()).getTime();
+            var contentLength = jqXHR.getResponseHeader('Content-Length');
+            if(contentLength) {
+                execution.size =  contentLength / 1024.0;
+            }
+
+            if (typeof callback === 'function') {
+                callback.call(this, data, execution);
+            }
+        });
+
+        return this;
+    };
+    
     PublicaMundi.Data.Query.prototype.take = function (value) {
         if (isNaN(value)) {
             throw new PublicaMundi.Data.SyntaxException('Invalid number.');
@@ -564,10 +616,4 @@
         this.query.offset = value;
         return this;
     };
-
-    if (typeof global.PublicaMundi === 'undefined') {
-        global.PublicaMundi = PublicaMundi;
-    } else {
-        global.PublicaMundi.Data = PublicaMundi.Data;
-    }
-})(window);
+});
