@@ -5,27 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="content/css/lib/normalize/normalize.css" />
-
-    <link rel="stylesheet" href="content/css/lib/ol3/ol.css" />
-
-    <!--<link rel="stylesheet" href="content/css/lib/jquery-ui/jquery-ui.min.css" />-->
-
-    <link rel="stylesheet" href="content/css/lib/jquery-mobile/publicamundi/publicamundi.css" />
-    <link rel="stylesheet" href="content/css/lib/jquery-mobile/publicamundi/jquery.mobile.icons.min.css" />
-    <link rel="stylesheet" href="content/css/lib/jquery-mobile/default/jquery.mobile.structure-1.4.5.css" />
-
-    <!--<link href="content/css/lib/jquery-mobile/default/jquery.mobile-1.4.5.min.css" rel="stylesheet" />-->
-
+	<link rel="stylesheet" href="content/css/lib/bootstrap/current/css/bootstrap.min.css">	
+	<link rel="stylesheet" href="content/css/lib/bootstrap-select/bootstrap-select.min.css">	
+	<link rel="stylesheet" href="content/css/lib/jquery-ui/current/jquery-ui.min.css">	
+    <link rel="stylesheet" href="content/css/lib/ol3/3.4.0/ol.css" />
     <link rel="stylesheet" href="content/css/app/default.css" />
 
     <title>PublicaMundi - Map Client</title>
     <link rel="shortcut icon" href="content/images/icons/geodatagovgr.ico" />
     <script type="text/javascript">
-        var resource = '{{c.resource}}';
         var ﻿require = {
             config: {
                 app: {
+					path: '{{config['mapclient.url.prefix']}}',
                     proxy: {
                         path: '{{ h.url_for(controller='proxy', action='proxy_resource')}}',
                         param: 'url'
@@ -37,7 +29,6 @@
                             key: null
                         {% endif %}
                     },
-                    imagePath: '/content/images/',
                     map: {
                         target: 'map',
                         {% if 'mapclient.map.center' in config %}
@@ -53,12 +44,15 @@
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}'
-                    }
+                    },
+                    resource : '{{c.resource}}',
+                    api: {
+						endpoint : '/'
+					}
                 }
             }
         };
     </script>
-    <!--<script type="text/javascript" data-main="content/js/main.js" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.15/require.min.js"></script>-->
     <script type="text/javascript" data-main="content/js/main.js" src="content/js/lib/requirejs/require.js"></script>
     <script type="text/javascript">
         var result = null;
@@ -71,146 +65,152 @@
 <body>
     <div id="block-ui">
         <div id="loader-icon">
-            <img src="content/images/geodata-biglogo.png" alt="" />
+			<div>
+				<img src="content/images/geodata-biglogo.png" alt="" />
+				<div id="loading-text" class="loading-text">
+					Loading Scripts ... 0%
+				</div>
+			</div>
         </div>
     </div>
-    <div data-role="page" id="main">
-        <div id="content">
-            <div id="header">
-                <div class="nav-button-left">
-                    <a href="#view-layers" class="ui-btn ui-btn-icon-notext ui-icon-bullets ui-corner-all" data-rel="popup" data-position-to="window" data-role="button" data-inline="true" data-transition="pop"></a>
-                </div>
-                <div class="logo-container">
-                    <div class="logo-publicamundi"></div>
-                    <div class="progress-loader">
-                        <img src="content/images/ajax-loader.gif" alt="" />
-                    </div>
-                </div>
-                <div class="nav-button-right" style="display: none;">
-                    <a href="#actions" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-action ui-corner-all"></a>
-                </div>
-                <div class="nav-button-right" style="display: none;">
-                    <a href="#query" data-rel="popup" data-transition="slide" class="ui-btn ui-btn-icon-notext ui-icon-edit ui-corner-all"></a>
-                </div>
+    <div id="map"></div>
+    <div id="dialog-container" style="width: 100%; height: 100%;"></div>
+	<nav class="navbar navbar-default navbar-geodata navbar-fixed-top">
+		<div class="container" style="width: 100%;">
+				<a class="navbar-brand" href="{{config['mapclient.url.catalog']}}" target="_blank">
+					<img src="content/images/geodata-biglogo.png" alt="GeoData.gov.gr">
+				</a>
+				<div style="float: right; padding-top: 17px;" >
+					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" type="range" style="width: 150px;">
+				</div>
+				<div class="img-text" style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" title="Διαφάνεια">
+					<img src="content/images/opacity.png" alt="" />
+				</div>
+				<div class="device" style="float: right; padding-top: 8px; padding-right: 6px;">
+					<select name="base_layer" id="base_layer" data-width="250px">
+						<option data-key=""
+								data-type="ktimatologio"
+								data-set=""
+								value="ktimatologio" selected>Κτηματολόγιο</option>
+						<!--
+						<option data-key=""
+								data-type="osm"
+								data-set=""
+								value="osm" selected>Open Street Maps</option>
+						-->
+						<option data-key=""
+								data-type="mapquest"
+								data-set="osm"
+								value="mapquest">Map Quest - Open Street Maps</option>
+						<option data-key=""
+								data-type="mapquest"
+								data-set="sat"
+								value="mapquest">Map Quest - Satellite</option>
+						<!-- 
+						<option data-key=""
+								data-type="mapquest"
+								data-set="hyb"
+								value="mapquest">Map Quest - Hybrid</option>
+						-->
+						{% if config['mapclient.base.layer.key'] != '' %}
+						<option data-key="{{config['mapclient.base.layer.key']}}"
+								data-type="bing"
+								data-set="Aerial"
+								value="bing">Bing Map - Aerial</option>
+						<option data-key="{{config['mapclient.base.layer.key']}}"
+								data-type="bing"
+								data-set="AerialWithLabels"
+								value="bing">Bing Map - Aerial with Labels</option>
+						<option data-key="{{config['mapclient.base.layer.key']}}"
+								data-type="bing"
+								data-set="Road"
+								value="bing">Bing Map - Road</option>
+						{% endif %}
+						<option data-key=""
+								data-type="stamen"
+								data-set="toner"
+								value="mapquest">Stamen - Toner</option>
+						<option data-key=""
+								data-type="stamen"
+								data-set="watercolor"
+								value="mapquest">Stamen - Watercolor</option>
+					</select>
+				</div>
+				<div class="device img-text"  style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" title="Υπόβαθρο">
+					<img src="content/images/map.png" alt="" />
+				</div>
+		</div>
+	</nav>
+	<div class="panel-left panel-left-visible">
+		<div class="panel-left-handler">
+			<img src="content/images/arrow.png" alt=""/>
+		</div>
+		<div class="panel-content">
+			<div class="clearfix" style="border-bottom: solid 1px #E7E7E7; padding: 2px 0px 6px 2px;">
+				<div style="float: left; padding-top: 1px;">
+					<img class="inactive"id="group" style="" src="content/images/comments.png" alt="" data-selected="true"/>
+				</div>
+				<div id="group-label" style="float: left; padding-left: 7px;" class="section-label">Θεματικές Ενότητες</div>
+				<div style="float: left;">
+					<img class="active" id="organization" src="content/images/organization.png" alt="" data-selected="false"/>
+				</div>
+				<div id="organization-label" style="float: left; padding-left: 7px;"  class="section-label section-label-hidden">Οργανισμοί</div>
+				<div style="float: left; padding-top: 1px;">
+					<img class="active" id="search" src="content/images/search.png" alt="" data-selected="false"/>
+				</div>
+				<div style="float: left;" id="search-label" style="float: left; padding-left: 7px;" class="section-label section-label-hidden">Αναζήτηση</div>
+			</div>
+
+			<div id="layer-tree-group" class="clearfix layer-tree-group"></div>
+			<div id="layer-tree-organization" class="clearfix layer-tree-organization"></div>
+            <div id="layer-tree-search" class="clearfix layer-tree-search"></div>
+
+			<div id="layer-selection-header" class="clearfix" style="padding: 8px 0px 6px 2px; border-bottom: solid 1px #E7E7E7; cursor: pointer;">
+				<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px;">Επιλογές</span>
+			</div>
+			<div id="layer-selection" class="clearfix" style="max-height: 300px; overflow-y: auto;">
+			</div>
+			<div id="tools-header" class="clearfix" style="padding: 8px 0px 6px 2px; border-bottom: solid 1px #E7E7E7; cursor: pointer;">
+				<img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;">Εργαλεία</span>
+			</div>
+			<div id="tools" class="clearfix" style="max-height: 300px; overflow-y: auto; padding: 4px 0px 4px 0px; display: none;">
+                <div class="tool-wrapper" id="tool-length"></div>
+                <div class="tool-wrapper" id="tool-area"></div>
+                <div class="tool-wrapper" id="tool-export"></div>
+				<div class="tool-wrapper" id="action-export"></div>
+			</div>
+		</div>
+		<div class="panel-left-label">
+			<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px; font-size: 1.3em; color: #485AA8">Κατάλογος</span>
+		</div>
+	</div>
+    	
+	<footer class="footer">
+        <div style="position: absolute; width: 100%; text-align: center; padding-top: 10px;">
+            <a href="https://icons8.com/web-app/">Icons by Icons8</a>
+        </div>
+        <div class="mouse-pos">
+            <div style="float: left; padding-top: 5px; padding-left: 2px; cursor: pointer; display: none;">
+                <img class="img-text" src="content/images/center-direction.png" alt="" data-placement="bottom" title="Αναζήτηση θέσης" />
             </div>
-            <div id="map"></div>
-            <div id="footer">
-                <div class="mouse-pos">
-                    <div class="mouse-pos-img ui-btn ui-btn-icon-notext ui-icon-navigation">
-                    </div>
-                </div>
-                <div class="combo-crs">
-                    <select name="pos_epsg" id="pos_epsg" data-native-menu="false">
-                        <option value="EPSG:3857" selected="selected">3857</option>
-                        <option value="EPSG:4326">4326</option>
-                    </select>
-                </div>
+            <div style="float: left; padding-top: 5px;">
+                <img class="img-text" src="content/images/location.png" alt="" data-placement="bottom" title="Θέση" />
             </div>
         </div>
-
-        <div data-role="panel" data-position="left" data-position-fixed="true" data-display="push" data-theme="a" id="view-layers" data-inset="false">
-            <h2>Base Layer<a style="float: right; margin-top: 0px !important; margin-right: 5px;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
-            <div class="clearfix">
-                <select name="base_layer" id="base_layer" data-native-menu="false" autocomplete="off">
-                    <option data-key=""
-                            data-type="osm"
-                            data-set="" data-img="content/images/road.png"
-                            value="osm" selected="selected">Open Street Maps</option>
-                    <option data-key=""
-                            data-type="mapquest"
-                            data-set="osm" data-img="content/images/road.png"
-                            value="mapquest">Map Quest - Open Street Maps</option>
-                    <option data-key=""
-                            data-type="mapquest"
-                            data-set="sat" data-img="content/images/aerial.png"
-                            value="mapquest">Map Quest - Satellite</option>
-                    <!-- 
-                    <option data-key=""
-                            data-type="mapquest"
-                            data-set="hyb" data-img="content/images/aerial.png"
-                            value="mapquest">Map Quest - Hybrid</option>
-                    -->
-                    {% if config['mapclient.base.layer.key'] != '' %}
-                    <option data-key="{{config['mapclient.base.layer.key']}}"
-                            data-type="bing"
-                            data-set="Aerial"
-                            data-img="content/images/aerial.png"
-                            value="bing">Bing Map - Aerial</option>
-                    <option data-key="{{config['mapclient.base.layer.key']}}"
-                            data-type="bing"
-                            data-set="AerialWithLabels"
-                            data-img="content/images/aerial.png"
-                            value="bing">Bing Map - Aerial with Labels</option>
-                    <option data-key="{{config['mapclient.base.layer.key']}}"
-                            data-type="bing"
-                            data-set="Road"
-                            data-img="content/images/road.png"
-                            value="bing">Bing Map - Road</option>
-                    {% endif %}
-                    <option data-key=""
-                            data-type="stamen"
-                            data-set="toner" data-img="content/images/road.png"
-                            value="mapquest">Stamen - Toner</option>
-                    <option data-key=""
-                            data-type="stamen"
-                            data-set="watercolor" data-img="content/images/road.png"
-                            value="mapquest">Stamen - Watercolor</option>
-                </select>
-            </div>
-            <form>
-                <div id="select-visible" style="display: none;">
-                    <select name="filter-selected" id="filter-selected" data-role="slider">
-                        <option value="All">All</option>
-                        <option value="Selected">Selected</option>
-                    </select>
-                </div>
-                <div style="display: none;">
-                    <input data-type="search" id="searchAllLayers" style="display: none;">
-                </div>
-                <input type="search" name="full-text-search" id="search" value="" placeholder="Search for resources ...">
-            </form>
-
-            <h2 class="panel-section">Resources</h2>
-            <div class="clearfix ui-collapsible-set ui-group-theme-a ui-corner-all" id="services" data-filter="false" data-children="> div,  > ul, > div div ul li, > ul div li" data-input="#searchAllLayers">
-            </div>
-
-            <div style="position: relative;">
-                <div style="position: absolute;">
-                    <a id="toggle-catalog" style="float: left; margin: 5px 0 0 8px;" href="#" class="ui-btn ui-btn-icon-notext ui-icon-minus ui-corner-all"></a>
-                </div>
-                <div style="position: absolute; right: 0px;">
-                    <a id="catalog-return" style="float: right; margin: 5px 5px 0 0px; display: none;" href="#" class="ui-btn ui-btn-icon-notext ui-icon-back ui-corner-all"></a>
-                </div>
-                <h2 id="catalog-header" class="panel-section panel-section-collaspible">Catalog</h2>
-            </div>
-
-            <div data-theme="a" data-content-theme="b" data-role="collapsibleset" class="clearfix ui-collapsible ui-group-theme-a ui-corner-all" id="catalog" data-filter="true" data-children="> div div, > div div span, > div ul li" data-input="#searchAllLayers">
-                <div id="topics"></div>
-                <div id="datasets"></div>
-            </div>
+        <div class="combo-crs" style="width: 80px;">
+            <select name="pos_epsg" id="pos_epsg" class="selectpicker" data-width="80px">
+                <option value="EPSG:3857" selected="selected">3857</option>
+                <option value="EPSG:4326">4326</option>
+            </select>
         </div>
-
-        <div data-role="panel" data-position="right" data-position-fixed="true" data-display="push" data-theme="a" id="query">
-            <h2 style="padding-right: 4px;">Query Builder<a style="float: right; margin-top: 0px !important;" href="#" data-rel="close" class="ui-btn ui-btn-icon-notext ui-icon-delete ui-corner-all"></a></h2>
+        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" title="Σύστημα αναφοράς">
+            <img src="content/images/earth.png" alt="" />
         </div>
-
-        <div data-role="popup" id="legendPopup" data-dismissible="false" data-overlay-theme="a" data-corners="false" data-tolerance="30,15">
-            <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right"></a>
-            <img id="legendZoom" src="content/images/blank.gif" alt="">
+        <div id="scale-line" style="float: right; padding: 18px 10px 0px 2px;">
         </div>
-
-        <div data-role="popup" id="message-popup">
-            <p id="message-popup-text"></p>
+        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" title="Κλίμακα χάρτη">
+            <img src="content/images/ruler.png" alt="" />
         </div>
-
-        <div data-role="popup" id="dataset-popup" data-overlay-theme="a" data-corners="false" data-tolerance="30,15">
-            <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right"></a>
-            <div data-role="header" data-theme="a" class="ui-corner-top">
-                <h3 id="dataset-popup-title" class="dataset-title-header"></h3>
-            </div>
-            <div id="dataset-popup-notes" style="max-width: 500px; padding: 10px; text-align: justify;">
-            </div>
-        </div>
-    </div>
+	</footer>
 </body>
 </html>

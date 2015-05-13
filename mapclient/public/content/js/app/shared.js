@@ -37,23 +37,15 @@
     PublicaMundi.define('Maps.UI');
     PublicaMundi.define('Maps.CRS');
     PublicaMundi.define('Maps.Resources');
-    PublicaMundi.define('Maps.Resources.UI');
 
     // Built-in coordinate systems
-    PublicaMundi.Maps.CRS = {
-        Google: 'EPSG:900913',
-        Mercator: 'EPSG:3857',
-        WGS84: 'EPSG:4326'
-    };
+    PublicaMundi.Maps.CRS.Google = 'EPSG:900913';
+	PublicaMundi.Maps.CRS.Mercator = 'EPSG:3857';
+	PublicaMundi.Maps.CRS.WGS84 = 'EPSG:4326';
+	PublicaMundi.Maps.CRS.CRS84 = 'CRS:84';
 
-    // Supported resources
+    // Supported resource types
     PublicaMundi.Maps.Resources.Types = {};
-
-    // Supported resource view types
-    PublicaMundi.Maps.Resources.UI.Views = {
-        CREATE: 'CREATE',
-        CONFIG: 'CONFIG'
-    };
 
     // Add support for simple class hierarchy 
     var __extendClass = function (derived, base) {
@@ -65,13 +57,23 @@
         derived.prototype = new Empty();
     };
 
-    PublicaMundi.extend = function (target, source) {
-        target = target || {};
+    PublicaMundi.extend = function (target, source, deepCopy) {
+		var exclude = ['values'];
 
+        target = target || {};
+		deepCopy = deepCopy || false;
+		
         if (source) {
             for (var property in source) {
-                if (source.hasOwnProperty(property)) {
-                    target[property] = source[property];
+                if ((exclude.indexOf(property) < 0) && (source.hasOwnProperty(property))) {
+					if((deepCopy) && (typeof source[property] === 'object') && (source[property])) {
+						if(typeof target[property] !== 'object') {
+							target[property] = {};
+						}
+						PublicaMundi.extend(target[property], source[property]);
+					} else {
+						target[property] = source[property];
+					}
                 }
             }
         }
@@ -95,7 +97,7 @@
             return (function (__super) {
                 var Class = function () {
                     this.values = {};
-
+				
                     if (typeof this.initialize === 'function') {
                         this.initialize.apply(this, arguments);
                     }
@@ -112,7 +114,7 @@
         return (function () {
             var Class = function () {
                 this.values = {};
-
+                			
                 if (typeof this.initialize === 'function') {
                     this.initialize.apply(this, arguments);
                 }
@@ -128,13 +130,13 @@
         throw 'Function not implemented.';
     };
 
-    PublicaMundi.getProxy = function (path, parameter) {
+    PublicaMundi.getProxyUrl = function (path, parameter) {
         var proxy = path, query = parameter;
         if (typeof path === 'object') {
             proxy = path.path;
             query = path.param;
         }
-        if ((!proxy)) {
+        if (!proxy) {
             return null;
         }
 
@@ -172,14 +174,13 @@
         }
     };
 
-    // Simple event system
+    // Base class implementing simple event system
     PublicaMundi.Maps.Observable = PublicaMundi.Class({
-        initialize: function (options) {
-            this.values = {
-                events: {}
-            };
+        initialize: function (options) {    
+			this.values.events = {};       
+			
             PublicaMundi.extend(this.values, options);
-        },
+		},
         event: function (event) {
             if (typeof this.values.events[event] === 'undefined') {
                 this.values.events[event] = {
@@ -188,16 +189,16 @@
                 };
             }
         },
-        on: function (event, callback) {
+        on: function (event, callback, context) {
             if (typeof this.values.events[event] === 'undefined') {
                 throw 'Event not supported.';
             }
-            var listeners = this.values.events[event].listeners.push(callback);
+            var listeners = this.values.events[event].listeners.push({'callback' : callback, 'context' : context});
         },
         off: function (callback) {
             for (var key in this.values.events) {
                 for (var i = 0; i < this.values.events[key].listenters; i++) {
-                    if (this.values.events[key].listeners[i] === callback) {
+                    if (this.values.events[key].listeners[i].callback === callback) {
                         this.values.events[key].listeners.splice(i, 1);
                         return;
                     }
@@ -211,54 +212,16 @@
             var listeners = this.values.events[event].listeners;
 
             for (var i = 0; i < listeners.length; i++) {
-                listeners[i](this, args);
+                listeners[i].callback.call((listeners[i].context ? listeners[i].context : this), args);
             }
         }
     });
-
+    
     // Resource registry
-    var resourceTypeRegistry = {};
-
-    PublicaMundi.Maps.registerResourceType = function (type, title, metadataReader, layerFactory) {
-        if (!type) {
-            throw 'Parameter type is not set.';
-        }
-        if (typeof title === 'undefined') {
-            throw 'Parameter title is not set.';
-        }
-        if (typeof metadataReader !== 'function') {
-            throw 'Parameter metadataReader is not a function.';
-        }
-        if (typeof layerFactory !== 'function') {
-            throw 'Parameter layerFactory is not a function.';
-        }
-
-        resourceTypeRegistry[type] = {
-            title: title,
-            metadataReader: metadataReader,
-            layerFactory: layerFactory
-        };
-    };
-
-    // Adapter registry
-    var adapterRegistry = {};
-
-    PublicaMundi.Maps.registerResourceTypeAdapter = function (format, type, adapter) {
-        if (!format) {
-            throw 'Parameter format is not set.';
-        }
-        if (!PublicaMundi.Maps.Resources.Types.hasOwnProperty(type)) {
-            throw 'Parameter type is invalid.';
-        }
-        if (typeof adapter !== 'function') {
-            throw 'Parameter adapter is not a function.';
-        }
-
-        adapterRegistry[format] = {
-            type: type,
-            adapter: adapter
-        };
-    };
+    var shared = {
+		resources : {},
+		adapters: {}
+	};
 
     PublicaMundi.Maps.Resources.ResourceMetadataReader = PublicaMundi.Class({
         initialize: function (options) {
@@ -273,10 +236,48 @@
         initialize: function (options) {
             PublicaMundi.extend(this.values, options);
         },
-        getOptions: function (resource) {
+        setOptions: function (resource) {
             PublicaMundi.operationNotImplemented();
         }
     });
+
+    PublicaMundi.Maps.Resources.registerResourceType = function (type, title, reader, factory) {
+        if (!type) {
+            throw 'Parameter type is not set.';
+        }
+        if (!title) {
+            throw 'Parameter title is not set.';
+        }
+        if (typeof reader !== 'function') {
+            throw 'Parameter reader is not a function.';
+        }
+        if (typeof factory !== 'function') {
+            throw 'Parameter factory is not a function.';
+        }
+
+        shared.resources[type] = {
+            title: title,
+            reader: reader,
+            factory: factory
+        };
+    };
+
+    PublicaMundi.Maps.Resources.registerResourceTypeAdapter = function (format, type, adapter) {
+        if (!format) {
+            throw 'Parameter format is not set.';
+        }
+        if ((!type) || (!PublicaMundi.Maps.Resources.Types.hasOwnProperty(type))) {
+            throw 'Parameter type is invalid.';
+        }
+        if (typeof adapter !== 'function') {
+            throw 'Parameter adapter is not a function.';
+        }
+
+        shared.adapters[format] = {
+            type: type,
+            adapter: adapter
+        };
+    };
 
     PublicaMundi.Maps.Resources.LayerFactory = PublicaMundi.Class({
         initialize: function (options) {
@@ -287,20 +288,6 @@
         },
         destroy: function (map, resource, layer) {
             PublicaMundi.operationNotImplemented();
-        },
-        renderLayerGroup: function (resource) {
-            var text = '<h2>' + resource.metadata.title + '<p class="remove-resource"><a id="' + resource.id + '_rl" class="remove-resource" href="#" data-resource="' + resource.id + '">Remove</a></p>';
-            if (resource.metadata.layers.length > 1) {
-                text += '<span class="ui-li-count ui-li-count-resource">' + resource.metadata.layers.length + '</span>';
-            }
-            text += '</h2>';
-
-            return text;
-        },
-        renderLayerItem: function (resource, layer) {
-            var legend = layer.legend;// || this.values.config.imagePath + 'blank.gif';
-
-            return ((layer.legend ? '<img src="' + layer.legend + '" alt="" class="legend" /><p>' : '<p style="margin-left: -9px">') + '<a class="ui-btn ui-btn-icon-notext ui-icon-edit btn-layer-config" data-layer="' + layer.id + '" href="#" style="float: left;"></a><span class="layer-title">' + layer.title + '</span></p><label class="layer-selector ui-li-aside"><input type="checkbox" data-layer="' + layer.id + '"></label>');
         },
         createStyle: function (options) {
             options.fill = options.fill || [255, 255, 255, 0.4];
@@ -332,228 +319,215 @@
         },
     });
 
+       
     PublicaMundi.Maps.Resources.ResourceManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
         initialize: function (options) {
             if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
             }
 
-            this.values.registry = {
-                counter: 0,
-                resources: []
-            };
+            this.values.readers = {};
+            this.values.layers = []
+            this.values.layerCounter = 0;
 
             this.event('resource:add');
             this.event('resource:remove');
         },
-        addResource: function (options) {
-            if (typeof options.type === 'undefined') {
-                throw 'Resource type is missing.';
-            }
-            if (typeof resourceTypeRegistry[options.type] !== 'object') {
-                throw 'Resource type is not supported.';
-            }
-            options.config = this.values.config;
-
-            var metadataReader = new resourceTypeRegistry[options.type].metadataReader(options);
-
-            var self = this;
-
-            metadataReader.getMetadata(function (metadata) {
-                var existingResource = self.getResourceByTypeAndKey(options.type, metadata.key);
-
-                if (existingResource) {
-                    self.removeResource(existingResource.id);
-                }
-                self.values.registry.counter++;
-
-                var newResource = {
-                    id: 'resource_' + self.values.registry.counter,
-                    metadata: metadata
-                };
-
-                for (var l = 0; l < newResource.metadata.layers.length; l++) {
-                    PublicaMundi.extend(newResource.metadata.layers[l], {
-                        id: newResource.id + '_' + l
-                    });
-                }
-                self.values.registry.resources.push(newResource);
-
-                self.trigger('resource:add', newResource);
-            });
-
-            return true;
-        },
-        addResourceFromCatalog: function (resource) {
+        setCatalogResourceMetadataOptions: function(resource) {
             if (!resource) {
                 throw 'Resource is missing.';
             }
-            if (typeof adapterRegistry[resource.format.toUpperCase()] !== 'object') {
-                return false;
+            if (typeof shared.adapters[resource.format.toUpperCase()] !== 'object') {
+                throw 'Resource typ ' + resource.format.toUpperCase() + ' is not registered.';
             }
-            var adapter = new adapterRegistry[resource.format.toUpperCase()].adapter();
+            var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
 
-            this.addResource(adapter.getOptions(resource));
-
-            return true;
-        },
-        removeResource: function (id) {
-            var resource = this.getResourceById(id), i;
-
-            for (i = 0; i < resource.metadata.layers.length; i++) {
-                var layer = resource.metadata.layers[i];
-                if ((layer.viewer.visible) && (layer.loader.queue)) {
-                    for (var q = 0; q < layer.loader.queue.length; q++) {
-                        if (layer.loader.queue[q].readyState !== 4) {
-                            layer.loader.queue[q].abort();
-                        }
-                    }
-                }
-                layer.loader.queue = [];
-            }
-
-            for (i = 0; i < this.values.registry.resources.length; i++) {
-                if (this.values.registry.resources[i].id === resource.id) {
-                    this.values.registry.resources.splice(i, 1)[0];
-
-                    this.trigger('resource:remove', resource);
-                    break;
-                }
-            }
+            adapter.setOptions(resource);
 
             return resource;
-        },
-        getResourceById: function (id) {
-            var parts = id.split('_');
-            var prefix = parts[0] + '_' + parts[1];
-
-            for (var i = 0; i < this.values.registry.resources.length; i++) {
-                var resource = this.values.registry.resources[i];
-                if (resource.id === prefix) {
-                    return resource;
-                }
+		},
+        getResourceMetadata: function (type, parameters) {
+            if (typeof type === 'undefined') {
+                throw 'Resource type is missing.';
             }
-            return null;
-        },
-        getLayerById: function (id) {
-            var parts = id.split('_');
-
-            var resource = this.getResourceById(parts[0] + '_' + parts[1]);
-
-            if (resource) {
-                return resource.metadata.layers[parts[2]];
-            }
-            return null;
-        },
-        getResourceByTypeAndKey: function (type, key) {
-            if (typeof resourceTypeRegistry[type] === 'undefined') {
+            if (typeof shared.resources[type] !== 'object') {
                 throw 'Resource type is not supported.';
             }
-            if (!key) {
-                return null;
+			if(typeof this.values.readers[type] !== 'object') {
+				this.values.readers[type] = new shared.resources[type].reader({ proxy : this.values.proxy});
+			}
+			
+			return this.values.readers[type].getMetadata(parameters);
+        },
+        addResourceFromCatalog: function (map, resource) {
+            var self = this;
+            
+            if (!resource) {
+                throw 'Resource is missing.';
+            }
+            if (typeof shared.adapters[resource.format.toUpperCase()] !== 'object') {
+                return false;
             }
 
-            for (var i = 0; i < this.values.registry.resources.length; i++) {
-                var resource = this.values.registry.resources[i];
-                if ((resource.metadata.type === type) && (resource.metadata.key === key)) {
-                    return resource;
+            resource = this.setCatalogResourceMetadataOptions(resource);
+
+            var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
+            adapter.setOptions(resource);
+
+            this.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
+                var layer;
+
+                for(var i=0; i < metadata.layers.length; i++){
+                    if(metadata.layers[i].key == resource.metadata.extras.layer) {
+                        layer = metadata.layers[i];
+                        break;
+                    }
                 }
-            }
-            return null;
+                if(layer) {
+                    self.createLayer(map, metadata, layer.key, resource.id + '_' + layer.key, layer.title);
+                }
+            });
+            return true;
         },
         getResourceTypes: function () {
             var types = [];
 
-            for (var type in resourceTypeRegistry) {
+            for (var type in shared.resources) {
                 types.push({
                     type: type,
-                    title: resourceTypeRegistry[type].title
+                    title: shared.resources[type].title
                 });
             }
 
             return types;
         },
-        createLayer: function (map, id) {
-            var resource = this.getResourceById(id);
-            var layer = this.getLayerById(id);
+        createLayer: function (map, metadata, layer, id, title) {
+			var __object = null;
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					__object = this.values.layers[i].layer;
+					break;
+				}
+			}
+			if(!__object) {
+				var factory = new shared.resources[metadata.type].factory({
+					proxy: this.values.proxy
+				});
 
-            if ((resource) && (layer)) {
-                var layerFactory = new resourceTypeRegistry[resource.metadata.type].layerFactory({
-                    config: this.values.config
-                });
+				this.values.layers.push({
+					id: id,
+					layer : factory.create(map, metadata, layer, title),
+                    title: title
+				});
 
-                layer.viewer.visible = true;
-
-                layerFactory.create(map, resource, layer);
-            }
+				this.values.layerCounter++;
+			}
         },
         destroyLayer: function (map, id) {
-            var resource = this.getResourceById(id);
-            var layer = this.getLayerById(id);
+			var index = -1, __object = null;
+			
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					index = i;
+					__object = this.values.layers[i].layer;
+					break;
+				}
+			}
+			
+            if(__object) {
+				map.removeLayer(__object);
+				
+				this.values.layers.splice(index, 1);
+				
+				this.values.layerCounter--;
+            }
+        },
+        getLayerCount: function() {
+			return this.values.layerCounter;
+		},
+        getSelectedLayers: function() {
+            return this.values.layers.map(function(currentValue, index, array) {
+                var parts = currentValue.id.split('_');
 
-            if ((resource) && (layer)) {
-                var layerFactory = new resourceTypeRegistry[resource.metadata.type].layerFactory({
-                    config: this.values.config
-                });
-
-                layer.viewer.visible = false;
-
-                for (var i = 0; i < layer.loader.queue.length; i++) {
-                    if (layer.loader.queue[i].readyState !== 4) {
-                        layer.loader.queue[i].abort();
-                    }
+                return {
+                    resource_id: parts[0],
+                    layer_id: parts[1],
+                    title: currentValue.title
                 }
-
-                layer.loader.queue = [];
-
-                layerFactory.destroy(map, resource, layer);
-            }
-        },
-        getLayerFactory: function (type) {
-            return new resourceTypeRegistry[type].layerFactory({
-                config: this.values.config
             });
-        }
-    });
-
-    var viewFactoryRegistry = {};
-
-    PublicaMundi.Maps.registerViewFactory = function (type, constructor) {
-        if (PublicaMundi.Maps.Resources.Types[type] === undefined) {
-            throw 'Resource type is not supported.';
-        }
-
-        if (typeof constructor !== 'function') {
-            throw 'Parameter constructor is not a function.';
-        }
-
-        viewFactoryRegistry[type] = constructor;
-    };
-
-    PublicaMundi.Maps.Resources.UI.ViewFactory = PublicaMundi.Class({
-        initialize: function (options) {
-            PublicaMundi.extend(this.values, options);
         },
-        build: function () {
-            PublicaMundi.operationNotImplemented();
-        }
-    });
-
-    PublicaMundi.Maps.Resources.UI.ViewManager = PublicaMundi.Class({
-        initialize: function (options) {
-            PublicaMundi.extend(this.values, options);
-        },
-        createView: function (options) {
-            if (typeof viewFactoryRegistry[options.resourceType] !== 'function') {
-                throw 'View type is not supported.';
+		setLayerOpacity: function(id, opacity) {
+			var __object = null;
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					__object = this.values.layers[i].layer;
+					break;
+				}
+			}
+			if(__object) {
+				__object.setOpacity(opacity / 100.0);
+			}
+		},
+		moveLayerUp: function(map, id) {
+			var __object = null;
+			
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					__object = this.values.layers[i].layer;
+					break;
+				}
+			}
+			
+			var layers = map.getLayers().getArray();
+			var currentIndex = -1;
+			
+            for (var i = 2; i < layers.length; i++) {
+                if (layers[i] === __object) {
+                    currentIndex = i;
+                    break;
+                }
             }
-
-            var buidler = new viewFactoryRegistry[options.resourceType]({
-                config: this.values.config
-            });
-
-            return buidler.build(options);
-        }
+            
+            if((__object) && ((currentIndex+1) < layers.length)) {
+				var replaced = map.getLayers().item(currentIndex+1);
+				map.getLayers().setAt(currentIndex+1, __object);
+				map.getLayers().setAt(currentIndex, replaced);
+				
+				return true;
+			}
+			
+			return false;
+		},
+		moveLayerDown: function(map, id) {
+			var __object = null;
+			
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					__object = this.values.layers[i].layer;
+					break;
+				}
+			}
+			
+			var layers = map.getLayers().getArray();
+			var currentIndex = -1;
+			
+            for (var i = 2; i < layers.length; i++) {
+                if (layers[i] === __object) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            
+            if((__object) && ((currentIndex-1) > 1)) {
+				var replaced = map.getLayers().item(currentIndex-1);
+				map.getLayers().setAt(currentIndex-1, __object);
+				map.getLayers().setAt(currentIndex, replaced);
+				
+				return true;
+			}
+			
+			return false;
+		}
     });
 
     PublicaMundi.Maps.UI.View = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
@@ -568,20 +542,6 @@
 
         },
         show: function () {
-
-        }
-    });
-
-    PublicaMundi.Maps.UI.CreateResourceView = PublicaMundi.Class(PublicaMundi.Maps.UI.View, {
-        initialize: function (options) {
-            if (typeof PublicaMundi.Maps.UI.View.prototype.initialize === 'function') {
-                PublicaMundi.Maps.UI.View.prototype.initialize.apply(this, arguments);
-            }
-
-            this.event('create');
-            this.event('cancel');
-        },
-        getParameters: function () {
 
         }
     });

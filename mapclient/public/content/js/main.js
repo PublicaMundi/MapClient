@@ -1,45 +1,50 @@
 ﻿requirejs.config({
-    enforceDefine: true,
-    // Disable caching...
+    enforceDefine: false,
+    // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
+		promise: [
+			'https://www.promisejs.org/polyfills/promise-6.1.0.min'
+		],
         jquery: [
-            //'//code.jquery.com/jquery-2.1.1.min',
-            'lib/jquery/jquery-2.1.1.min'
+            'lib/jquery/jquery-2.1.3.min'
         ],
         jqueryui: [
-            //'//code.jquery.com/ui/1.11.2/jquery-ui.min',
-            'lib/jquery-ui/jquery-ui.min'
+            'lib/jquery-ui/jquery-ui.1.11.4.min'
         ],
-        jquerymobile: [
-            //'//code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min',
-            'lib/jquery-mobile/jquery.mobile-1.4.5'
-        ],
+		bootstrap: [
+			'lib/bootstrap/current/bootstrap.min'
+		],
+		bootstrap_select: [
+			'lib/bootstrap-select/bootstrap-select.min'
+		],
         ol: [
-            'lib/ol3/ol'
+            'lib/ol3/ol.3.4.0'
         ],
         URIjs: 'lib/uri',
         x2js: 'lib/x2js/xml2json',
         app: 'app/app',
+        controls: 'app/controls',
         shared: 'app/shared',
-        wms: 'app/model/wms',
-        'wms-ui': 'app/view/wms',
-        wfs: 'app/model/wfs',
-        'wfs-ui': 'app/view/wfs',
-        file: 'app/model/file',
-        'file-ui': 'app/view/file',
-        geojson: 'app/model/geojson',
-        gml: 'app/model/gml',
-        kml: 'app/model/kml',
+        wms: 'app/wms',
         proj4: 'lib/proj4js/proj4',
-        config: 'app/view/config',
-        ckan: 'app/ckan'
+        ckan: 'app/ckan',
+        api: 'api/data'
     },
     shim: {
+		jquery: {
+			deps : ['promise']
+		},
+		bootstrap : { 
+			deps : ['jquery'] 
+		},
+		bootstrap_select : { 
+			deps : ['bootstrap', 'jquery'] 
+		},
+		fuelux: {
+			deps : ['jquery'] 
+		},
         jqueryui: {
-            deps: ['jquery']
-        },
-        jquerymobile: {
             deps: ['jquery']
         },
         ol: {
@@ -64,24 +69,25 @@
                 'URIjs/URI',
             ]
         },
+        controls: {
+            deps: [
+                'shared'
+            ]
+        },
         app: {
             deps: [
                 'jquery',
-                'jquerymobile',
+                'bootstrap',
+                'bootstrap_select',
+                'jqueryui',                
                 'proj4',
                 'ol',
                 'URIjs/URI',
                 'x2js',
                 'ckan',
+                'controls',                
                 'wms',
-                'wms-ui',
-                'wfs',
-                'wfs-ui',
-                'file',
-                'file-ui',
-                'geojson',
-                'gml',
-                'kml',
+                'api'
             ]
         },
         wms: {
@@ -89,75 +95,25 @@
                 'shared'
             ]
         },
-        config: {
+        api: {
             deps: [
                 'shared'
-            ]
-        },
-        'wms-ui': {
-            deps: [
-                'shared', 'wms', 'config'
-            ]
-        },
-        wfs: {
-            deps: [
-                'shared'
-            ]
-        },
-        'wfs-ui': {
-            deps: [
-                'shared', 'wfs', 'config'
-            ]
-        },
-        file: {
-            deps: [
-                'shared'
-            ]
-        },
-        geojson: {
-            deps: [
-                'shared',
-                'file'
-            ]
-        },
-        gml: {
-            deps: [
-                'shared',
-                'file'
-            ]
-        },
-        kml: {
-            deps: [
-                'shared',
-                'file'
-            ]
-        },
-        'file-ui': {
-            deps: [
-            'shared', 'file', 'config'
             ]
         }
-    }
+	}
 });
 
+var scriptCounter = 0;
+
 requirejs.onResourceLoad = function (context, map, depArray) {
-    //console.log(map.name + ' : ' + map.url);
+	if(typeof $ !== 'undefined') {
+		scriptCounter++;
+		$('#loading-text').html('Loading Scripts ... ' + (100 * scriptCounter / 11).toFixed(0) + '%');
+	}
 };
 
 define(['module'], function (module) {
     "use strict";
-
-    require(['jquery'], function ($) {
-        $(document).on("mobileinit", function () {
-            // Add code for jQuery mobile initialization here ...
-
-            // $.mobile.ignoreContentEnabled = true;
-        });
-
-        $(document).on('pageinit', function () {
-            // Add code for main page initialization here ...
-        });
-    });
 
     require(['jquery', 'app'], function ($, PublicaMundi) {
         $(function () {

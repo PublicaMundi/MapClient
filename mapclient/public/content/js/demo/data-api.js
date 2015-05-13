@@ -1,11 +1,16 @@
-$(function () {    
+define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
+    "use strict";
+    
     var queryIndex = 0;
 
     var QueryMode = {
         JSON : 'json',
         FLUENT : 'fluent'
     };
-
+    
+    var path = module.config().path;
+    var endpoint = path;
+    
     var queryEditor = CodeMirror.fromTextArea(document.getElementById("query"), {
         lineNumbers: true,
         mode: {name: "javascript", globalVars: true},
@@ -14,6 +19,7 @@ $(function () {
         tabSize: 8,
         extraKeys: {"Ctrl-Space": "autocomplete"}
     });
+    
     queryEditor.on('keyup', function(sender, e) {
         if(e.key==='.') {
             queryEditor.showHint(e);
@@ -48,7 +54,7 @@ $(function () {
         jsonSyntaxEditor.refresh();
     });
 
-    $('#query_exec').tooltip();
+    $('#query_exec, #query_export').tooltip();
 
     $.widget( "custom.iconselectmenu", $.ui.selectmenu, {
         _renderItem: function( ul, item ) {
@@ -187,10 +193,10 @@ $(function () {
         });
     });
 
-    var renderFeatures = function(data, execution) {
+    var downloadFile = function(data, execution) {
         $('.progress-loader').hide();
 
-        $('#output').val(JSON.stringify(data, null, " "));
+        $('#output').val('');
         outputEditor.setValue($('#output').val());
 
         if(execution.size) {
@@ -200,15 +206,36 @@ $(function () {
             $('#query_time').html(((execution.end - execution.start)/1000.0).toFixed(2) + ' secs').show();
         }
 
-        if('success' in data) {
-            if(!data.success) {
+        vectorSource.clear();
+        
+        if(data.success) {
+            jQuery('#export-download-frame').remove();
+            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + path + 'api/download?code=' + data.code + '"></iframe></div>');
+        }
+    }
+    
+    var renderFeatures = function(response, execution) {
+        $('.progress-loader').hide();
+
+        $('#output').val(JSON.stringify(response, null, " "));
+        outputEditor.setValue($('#output').val());
+
+        if(execution.size) {
+            $('#query_size').html(execution.size.toFixed(2) + ' Kbs').show();
+        }
+        if((execution.start) && (execution.end)) {
+            $('#query_time').html(((execution.end - execution.start)/1000.0).toFixed(2) + ' secs').show();
+        }
+
+        if('success' in response) {
+            if(!response.success) {
                 $("#tabs").tabs("option", "active", 1);
                 return;
             }
         }
 
         var format = new ol.format.GeoJSON();
-        var features = format.readFeatures(data, {
+        var features = format.readFeatures(response.data[0], {
             dataProjection: 'EPSG:3857',
             featureProjection: 'EPSG:3857'
         });
@@ -221,14 +248,23 @@ $(function () {
         $("#tabs").tabs("option", "active", 0);
     };
 
-    var executeQuery = function() {
+    var executeQuery = function(action) {
         vectorSource.clear();
         select.getFeatures().clear();
 
         $('#query_size, #query_time').hide();
 
-        var url = path + 'api/query';
-
+        var url;
+        
+        switch(action) {
+            case 'execute':
+                url = path + 'api/query';
+                break;
+            case 'export':
+                url = path + 'api/export';
+                break;
+        }
+        
         var execution = {
             size : null,
             start : (new Date()).getTime(),
@@ -256,24 +292,31 @@ $(function () {
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     data: queryEditor.getValue(' ')
-                }).done(function (data, textStatus, jqXHR) {
+                }).done(function (response, textStatus, jqXHR) {
                     execution.end = (new Date()).getTime();
                     var contentLength = jqXHR.getResponseHeader('Content-Length');
                     if(contentLength) {
                         execution.size =  contentLength / 1024.0;
                     }
 
-                    renderFeatures(data, execution);
+                    switch(action) {
+                        case 'execute':
+                            renderFeatures(response, execution);
+                            break;
+                        case 'export':
+                            downloadFile(response, execution);
+                            break;
+                    }
                 }).always(function() {
                     $('.progress-loader').hide();
                 });
                 break;
             case QueryMode.FLUENT:
-                if(typeof queries[queryIndex].method === 'function' ) {
+
+                if(typeof PublicaMundi.queries[queryIndex].method === 'function' ) {
                     try {
                         var dynamicFunction = null;
                         eval('dynamicFunction = function(callback) { ' + queryEditor.getValue() + '};');  
-
                         if(typeof dynamicFunction === 'function') {
                             dynamicFunction.call(this, renderFeatures);
                         }
@@ -281,7 +324,7 @@ $(function () {
                         console.log(e.toString());
                     }
                    
-                    //queries[queryIndex].method(renderFeatures);
+                    //PublicaMundi.queries[queryIndex].method(renderFeatures);
                 }
                 break;
         }
@@ -297,7 +340,7 @@ $(function () {
             $('#query_prev').addClass('query-button-enabled');
         }
 
-        if(index === queries.length-1) {
+        if(index === PublicaMundi.queries.length-1) {
             $('#query_next').removeClass('query-button-enabled').addClass('query-button-disabled');
         } else if(!$('#query_next').hasClass('query-button-enabled')) {
             $('#query_next').addClass('query-button-enabled');
@@ -305,13 +348,13 @@ $(function () {
 
         $('#query_index').html(index+1);
 
-        $('#query-notes').html(queries[index].description);
+        $('#query-notes').html(PublicaMundi.queries[index].description);
         switch(mode) {
             case QueryMode.JSON:
-                $('#query').val(JSON.stringify(queries[index].query, null, "  "));
+                $('#query').val(JSON.stringify(PublicaMundi.queries[index].query, null, "  "));
                 break;
             case QueryMode.FLUENT:
-                $('#query').val(queries[index].method.toString());
+                $('#query').val(PublicaMundi.queries[index].method.toString());
                 break;
         }
 
@@ -337,7 +380,7 @@ $(function () {
     });
 
     $('#query_next').click(function(e) {
-        if(queryIndex < queries.length-1) {
+        if(queryIndex < PublicaMundi.queries.length-1) {
             queryIndex++;
             setQuery(queryIndex);
         }
@@ -345,9 +388,14 @@ $(function () {
 
     $('#query_exec').click(function(e) {
         $('.progress-loader').show();
-        executeQuery();
+        executeQuery('execute');
     });
 
+    $('#query_export').click(function(e) {
+        $('.progress-loader').show();
+        executeQuery('export');
+    });
+    
     $('.query-mode-option').click(function(e) {
         if($(this).hasClass('query-mode-option-selected')) {
             return;
@@ -451,7 +499,7 @@ $(function () {
 
         map.updateSize();
 
-        $('#query-container .CodeMirror').height($(window).height()-221);
+        $('#query-container .CodeMirror').height($(window).height()-261);
         queryEditor.refresh();
 
         $('#tabs-2 .CodeMirror').height($(window).height()-126).width($(window).width() - 482);
@@ -487,4 +535,7 @@ $(function () {
     setTimeout(function () {
         $('#block-ui').fadeOut(300).hide();
     }, 1000);
+
+    return PublicaMundi;
 });
+
