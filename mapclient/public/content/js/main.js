@@ -22,7 +22,6 @@
             'lib/ol3/ol.3.4.0'
         ],
         URIjs: 'lib/uri',
-        x2js: 'lib/x2js/xml2json',
         app: 'app/app',
         controls: 'app/controls',
         shared: 'app/shared',
@@ -53,9 +52,6 @@
             ],
             exports: 'ol'
         },
-        x2js: {
-            exports: "X2JS",
-        },
         ckan: {
             deps: [
                 'jquery',
@@ -83,7 +79,6 @@
                 'proj4',
                 'ol',
                 'URIjs/URI',
-                'x2js',
                 'ckan',
                 'controls',                
                 'wms',
@@ -108,7 +103,7 @@ var scriptCounter = 0;
 requirejs.onResourceLoad = function (context, map, depArray) {
 	if(typeof $ !== 'undefined') {
 		scriptCounter++;
-		$('#loading-text').html('Loading Scripts ... ' + (100 * scriptCounter / 11).toFixed(0) + '%');
+		$('#loading-text').html('Loading Scripts ... ' + (100 * scriptCounter / 10).toFixed(0) + '%');
 	}
 };
 

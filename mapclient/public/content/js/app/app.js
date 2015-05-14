@@ -334,16 +334,42 @@
         members.map.control.addInteraction(members.map.interactions.bbox.control);
         members.map.interactions.bbox.control.setActive(false);
     };
-  
+
+    var resize = function() {
+        $('#dialog-container').height($(window).height()-50).width(($(window).width()-5));
+        
+        var height = $(window).height();
+
+        var headerHeight = $('#layer-tree-header').outerHeight(true) + 
+                           $('#layer-selection-header').outerHeight(true) + 
+                           $('#tools-header').outerHeight(true);
+
+        var selectionHeight = ( $('#layer-selection').is(':visible') ? $('#layer-selection').outerHeight(true) : 0);
+        var toolsHeight = ( $('#tools').is(':visible') ? $('#tools').outerHeight(true) : 0);
+
+        var offset = 100;
+        
+        $('#panel-content-left').height(height - offset);
+        
+        $('#layer-tree-group').height(height - headerHeight - selectionHeight - toolsHeight - offset);
+        $('#layer-tree-organization').height(height - headerHeight - selectionHeight - toolsHeight - offset);
+        $('#layer-tree-search').height(height - headerHeight - selectionHeight - toolsHeight - offset);
+    };
+          
     var initializeUI = function() {
-        // Layout management
-        var resize = function() {
-            $('#dialog-container').height($(window).height()-50).width(($(window).width()-5));
-        };
+        // Left sliding panel accordion events
+        $('#layer-selection-header').click(function() {
+            $('#layer-selection').show();
+            $('#tools').hide();
+            resize();
+        });
         
-        resize();
-        $(window).resize(resize);
-        
+        $('#tools-header').click(function() {
+            $('#tools').show();
+            $('#layer-selection').hide();
+            resize();
+        });
+                
         // CKAN catalog
 		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
 			endpoint: module.config().ckan.endpoint
@@ -391,14 +417,30 @@
 			resources: members.resources
 		});
         
-        members.components.dialog1 = new PublicaMundi.Maps.Dialog({
-            title: 'Επιλογή θέσης',
+        // Dialogs
+        members.components.catalogInfoDialog = new PublicaMundi.Maps.Dialog({
+            title: '',
             element: 'dialog-1',
             target : 'dialog-container',
             visible: false,
-            width: 400
+            width: 400,
+            height: 200,
+            buttons: {
+                close : {
+                    text: 'Κλείσιμο',
+                    style: 'primary'
+                }
+            }
         });
 
+        members.components.catalogInfoDialog.on('dialog:action', function(args){
+                switch(args.action){ 
+                    case 'close':
+                        this.hide();
+                        break;
+                }
+        });
+        
         // UI actions
         members.actions.export = new PublicaMundi.Maps.Action({
             element: 'action-export',
@@ -560,18 +602,7 @@
 				$('.panel-left-label').hide();
 			}
 		});
-
-        // Left sliding panel accordion events
-        $('#layer-selection-header').click(function() {
-            $('#layer-selection').slideDown(400);
-            $('#tools').slideUp(400);
-        });
-        
-        $('#tools-header').click(function() {
-            $('#tools').slideDown(400);
-            $('#layer-selection').slideUp(400);
-        });
-        
+       
         // Tooltips
         $('.selected-layer-opacity-label, .img-text').tooltip();
 
@@ -614,14 +645,39 @@
 			members.components.layerSelection.remove(args.id);
 		}
 		
+        var showCatalogObjectInfo = function(args) {
+            if(args.data) {
+                switch(args.type) {
+                    case 'group':
+                        members.components.catalogInfoDialog.setTitle(args.data.caption);
+                        members.components.catalogInfoDialog.setContent(args.data.description);
+                        members.components.catalogInfoDialog.show();
+                        break;
+                    case 'organization':
+                        members.components.catalogInfoDialog.setTitle(args.data.caption);
+                        members.components.catalogInfoDialog.setContent(args.data.description);
+                        members.components.catalogInfoDialog.show();
+                        break;
+                    case 'package':
+                        members.components.catalogInfoDialog.setTitle(args.data.title);
+                        members.components.catalogInfoDialog.setContent(args.data.notes);
+                        members.components.catalogInfoDialog.show();
+                        break;
+                }
+            }
+        };
+        
 		members.components.layerTreeGroup.on('layer:added', layerAdded);
 		members.components.layerTreeGroup.on('layer:removed', layerRemoved);
+        members.components.layerTreeGroup.on('catalog:info', showCatalogObjectInfo);
         
 		members.components.layerTreeOrganization.on('layer:added', layerAdded);
         members.components.layerTreeOrganization.on('layer:removed', layerRemoved);
+        members.components.layerTreeOrganization.on('catalog:info', showCatalogObjectInfo);
         
         members.components.layerTreeSearch.on('layer:added', layerAdded);
         members.components.layerTreeSearch.on('layer:removed', layerRemoved);
+        members.components.layerTreeSearch.on('catalog:info', showCatalogObjectInfo);
 
         // Interaction events
         members.components.layerTreeSearch.on('bbox:draw', function(args) {
@@ -660,11 +716,23 @@
             this.setQueryBoundingBox(null);
         });
         
+		var layerSelectionAdded  = function(args) {
+            resize();
+		}
+        
 		var layerSelectionRemoved  = function(args) {
 			members.components.layerTreeGroup.remove(args.id);
+            resize();
 		}
 		
-		members.components.layerSelection.on('layer:removed', layerSelectionRemoved);
+		members.components.layerSelection.on('layer:added', layerSelectionAdded);
+        
+        members.components.layerSelection.on('layer:removed', layerSelectionRemoved);
+        
+        // Initialize layeout
+        resize();
+        
+        $(window).resize(resize);
 	};
 
     var attachEvents = function () {	

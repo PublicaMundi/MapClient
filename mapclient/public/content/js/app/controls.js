@@ -70,6 +70,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('bbox:cancel');
             
             this.event('catalog:search');
+            this.event('catalog:info');
             
 			var sortByTitle = function(a, b) {
 				if(a.title < b.title) {
@@ -135,6 +136,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
 					content.push('<div class="tree-text tree-text-1">' + groups[i].title + '</div>');
+                    if(groups[i].description) {
+                        content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                    }
 					content.push('</div></li>');
 				}
 				$('#' + this.values.contentElement).append(content.join(''));
@@ -152,6 +156,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
 					content.push('<div class="tree-text tree-text-1">' + organizations[i].caption + '</div>');
+                    if(organizations[i].description) {
+                        content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                    }
 					content.push('</div></li>');
 				}
 				$('#' + this.values.contentElement).append(content.join(''));
@@ -207,6 +214,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
 						content.push('<div class="tree-text tree-text-2">' + group_organizations[i].caption + '</div>');
+                        if(group_organizations[i].description) {
+                            content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        }
 						content.push('</div>');				
 						content.push('</li>');
 					}
@@ -269,7 +279,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  resourceId + '_' + 
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
-							content.push('<div class="tree-info"><img src="content/images/info.png" class="img-16" /></div>');
+                            if(organization_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 						} else if(organization_packages[j].resources.length === 1) {
@@ -283,6 +295,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  resourceId + '_' + 
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
+                            if(organization_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 					    } else {
@@ -293,6 +308,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  organization_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
+                            if(organization_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 						}
@@ -353,6 +371,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
 						content.push('<div class="tree-text tree-text-2">' + organization_groups[i].title + '</div>');
+                        if(organization_groups[i].description) {
+                            content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        }
 						content.push('</div>');
 						content.push('</li>');
 					}
@@ -415,7 +436,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  resourceId + '_' + 
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
-							content.push('<div class="tree-info"><img src="content/images/info.png" class="img-16" /></div>');
+                            if(group_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 						} else if(group_packages[j].resources.length === 1) {
@@ -429,6 +452,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  resourceId + '_' + 
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
+                            if(group_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 					    } else {
@@ -439,6 +465,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  group_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
+                            if(group_packages[j].notes) {
+                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                            }
 							content.push('</div>');
 							content.push('</li>');
 						}
@@ -487,7 +516,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                              resource.id + '_' + 
                                                                              this.values.elemeng + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
-						content.push('<div class="tree-info"><img src="content/images/info.png" class="img-16" /></div>');
 						content.push('</div>');
 						content.push('</li>');
 					} else {
@@ -543,7 +571,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                          layers[i].key + '_' + 
                                                                          this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 					content.push('<div class="tree-text tree-text-4">' + layers[i].title + '</div>');
-					content.push('<div class="tree-info"><img src="content/images/info.png" class="img-16" /></div>');
 					content.push('</div>');
 					content.push('</li>');
 
@@ -575,7 +602,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						$('#' + id).closest('li').find('ul').first().fadeIn(250);
 					} else {
 						if(type === 'group') {
-							self.values.ckan.getGroupById(parts[0]).then(function(group) {
+							self.values.ckan.loadGroupById(parts[0]).then(function(group) {
 								renderGroupOrganizations.call(self, $('#' + id).closest('li'), id);
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
@@ -583,7 +610,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 							});							
 						} else if (type === 'organization') {
-							self.values.ckan.getOrganizationById(parts[0]).then(function(organization) {
+							self.values.ckan.loadOrganizationById(parts[0]).then(function(organization) {
 								renderOrganizationGroups.call(self, $('#' + id).closest('li'), id);
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
@@ -650,6 +677,33 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 			});
 		
+            $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-info', function() {
+                var id = $(this).data('id');
+                var type = $(this).data('type');
+                
+                var data = null;
+                
+                switch(type) {
+                    case 'group':
+                        data = self.values.ckan.getGroupById(id);
+                        break;
+                    case 'organization':
+                        data = self.values.ckan.getOrganizationById(id);
+                        break;
+                    case 'package':
+                        if(self.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
+                            data = self.values.ckan.getFilteredPackageById(id);
+                        } else {
+                            data = self.values.ckan.getPackageById(id);   
+                        }
+                        break;
+                        
+                }
+                if(data) {
+                    self.trigger('catalog:info', { sender: self, type : type, data : data });
+                }
+            });
+            
             if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-draw-btn', function(e) {
                     e.preventDefault();
@@ -864,7 +918,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     
                     content.push('</div>');
                     
-                    content.push('<div class="clearfix" id="' + this.values.element + '-result" style="margin-top: 105px; border-top: 1px solid #E7E7E7; max-height: 149px; overflow-y: auto">');
+                    content.push('<div id="' + this.values.element + '-result" class="clearfix layer-tree-search-result">');
                     content.push('</div>');
                     
                     $('#' + this.values.element).html(content.join(''));
@@ -1499,14 +1553,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 image: '',
                 title: null,
                 visible: false,
-                width: 600
+                width: 600,
+                height: 400,
+                buttons: {
+                },
+                closeOnEscape: true
 			});
 			
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
             
-            this.event('action:execute');
+            this.values.positionInitialized = false;
+            
+            this.event('dialog:close');
+            this.event('dialog:action');
             
             this.render();
         },
@@ -1517,23 +1578,29 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             var content = [];
             
-            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: 1; width: ' + (this.values.width || 600 ) + 'px;">');
+            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: 1; width: ' + (this.values.width || 600 ) + 'px; outline: none;" tabIndex="1">');
             content.push('<div class="modal-content">');
             
             content.push('<div class="modal-header">');
-            content.push('<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>');
+            content.push('<button id="' + this.values.element + '-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>');
             content.push('<h4 class="modal-title">' + this.values.title + '</h4>');
             content.push('</div>');
             
-            content.push('<div class="modal-body">');
+            content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) + 'px; overflow: auto;" >');
             if(typeof this.values.renderContent === 'function'){
                 content = content.concat(this.values.renderContent());
             }
             content.push('</div>');
             
             content.push('<div class="modal-footer">');
-            content.push('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>');
-            content.push('<button type="button" class="btn btn-primary">Save changes</button>');            
+            if(this.values.buttons) {
+                for(var action in this.values.buttons) {
+                    this.values.buttons[action].style = this.values.buttons[action].style || 'default';
+                    
+                    content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-action="' + action + 
+                                 '">' + this.values.buttons[action].text + '</button>');
+                }
+            }
             content.push('</div>');
             
             content.push('</div>');
@@ -1547,11 +1614,36 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 containment: 'parent'
             });
             
+            $('#' + this.values.element).on('click.' + this.values.element, 'button', function() {
+                self.trigger('dialog:action', { sender : self, action : $(this).data('action') });
+            });
+            
+            $('#' +  this.values.element + '-close').click(function(e) {
+                self.hide();
+                self.trigger('dialog:close', { sender : self });
+            });
+            
             if(this.values.visible) {
                 this.show();
             } else {
                 this.hide();
             }
+            
+            $('#' +  this.values.element).on('keydown', function(e){ 
+                if((self.values.closeOnEscape) && (e.keyCode == 27)) {
+                    self.hide();
+                    self.trigger('dialog:close', { sender : self });
+                }
+            });
+        },
+        show: function() {
+            PublicaMundi.Maps.Component.prototype.show.apply(this, arguments);
+            
+            if(!this.values.positionInitialized) {
+                this.values.positionInitialized = true;
+                this.moveToCenter();
+            }
+            $('#' +  this.values.element).focus();
         },
         moveTo: function(left, top) {
             $('#' + this.values.element).offset({ top : top, left : left });
@@ -1561,6 +1653,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 top : ($(window).height() - $('#' + this.values.element).height()) / 2,
                 left : ($(window).width() - $('#' + this.values.element).width()) / 2 
             });
+        },
+        setTitle: function(text) {
+            $('#' + this.values.element).find('.modal-title').html(text);
+        },
+        setContent: function(text) {
+            $('#' + this.values.element).find('.modal-body').html(text);
         }
     });
 

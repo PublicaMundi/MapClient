@@ -199,15 +199,20 @@ ul {
         padding: 0px 0px 2px 0px;
     }
 
+.layer-tree-header {
+    border-bottom: solid 1px #E7E7E7;
+    padding: 2px 0px 6px 2px;
+}
+
 .layer-tree-group {
-    max-height: 300px;
+    min-height: 300px;
     overflow-y: auto;
     padding: 0px 2px 0px 0px;
     border-bottom: solid 1px #E7E7E7;
 }
 
 .layer-tree-organization{
-    max-height: 300px; 
+    min-height: 300px;
     overflow-y: auto; 
     padding: 0px 2px 0px 0px; 
     display: none; 
@@ -215,12 +220,43 @@ ul {
 }
 
 .layer-tree-search {
-    max-height: 300px; 
+    min-height: 300px;
     overflow-y: auto;
     padding: 0px;
     border-bottom: solid 1px #E7E7E7;
     position: relative;
     min-height: 110px;
+}
+
+.layer-tree-search-result {
+    margin-top: 105px;
+    border-top: 1px solid #E7E7E7;
+    min-height: 149px;
+    overflow-y: auto
+}
+
+.layer-selection-header {
+    padding: 8px 0px 6px 2px;
+    border-bottom: solid 1px #E7E7E7;
+    cursor: pointer;
+}
+
+.layer-selection{
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.tools-header {
+    padding: 8px 0px 6px 2px;
+    border-bottom: solid 1px #E7E7E7;
+    cursor: pointer;
+}
+
+.tools { 
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 4px 0px 4px 0px;
+    display: none;
 }
 
 .selected-layer-text {
@@ -309,16 +345,12 @@ ul {
     cursor: pointer;
 }
 
-
-
 .tree-toggle {
     -moz-transition: transform 250ms linear;
     -o-transition: transform 250ms linear;
     -webkit-transition: transform 250ms linear;
     transition: transform 250ms linear;
 }
-
-
 
 .img-16 {
     height: auto;
@@ -344,7 +376,6 @@ ul {
     cursor: pointer;
 }
 
-
 .tree-node-collapse {
     -moz-transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
@@ -353,21 +384,15 @@ ul {
     transform: rotate(-90deg);
 }
 
-
-
 .selected-layer {
     overflow: hidden;
     padding-bottom: 10px;
     border-bottom: solid 1px #E7E7E7;
 }
 
-
-
 .inactive {
     cursor: not-allowed;
 }
-
-
 
 .active {
     cursor: pointer;

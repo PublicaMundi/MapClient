@@ -62,29 +62,29 @@ set debug = false
 keys = root, routes, mapclient, sqlalchemy
 
 [handlers]
-keys = console
+keys = console, filelog
 
 [formatters]
 keys = generic
 
 [logger_root]
 level = WARN
-handlers = console
+handlers = console, filelog
 
 [logger_routes]
 level = WARN
-handlers =
+handlers = console, filelog
 qualname = routes.middleware
 # "level = DEBUG" logs the route matched and routing variables.
 
 [logger_mapclient]
 level = WARN
-handlers =
+handlers = console, filelog
 qualname = mapclient
 
 [logger_sqlalchemy]
 level = WARN
-handlers =
+handlers = console, filelog
 qualname = sqlalchemy.engine
 # "level = INFO" logs SQL queries.
 # "level = DEBUG" logs SQL queries and results.
@@ -93,6 +93,12 @@ qualname = sqlalchemy.engine
 [handler_console]
 class = StreamHandler
 args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[handler_filelog]
+class = handlers.RotatingFileHandler
+args = ('%(here)s/data/logs/mapclient.log','a', 10485760, 10)
 level = NOTSET
 formatter = generic
 
