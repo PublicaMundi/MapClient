@@ -277,7 +277,7 @@
 			
 			return -1;
 		},
-        getOrganizationById: function (id, callback, context, data) {
+        loadOrganizationById: function (id) {
 			// Example : http://labs.geodata.gov.gr/api/3/action/organization_show?id=3f94f428-06ec-4fc4-8838-c753866f9155&include_datasets=true
             var self = this;
 
@@ -358,7 +358,15 @@
 				});
 			});
         },
-        getGroupById: function(id) {
+        getOrganizationById: function(id) {
+            for(var i=0; i < this.values.catalog.organizations.length; i++) {
+                if(this.values.catalog.organizations[i].id === id) {
+                    return this.values.catalog.organizations[i];
+                }
+            }
+            return null;
+        },
+        loadGroupById: function(id) {
 			// Example : http://labs.geodata.gov.gr/api/3/action/group_show?id=928771cb-4d0f-4ff6-8c50-984c8457eb71
             var self = this;
 
@@ -440,6 +448,14 @@
 				});
 			});
 		},
+        getGroupById: function(id) {
+            for(var i=0; i < this.values.catalog.groups.length; i++) {
+                if(this.values.catalog.groups[i].id === id) {
+                    return this.values.catalog.groups[i];
+                }
+            }
+            return null;
+        },
         getPackageById: function (id) {
             var p;
 
