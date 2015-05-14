@@ -898,19 +898,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     
                     content.push('<div class="form-group">');
                     content.push('<div class="col-md-3"  id="' + this.values.element + '-box-draw">');
-                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary"><img src="content/images/edit-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" title="Σχεδίαση πλαισίου για χωρική αναζήτηση. Κρατήστε πατημένο το πλήκτρο shift και το δεξί πλήκτρο του ποντικιού για την έναρξη της σχεδίασης."><img src="content/images/edit-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div class="col-md-3" id="' + this.values.element + '-box-remove" style="display: none;">');
-                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" title="Αφαίρεση φίλτρου"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div class="col-md-3" id="' + this.values.element + '-box-apply" style="display: none;">');
-                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success"><img src="content/images/apply-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" title="Εφαρμογή φίλτρου"><img src="content/images/apply-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div class="col-md-3" id="' + this.values.element + '-box-cancel" style="display: none;">');
-                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" title="Ακύρωση"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div class="col-md-3" id="' + this.values.element + '-search">');
-                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary"><img src="content/images/search-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" title="Αναζήτηση"><img src="content/images/search-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('</div>');
 
@@ -922,6 +922,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
                     
                     $('#' + this.values.element).html(content.join(''));
+                    $('#' + this.values.element).find('a').tooltip();
                 }
             } else {
                 $('#' + this.values.element).html('');
