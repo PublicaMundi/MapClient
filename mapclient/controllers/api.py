@@ -575,6 +575,7 @@ class ApiController(BaseController):
             }, None)
         
     def query(self):
+        callback = None
         try:
             result = self._execute_collection(ACTION_QUERY)
             

@@ -329,7 +329,8 @@
             this.values.readers = {};
             this.values.layers = []
             this.values.layerCounter = 0;
-
+            this.values.queryable = [];
+            
             this.event('resource:add');
             this.event('resource:remove');
         },
@@ -401,6 +402,37 @@
 
             return types;
         },
+        updateQueryableResources: function() {
+            var self = this;
+            
+            var url = this.values.path + 'api/resource_show';
+
+            return new Promise(function(resolve, reject) {
+                $.ajax({
+                    url: url,
+                    context: this
+                }).done(function(data, textStatus, jqXHR) {
+                    self.values.queryable= [];
+                    
+                    if((data) && (data.success)) {
+                         for (var id in data.resources) {
+                            if((data.resources[id].wms_layer) && (data.resources[id].wms_server)) {
+                                self.values.queryable.push(data.resources[id]);
+                            }
+                        }
+                    }
+
+                    resolve(self.values.queryable);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log('Failed to load DATA API resource metadata: ' + url);
+                        
+                    reject(errorThrown);
+                });
+            });
+        },
+        getQueryableResources: function() {
+            return this.values.queryable;
+        },
         createLayer: function (map, metadata, layer, id, title) {
 			var __object = null;
 			for(var i=0; i < this.values.layers.length; i++) {
@@ -455,6 +487,14 @@
                     title: currentValue.title
                 }
             });
+        },
+        isLayerSelected: function(id) {
+            for(var i=0; i < this.values.layers.length; i++) {
+                if(id === this.values.layers[i].id) {
+                    return true;
+                }
+            }
+            return false;
         },
 		setLayerOpacity: function(id, opacity) {
 			var __object = null;

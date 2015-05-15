@@ -530,7 +530,7 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
         throw new PublicaMundi.Data.SyntaxException('Format is not supported.');
     };  
     
-    PublicaMundi.Data.Query.prototype.execute = function (callback) {
+    PublicaMundi.Data.Query.prototype.execute = function (callback, context) {
         callback = callback || this.callback;
 
         var execution = {
@@ -554,7 +554,7 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
             }
 
             if (typeof callback === 'function') {
-                callback.call(this, data, execution);
+                callback.call( context || this, data, execution);
             }
         });
 

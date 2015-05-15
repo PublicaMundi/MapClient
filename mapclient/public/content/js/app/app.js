@@ -32,34 +32,7 @@
         query: null,
         resource: null
     };
-	
- 	var getQueryableResourceMetadata = function() {
-        var url = (members.config.path ? members.config.path + '/' : '') + 'api/resource_show';
 
-		return new Promise(function(resolve, reject) {
-			$.ajax({
-				url: url,
-				context: this
-			}).done(function(data, textStatus, jqXHR) {
-				var resources = [];
-				
-				if((data) && (data.success)) {
-					 for (var id in data.resources) {
-						if((data.resources[id].wms_layer) && (data.resources[id].wms_server)) {
-							resources.push(data.resources[id]);
-						}
-					}
-				}
-
-				resolve(resources);
-			}).fail(function (jqXHR, textStatus, errorThrown) {
-				console.log('Failed to load DATA API resource metadata: ' + url);
-					
-				reject(errorThrown);
-			});
-		});
-	};
-	
     var initializeParameters = function () {
         var resource = module.config().resource;
 
@@ -377,6 +350,7 @@
 
         // Resources
 		members.resources = new PublicaMundi.Maps.Resources.ResourceManager({
+            path: (members.config.path ? members.config.path + '/' : ''),
 			proxy: PublicaMundi.getProxyUrl(module.config().proxy)
 		});
 
@@ -441,6 +415,30 @@
                 }
         });
         
+        members.components.tableBrowserDialog = new PublicaMundi.Maps.DialogTableBrowser({
+            title: 'Table Data',
+            element: 'dialog-2',
+            target : 'dialog-container',
+            visible: false,
+            width: 800,
+            height: 400,
+            buttons: {
+                close : {
+                    text: 'Κλείσιμο',
+                    style: 'primary'
+                }
+            },
+            endpoint: (members.config.path ? members.config.path + '/' : '') + members.config.api.endpoint
+        });
+
+        members.components.tableBrowserDialog.on('dialog:action', function(args){
+                switch(args.action){ 
+                    case 'close':
+                        this.hide();
+                        break;
+                }
+        });
+        
         // UI actions
         members.actions.export = new PublicaMundi.Maps.Action({
             element: 'action-export',
@@ -462,7 +460,7 @@
                 var polygon = JSON.parse(format.writeGeometry(feature.getGeometry()));
 
                 var layers = members.resources.getSelectedLayers();
-                var resources = members.query.resources;
+                var resources = members.resources.getQueryableResources();
 
                 var quyarable = [];
                 for(var i=0; i<layers.length; i++) {
@@ -480,7 +478,7 @@
                 if(quyarable.length > 0) {
                     this.suspendUI();
                                             
-                    var query = members.query.request;
+                    var query = members.query;
                     
                     query.reset().format(PublicaMundi.Data.Format.GeoJSON)
 
@@ -539,7 +537,20 @@
             map: members.map.control,
             actions: [members.actions.export]
         });
-        
+
+        members.tools.select = new PublicaMundi.Maps.SelectTool({
+            element: 'tool-select',
+            name: 'select',
+            images: {
+                enabled: 'content/images/cursor-w.png',
+                disabled: 'content/images/cursor.png'
+            },
+            title: 'Επιλογή αντικειμένου',
+            map: members.map.control,
+            resources: members.resources,
+            endpoint: members.config.api.endpoint
+        });
+
         var handleToolToggle = function(args) {
             var name = args.name;
             for(var item in members.tools) {
@@ -547,11 +558,14 @@
                     members.tools[item].setActive(false);
                 }
             }
+            resize();
         };
+                
+        members.tools.length.on('tool:toggle', handleToolToggle);
+        members.tools.area.on('tool:toggle', handleToolToggle);
+        members.tools.export.on('tool:toggle', handleToolToggle);
+        members.tools.select.on('tool:toggle', handleToolToggle);
         
-        members.tools.length.on('tool:toggle', handleToolToggle)
-        members.tools.area.on('tool:toggle', handleToolToggle)
-        members.tools.export.on('tool:toggle', handleToolToggle)
         
         // Left sliding panel
 		$('body').on('click', '.panel-left-hidden', function(e) {
@@ -838,13 +852,8 @@
 				members.components.layerTreeOrganization.refresh();
 
 				$('#loading-text').html('Loading Metadata ... 0%');
-				getQueryableResourceMetadata().then(function(resources) {
-					var url = (members.config.path ? members.config.path + '/' : '') + members.config.api.endpoint;
-					
-					members.query = {
-						resources: resources,
-						request: new PublicaMundi.Data.Query(members.config.api.endpoint)
-					};
+				members.resources.updateQueryableResources().then(function(resources) {				
+					members.query = new PublicaMundi.Data.Query(members.config.api.endpoint);
 					
 					$('#loading-text').html('Loading Metadata ... 100%');
 					
