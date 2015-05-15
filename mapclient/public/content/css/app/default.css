@@ -321,7 +321,7 @@ ul {
 }
 
 .tree-text-1 {
-    max-width: 16.2em;
+    max-width: 15.8em;
 }
 
 .tree-text-2 {
@@ -539,4 +539,14 @@ ul {
     bottom: -6px;
     margin-left: -7px;
     left: 50%;
+}
+
+.data-table {
+}
+
+.data-table td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

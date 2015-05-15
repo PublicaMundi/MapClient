@@ -264,13 +264,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						   (organization_packages[j].resources[0].metadata) && 
 						   (!!organization_packages[j].resources[0].metadata.extras.layer)) {
 
-							var selected = false;
 							var resourceId = organization_packages[j].resources[0].id ;
 							var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
-							if( $('[data-layer="' + layerId  +'"]').size() > 0) {
-								selected = $('[data-layer="' + layerId +'"]').data('selected');
-							}
-							
+							var selected = this.values.resources.isLayerSelected(layerId);
+                            
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
 							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
@@ -421,12 +418,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						   (group_packages[j].resources[0].metadata) && 
 						   (!!group_packages[j].resources[0].metadata.extras.layer)) {
 							   
-							var selected = false;
 							var resourceId = group_packages[j].resources[0].id ;
 							var layerId = resourceId + '_' + group_packages[j].resources[0].metadata.extras.layer;
-							if( $('[data-layer="' + layerId  +'"]').size() > 0) {
-								selected = $('[data-layer="' + layerId +'"]').data('selected');
-							}
+                            var selected = this.values.resources.isLayerSelected(layerId);
 							
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
@@ -502,12 +496,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 					if(!!resource.metadata.extras.layer) {
 						   
-						var selected = false;
 						var layerId = resource.id + '_' + resource.metadata.extras.layer;
-						if( $('[data-layer="' + layerId  +'"]').size() > 0) {
-							selected = $('[data-layer="' + layerId +'"]').data('selected');
-						}
-						
+						var selected = this.values.resources.isLayerSelected(layerId);
+                        
 						content.push('<li class="tree-node tree-node-checkbox">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' +
@@ -556,11 +547,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				content.push('<ul class="tree-node" style="display: none;">');
 				
 				for(var i = 0; i < layers.length; i++) {
-					var selected = false;
 					var layerId = resource_id + '_' + layers[i].name;
-					if( $('[data-layer="' + layerId  +'"]').size() > 0) {
-						selected = $('[data-layer="' + layerId +'"]').data('selected');
-					}
+                    var selected = this.values.resources.isLayerSelected(layerId);
 						
 					content.push('<li class="tree-node tree-node-checkbox">');
 					content.push('<div class="clearfix">');
@@ -896,20 +884,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     
-                    content.push('<div class="form-group">');
-                    content.push('<div class="col-md-3"  id="' + this.values.element + '-box-draw">');
+                    content.push('<div class="clearfix">');
+                    content.push('<div style="float: left; padding-right: 10px;"  id="' + this.values.element + '-box-draw">');
                     content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" title="Σχεδίαση πλαισίου για χωρική αναζήτηση. Κρατήστε πατημένο το πλήκτρο shift και το δεξί πλήκτρο του ποντικιού για την έναρξη της σχεδίασης."><img src="content/images/edit-w.png" class="img-20" /></a>');
                     content.push('</div>');
-                    content.push('<div class="col-md-3" id="' + this.values.element + '-box-remove" style="display: none;">');
+                    content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-remove">');
                     content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" title="Αφαίρεση φίλτρου"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
-                    content.push('<div class="col-md-3" id="' + this.values.element + '-box-apply" style="display: none;">');
+                    content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-apply">');
                     content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" title="Εφαρμογή φίλτρου"><img src="content/images/apply-w.png" class="img-20" /></a>');
                     content.push('</div>');
-                    content.push('<div class="col-md-3" id="' + this.values.element + '-box-cancel" style="display: none;">');
+                    content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-cancel">');
                     content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" title="Ακύρωση"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
-                    content.push('<div class="col-md-3" id="' + this.values.element + '-search">');
+                    content.push('<div style="float: left; padding-right: 10px;" id="' + this.values.element + '-search">');
                     content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" title="Αναζήτηση"><img src="content/images/search-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('</div>');
@@ -1197,9 +1185,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if(!self.values.feature) {
                     return null;
                 }
+
+                // http://openlayers.org/en/v3.5.0/examples/measure.html
+                var wgs84Sphere = new ol.Sphere(6378137);
+
+                var geom = self.values.feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326');
                 
                 if(self.values.type === PublicaMundi.Maps.MeasureToolType.Length) {
-                    var length = Math.round(self.values.feature.getGeometry().getLength() * 100) / 100;
+                    var coordinates = geom.getCoordinates();
+                    
+                    var length = 0;
+                    for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
+                      var c1 = coordinates[i];
+                      var c2 = coordinates[i + 1];
+                      length += wgs84Sphere.haversineDistance(c1, c2);
+                    }
+    
+                    var length = Math.round(length * 100) / 100;
                     var output;
                     if (length > 100) {
                         output = (Math.round(length / 1000 * 100) / 100) + ' ' + 'km';
@@ -1208,7 +1210,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     }
                     return output;
                 } else {
-                    var area = self.values.feature.getGeometry().getArea();
+                    var coordinates = geom.getLinearRing(0).getCoordinates();
+                    var area = Math.abs(wgs84Sphere.geodesicArea(coordinates));
+                    
                     var output;
                     if (area > 10000) {
                         output = (Math.round(area / 1000000 * 100) / 100) + ' ' + 'km<sup>2</sup>';
@@ -1489,6 +1493,163 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+    var _SelectToolClickHandler = function(e) {
+        if(this.isBusy()) {
+            return;
+        }
+        var layers = members.resources.getSelectedLayers();
+        var resources = members.resources.getQueryableResources();
+
+        var quyarable = [];
+        for(var i=0; i<layers.length; i++) {
+            for(var j=0; j<resources.length; j++) {
+                if(layers[i].resource_id == resources[j].wms) {
+                    quyarable.push({
+                        table: resources[j].table,
+                        title: layers[i].title
+                    });
+                    break;
+                }
+            }
+        }
+
+        var point = {
+            type: 'Point', 
+            coordinates: e.coordinate
+        };
+        
+        if(quyarable.length > 0) {
+            this.suspendUI();
+        
+            var query = this.values.query;        
+            query.reset().format(PublicaMundi.Data.Format.GeoJSON)
+                
+            for(var i=0; i<quyarable.length; i++) {
+                query.resource(quyarable[i].table).
+                      distanceLessOrEqual(
+                        point, 
+                        {
+                            resource: quyarable[i].table, 
+                            name : 'the_geom'
+                        },
+                        this.values.map.getView().getResolution() * this.values.buffer);
+                if(i < (quyarable.length-1)) {
+                    query.queue();
+                }
+            }
+            query.execute(function(response) {
+                this.values.overlay.getFeatures().clear();
+                this.values.features = new ol.Collection();
+                
+                if(response.success) {
+                    var format = new ol.format.GeoJSON();
+                    var id = 1;
+                    
+                    for(var i=0; i< response.data.length; i++) {
+                        if(response.data[i].features.length > 0) {
+                            /*
+                            for(var j=0; j < response.data[i].features.length; j++) {
+                                response.data[i].features[j].id = id;
+                                id++;
+                            }
+                            */
+                            var features = format.readFeatures(response.data[i], {
+                                dataProjection: PublicaMundi.Maps.CRS.Mercator,
+                                featureProjection: PublicaMundi.Maps.CRS.Mercator
+                            });
+                            this.values.features.extend(features);
+                        }
+                    }
+                    this.values.overlay.setFeatures(this.values.features);
+                    
+                    this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
+                }
+                this.resumeUI();
+            }, this);
+        }
+    };
+    
+    PublicaMundi.Maps.SelectTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
+        initialize: function (options) {
+			var self = this;
+
+			PublicaMundi.extend(this.values, {
+                map: null,
+                resources: null,
+                endpoint: null,
+                buffer: 3
+			});
+            
+            if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
+            }
+
+            this.event('selection:changed');
+            
+            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            this.values.features = new ol.Collection;
+            if(this.values.buffer < 0) {
+                this.values.buffer = 2;
+            }
+            
+            // Feature overlay
+            this.values.overlay = new ol.FeatureOverlay({
+                style: [
+                    new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: [255, 255, 255, 0.4]
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#F39C12',
+                            width: 3
+                        })
+                    }),
+                    new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: [255, 255, 255, 0.7]
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#F39C12',
+                                width: 2
+                            })
+                        }),
+                        zIndex: Infinity
+                    })
+                ]
+            });
+            
+            this.render();
+        },
+        setActive: function(active) {
+            PublicaMundi.Maps.Tool.prototype.setActive.apply(this, [active]);
+            
+            if(this.values.active) {    
+                this.values.map.on('click', _SelectToolClickHandler, this);
+                this.values.overlay.setMap(this.values.map);
+            } else {
+                this.values.map.un('click', _SelectToolClickHandler, this);
+                this.values.overlay.setMap(null);
+            }
+        },
+        getFeatures: function() {
+            return this.values.features.getArray();
+        },
+        isBusy: function() {
+            return $('#' + this.values.element).hasClass('busy');
+        },
+        suspendUI: function() {
+            if(!$('#' + this.values.element).hasClass('busy')) {
+                $('#' + this.values.element).addClass('tool-wapper-action busy').append('<div class="action-executing"><img style="" src="content/images/ajax-loader.gif"></div>');
+            }
+        },
+        resumeUI: function() {
+            $('#' + this.values.element).find('.action-executing').remove();
+            $('#' + this.values.element).removeClass('tool-wapper-action busy');
+        }
+    });
+
     PublicaMundi.Maps.Action = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
@@ -1663,5 +1824,125 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+    var _DialogTableBrowserRenderTable = function(response) {
+        console.log(response);
+        if(response.success) {
+            this.values.page.data = response.data[0].records;
+            
+            var records = this.values.page.data, content = [];
+            
+            content.push('<div class="clearfix" style="overflow: scroll; max-height: ' + (this.values.height - 100) + 'px;"><table class="table table-striped data-table">');
+            
+            if(records.length > 0) {
+                content.push('<thead>');
+                content.push('<tr>');
+                for(var field in records[0]) {
+                    if( field !== this.values.geometryName) {
+                        content.push('<th>' + field + '</th>');
+                    }
+                }
+                content.push('</tr>');
+                content.push('</thead>');
+                
+                content.push('<tbody>');
+                
+                var maxPageSize = this.values.page.size;
+                if (maxPageSize > records.length) {
+                    maxPageSize = records.length;
+                }
+                for(var i=0; i < maxPageSize; i++) {
+                    content.push('<tr>');
+                    for(var field in records[i]) {
+                        if( field !== this.values.geometryName) {
+                            content.push('<td>' + (records[i][field] ? records[i][field] : '' ) + '</td>');
+                        }
+                    }
+                    content.push('</tr>');                        
+                }
+                content.push('</tbody>');
+            }
+            content.push('</table><div>');
+            
+            this.setContent(content.join(''));
+            this.show();
+        }
+    };
+    
+    var _DialogTableBrowserBuildQuery = function() {
+        var query = this.values.query;
+        
+        query.reset();
+        query.resource(this.values.table).
+            format(PublicaMundi.Data.Format.JSON).
+            skip(this.values.page.index * this.values.page.size).
+            take(this.values.page.size + 1).
+            execute(_DialogTableBrowserRenderTable, this);
+        
+    };
+    
+    PublicaMundi.Maps.DialogTableBrowser = PublicaMundi.Class(PublicaMundi.Maps.Dialog, {
+        initialize: function (options) {
+			var self = this;
+			
+			PublicaMundi.extend(this.values, {
+                table: null,
+                endpoint: null
+			});
+			
+            if (typeof PublicaMundi.Maps.Dialog.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Dialog.prototype.initialize.apply(this, arguments);
+            }
+            
+            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            this.values.page = {
+                index : 0,
+                size: 10,
+                data: null,
+            };
+            this.values.geometryName = 'the_geom';
+            
+            this.event('page:next');
+            this.event('page:previous');
+            this.event('page:refresh');
+            this.event('row:changed');
+            
+            this.render();
+        },
+        render: function() {
+            var self = this;
+            
+            PublicaMundi.Maps.Dialog.prototype.render.apply(this);
+        },
+        getNextPage: function() {
+            this.values.page.index = this.values.page.index + 1;
+            _DialogTableBrowserBuildQuery.apply(this);
+        },
+        getPrevPage: function() {
+            if(this.values.page.index > 0) {
+                this.values.page.index = this.values.page.index - 1;
+            }
+            _DialogTableBrowserBuildQuery.apply(this);
+        },
+        getPage: function(index) {
+            if(index < 0) {
+                this.values.page.index = 0;
+            } else {
+                this.values.page.index = index;
+            }
+            _DialogTableBrowserBuildQuery.apply(this);
+        },
+        setTable: function(table) {
+            this.values.page.index = 0;
+            this.values.table = table;
+        },
+        getGeometryName: function() {
+            return this.values.geometryName;
+        },
+        getPageIndex: function() {
+            return this.values.page.index;
+        }
+    });
+    
     return PublicaMundi;
 });
+
