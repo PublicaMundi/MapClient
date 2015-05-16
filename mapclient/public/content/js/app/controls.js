@@ -1743,7 +1743,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var keys = feature.getKeys();
             for (var i = 0; i < keys.length; i++) {
                 if (keys[i] != feature.getGeometryName()) {
-                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' + feature.get(keys[i]) + '</td></tr>');
+                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' + 
+                    (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
                 }
             }
             content.push('</div></table>')
@@ -1907,7 +1908,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             var content = [];
             
-            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: 1; width: ' + (this.values.width || 600 ) + 'px; outline: none;" tabIndex="1">');
+            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: 2000; width: ' + (this.values.width || 600 ) + 'px; outline: none;" tabIndex="1">');
             content.push('<div class="modal-content">');
             
             content.push('<div class="modal-header">');
