@@ -136,7 +136,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
 					content.push('<div class="tree-text tree-text-1">' + groups[i].title + '</div>');
-                    if(groups[i].description) {
+                    if((groups[i].description) && (groups[i].title != groups[i].description)) {
                         content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
 					content.push('</div></li>');
@@ -156,7 +156,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
 					content.push('<div class="tree-text tree-text-1">' + organizations[i].caption + '</div>');
-                    if(organizations[i].description) {
+                    if((organizations[i].description) && (organizations[i].caption != organizations[i].description)) {
                         content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
 					content.push('</div></li>');
@@ -214,7 +214,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
 						content.push('<div class="tree-text tree-text-2">' + group_organizations[i].caption + '</div>');
-                        if(group_organizations[i].description) {
+                        if((group_organizations[i].description) && (group_organizations[i].caption != group_organizations[i].description)) {
                             content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
 						content.push('</div>');				
@@ -368,7 +368,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
 						content.push('<div class="tree-text tree-text-2">' + organization_groups[i].title + '</div>');
-                        if(organization_groups[i].description) {
+                        if((organization_groups[i].description) & (organization_groups[i].title != organization_groups[i].description)) {
                             content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
 						content.push('</div>');
@@ -1341,14 +1341,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 
                 tooltipElement.className = 'mt-tooltip mt-tooltip-static';
-                //tooltip.setOffset([0, -7]);
-                // unset self.values.feature
                 self.values.feature = null;
-                // unset tooltip so that a new one can be created
                 tooltipElement = null;
-       
-                //createTooltip();
-        
+
                 self.trigger('measure:end', { feature: e.feature });
             });
 
@@ -1537,6 +1532,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     query.queue();
                 }
             }
+
+            this.clearFeatureFocus();
+            
             query.execute(function(response) {
                 this.values.overlay.getFeatures().clear();
                 this.values.features = new ol.Collection();
@@ -1547,12 +1545,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     
                     for(var i=0; i< response.data.length; i++) {
                         if(response.data[i].features.length > 0) {
-                            /*
+                            // Make feature id unique
                             for(var j=0; j < response.data[i].features.length; j++) {
                                 response.data[i].features[j].id = id;
                                 id++;
                             }
-                            */
+
                             var features = format.readFeatures(response.data[i], {
                                 dataProjection: PublicaMundi.Maps.CRS.Mercator,
                                 featureProjection: PublicaMundi.Maps.CRS.Mercator
@@ -1561,6 +1559,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         }
                     }
                     this.values.overlay.setFeatures(this.values.features);
+                    
+                    this.setFeatureFocus(0);
                     
                     this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
                 }
@@ -1588,13 +1588,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
             this.values.features = new ol.Collection;
+            this.values.focus = null;
+            
             if(this.values.buffer < 0) {
                 this.values.buffer = 2;
             }
+            this.values.tooltip = null;
             
-            // Feature overlay
-            this.values.overlay = new ol.FeatureOverlay({
-                style: [
+            // Styles
+            this.values.styles = {
+                select : [
                     new ol.style.Style({
                         fill: new ol.style.Fill({
                             color: [255, 255, 255, 0.4]
@@ -1617,7 +1620,35 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         }),
                         zIndex: Infinity
                     })
+                ],
+                focus : [
+                    new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: [255, 255, 255, 0.4]
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#C0392B',
+                            width: 3
+                        })
+                    }),
+                    new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: [255, 255, 255, 0.7]
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#C0392B',
+                                width: 2
+                            })
+                        }),
+                        zIndex: Infinity
+                    })
                 ]
+            };
+            // Feature overlay
+            this.values.overlay = new ol.FeatureOverlay({
+                style: this.values.styles.select
             });
             
             this.render();
@@ -1631,6 +1662,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             } else {
                 this.values.map.un('click', _SelectToolClickHandler, this);
                 this.values.overlay.setMap(null);
+                if(this.values.tooltip) {
+                    this.values.map.removeOverlay(this.values.tooltip);
+                }
+                this.values.overlay.getFeatures().clear();
             }
         },
         getFeatures: function() {
@@ -1647,6 +1682,114 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         resumeUI: function() {
             $('#' + this.values.element).find('.action-executing').remove();
             $('#' + this.values.element).removeClass('tool-wapper-action busy');
+        },
+        clearFeatureFocus: function() {
+            if(this.values.focus) {
+                this.values.focus.feature.setStyle(this.values.styles.select);
+                this.values.focus = null;
+                if(this.values.tooltip) {
+                    this.values.map.removeOverlay(this.values.tooltip);
+                }
+            }
+        },
+        setFeatureFocus: function(index) {
+            var self = this;
+
+            if(this.values.focus) {
+                if(this.values.focus.index == index) {
+                    return true;
+                } else {
+                    this.clearFeatureFocus();
+                }
+            }
+           
+            var features = this.getFeatures();
+            if(index < 0 ) {
+                index = 0;
+            }
+            if(index >= features.length) {
+                index = features.length - 1;
+            }                           
+                    
+            var feature = features[index];
+            var geom = feature.getGeometry();
+            
+            this.values.focus = {
+                feature : feature,
+                index : index
+            };
+            
+            feature.setStyle(this.values.styles.focus);
+            
+            var content = [];
+
+            content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup">');
+            content.push('<div class="arrow"></div>');
+            content.push('<div class="clearfix popover-title" id="popover-top">');
+            content.push('<div style="float: left;">Στοιχεία αντικειμένου</div>');
+            if(features.length > 1) {
+                content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-12" src="content/images/right.png"></div>');
+                content.push('<div style="float: right;">' + (index + 1 ) + '</div>');
+                content.push('<div style="float: right;"><img id="' + this.values.element + '-prev" class="img-12" src="content/images/left.png"></div>');
+            }
+            content.push('</div>');
+            content.push('<div class="popover-content">');
+            
+            content.push('<div class="feature-table"><table style="width: 100%;">');
+            var keys = feature.getKeys();
+            for (var i = 0; i < keys.length; i++) {
+                if (keys[i] != feature.getGeometryName()) {
+                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' + feature.get(keys[i]) + '</td></tr>');
+                }
+            }
+            content.push('</div></table>')
+            
+            content.push('</div>');
+            content.push('</div>');
+            
+            $('body').append(content.join(''));
+            
+            if(features.length > 1) {
+                console.log(1);
+                $('#' + this.values.element + '-prev').click(function() {
+                    console.log(2);
+                    if((self.values.focus) && (self.values.focus.index > 0)) {
+                        self.setFeatureFocus(self.values.focus.index - 1);
+                    } else {
+                        self.setFeatureFocus(0);
+                    }
+                });
+                
+                $('#' + this.values.element + '-next').click(function() {
+                    console.log(3);
+                    if((self.values.focus) && (self.values.focus.index < (features.length -2))) {
+                        self.setFeatureFocus(self.values.focus.index + 1);
+                    } else {
+                        self.setFeatureFocus(features.length -1);
+                    }
+                });
+            }
+            
+            var element = $('#' + this.values.element + '-popup');
+            
+            this.values.tooltip = new ol.Overlay({
+                element: element[0],
+                offset: [-element.outerWidth() / 2, -element.outerHeight()],
+                positioning: 'bottom-center'
+            });
+            
+            this.values.map.addOverlay(this.values.tooltip);
+            
+            if (geom instanceof ol.geom.Polygon) {
+                console.log(geom.getInteriorPoint().getCoordinates());
+                this.values.tooltip.setPosition(geom.getInteriorPoint().getCoordinates());
+                this.values.map.getView().setCenter(geom.getInteriorPoint().getCoordinates());
+            } else {
+                this.values.tooltip.setPosition(geom.getLastCoordinate());
+                this.values.map.getView().setCenter(geom.getLastCoordinate());
+            }
+
+            return true;
         }
     });
 
