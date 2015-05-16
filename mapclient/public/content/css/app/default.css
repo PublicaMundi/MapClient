@@ -563,6 +563,7 @@ ul {
     display: block !important;
     width: 350px;
     max-height: 250px;
+    outline: none;
 }
 
 .feature-table {

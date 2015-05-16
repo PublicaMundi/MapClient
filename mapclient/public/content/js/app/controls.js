@@ -1704,6 +1704,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
            
             var features = this.getFeatures();
+            if(features.length == 0) {
+                return false;
+            }
+            
             if(index < 0 ) {
                 index = 0;
             }
@@ -1723,13 +1727,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             var content = [];
 
-            content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup">');
+            content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
             content.push('<div class="arrow"></div>');
             content.push('<div class="clearfix popover-title" id="popover-top">');
             content.push('<div style="float: left;">Στοιχεία αντικειμένου</div>');
             if(features.length > 1) {
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-12" src="content/images/right.png"></div>');
-                content.push('<div style="float: right;">' + (index + 1 ) + '</div>');
+                content.push('<div style="float: right; font-size: 0.9em; padding-top: 2px;">' + (index + 1 ) + '</div>');
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-prev" class="img-12" src="content/images/left.png"></div>');
             }
             content.push('</div>');
@@ -1750,28 +1754,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('body').append(content.join(''));
             
             if(features.length > 1) {
-                console.log(1);
                 $('#' + this.values.element + '-prev').click(function() {
-                    console.log(2);
-                    if((self.values.focus) && (self.values.focus.index > 0)) {
-                        self.setFeatureFocus(self.values.focus.index - 1);
-                    } else {
-                        self.setFeatureFocus(0);
-                    }
+                    return self.setFeatureFocusPrevious();
                 });
                 
                 $('#' + this.values.element + '-next').click(function() {
-                    console.log(3);
-                    if((self.values.focus) && (self.values.focus.index < (features.length -2))) {
-                        self.setFeatureFocus(self.values.focus.index + 1);
-                    } else {
-                        self.setFeatureFocus(features.length -1);
-                    }
+                    return self.setFeatureFocusNext();
                 });
             }
             
             var element = $('#' + this.values.element + '-popup');
-            
             this.values.tooltip = new ol.Overlay({
                 element: element[0],
                 offset: [-element.outerWidth() / 2, -element.outerHeight()],
@@ -1780,16 +1772,48 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             this.values.map.addOverlay(this.values.tooltip);
             
+            var c1, c2, center;
             if (geom instanceof ol.geom.Polygon) {
-                console.log(geom.getInteriorPoint().getCoordinates());
-                this.values.tooltip.setPosition(geom.getInteriorPoint().getCoordinates());
-                this.values.map.getView().setCenter(geom.getInteriorPoint().getCoordinates());
+                center = geom.getInteriorPoint().getCoordinates();
+            } else if (geom instanceof ol.geom.Point) {
+                center = geom.getCoordinates();
             } else {
-                this.values.tooltip.setPosition(geom.getLastCoordinate());
-                this.values.map.getView().setCenter(geom.getLastCoordinate());
+                var coords = geom.getCoordinates();
+                var middle= Math.floor(coords.length / 2);
+
+                center = [0, 0];                    
+                c1 = coords[middle-1];
+                c2 = coords[middle];
+
+                center[0] = (c2[0] + c1[0]) / 2.0;
+                center[1] = (c2[1] + c1[1]) / 2.0;
             }
 
+            this.values.tooltip.setPosition(center);
+            this.values.map.getView().setCenter(center);
+
+            $('#' + this.values.element + '-popup').focus();
+
             return true;
+        },
+        setFeatureFocusPrevious: function() {
+            if((this.values.focus) && (this.values.focus.index > 0)) {
+                this.setFeatureFocus(this.values.focus.index - 1);
+            } else {
+                this.setFeatureFocus(0);
+            }
+        },
+        setFeatureFocusNext: function() {
+            var features = this.getFeatures();
+            if(features.length == 0) {
+                return false;
+            }
+            
+            if((this.values.focus) && (this.values.focus.index < (features.length -2))) {
+                return this.setFeatureFocus(this.values.focus.index + 1);
+            } else {
+                return this.setFeatureFocus(features.length -1);
+            }
         }
     });
 
