@@ -352,6 +352,14 @@ ul {
     transition: transform 250ms linear;
 }
 
+.img-12 {
+    height: auto;
+    width: auto;
+    max-width: 12px;
+    max-height: 12px;
+    cursor: pointer;
+}
+
 .img-16 {
     height: auto;
     width: auto;
@@ -549,4 +557,35 @@ ul {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.feature-popup {
+    display: block !important;
+    width: 350px;
+    max-height: 250px;
+}
+
+.feature-table {
+    border-collapse: collapse;
+    height: max-height: 200px;
+    overflow: auto;
+}
+
+.feature-row {
+    font-size: 0.8em;
+}
+
+.feature-prop-key {
+    width: 120px;
+    word-wrap: break-word;
+    vertical-align: top;
+    font-weight: bold;
+    border-bottom: 1px solid #dddddd;
+}
+
+.feature-prop-value {
+    max-width: 200px;
+    word-wrap: break-word;
+    vertical-align: top;
+    border-bottom: 1px solid #dddddd;
 }
