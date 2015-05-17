@@ -1,4 +1,4 @@
-﻿define(['module', 'jquery', 'ol', 'URIjs/URI'], function (module, $, ol, URI) {
+﻿define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol, proj4, URI) {
     "use strict";
 
     // PublicaMundi namespace
@@ -44,6 +44,16 @@
 	PublicaMundi.Maps.CRS.WGS84 = 'EPSG:4326';
 	PublicaMundi.Maps.CRS.CRS84 = 'CRS:84';
 
+    PublicaMundi.Maps.CRS.GGRS87 = 'EPSG:2100';
+    PublicaMundi.Maps.CRS.ETRS89 = 'EPSG:4258';
+
+    if(typeof proj4.defs['EPSG:4258'] === 'undefined') {
+        proj4.defs("EPSG:4258","+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs");
+    }
+    if(typeof proj4.defs['EPSG:2100'] === 'undefined') {
+        proj4.defs("EPSG:2100","+proj=tmerc +lat_0=0 +lon_0=24 +k=0.9996 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=-199.87,74.79,246.62,0,0,0,0 +units=m +no_defs");
+    }
+    
     // Supported resource types
     PublicaMundi.Maps.Resources.Types = {};
 

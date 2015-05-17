@@ -29,7 +29,6 @@
         actions: {
             export: null
         },
-        query: null,
         resource: null
     };
 
@@ -309,7 +308,7 @@
     };
 
     var resize = function() {
-        $('#dialog-container').height($(window).height()-50).width(($(window).width()-5));
+        $('.dialog-container').height($(window).height()-50).width(($(window).width()-20));
         
         var height = $(window).height();
 
@@ -395,7 +394,6 @@
         members.components.catalogInfoDialog = new PublicaMundi.Maps.Dialog({
             title: '',
             element: 'dialog-1',
-            target : 'dialog-container',
             visible: false,
             width: 400,
             height: 200,
@@ -418,7 +416,6 @@
         members.components.tableBrowserDialog = new PublicaMundi.Maps.DialogTableBrowser({
             title: 'Table Data',
             element: 'dialog-2',
-            target : 'dialog-container',
             visible: false,
             width: 800,
             height: 400,
@@ -447,60 +444,7 @@
             title: 'Εξαγωγή σε ShapeFile',
             visible: false
         });
-        
-        members.actions.export.on('action:execute', function() {
-            if(this.isBusy()) {
-                return;
-            };
-
-            var feature = members.tools.export.getFeature();
-
-            if(feature) {
-                var format = new ol.format.GeoJSON();
-                var polygon = JSON.parse(format.writeGeometry(feature.getGeometry()));
-
-                var layers = members.resources.getSelectedLayers();
-                var resources = members.resources.getQueryableResources();
-
-                var quyarable = [];
-                for(var i=0; i<layers.length; i++) {
-                    for(var j=0; j<resources.length; j++) {
-                        if(layers[i].resource_id == resources[j].wms) {
-                            quyarable.push({
-                                table: resources[j].table,
-                                title: layers[i].title
-                            });
-                            break;
-                        }
-                    }
-                }
-
-                if(quyarable.length > 0) {
-                    this.suspendUI();
-                                            
-                    var query = members.query;
-                    
-                    query.reset().format(PublicaMundi.Data.Format.GeoJSON)
-
-                    var files= [];
-                    for(var i=0; i<quyarable.length; i++) {
-                        files.push(quyarable[i].title);
-                        
-                        query.resource(quyarable[i].table).
-                              contains(
-                                polygon, {
-                                    resource: quyarable[i].table, 
-                                    name : 'the_geom'
-                                });
-                        if(i < (quyarable.length-1)) {
-                            query.queue();
-                        }
-                    }
-                    query.export(downloadShapeFile, files);
-                }
-            }
-        });
-                
+              
         // UI tools
         members.tools.length = new PublicaMundi.Maps.MeasureTool({
             element: 'tool-length',
@@ -535,7 +479,9 @@
             },
             title: 'Σχεδίαση πολυγώνου',
             map: members.map.control,
-            actions: [members.actions.export]
+            resources: members.resources,
+            action: members.actions.export,
+            endpoint: members.config.api.endpoint
         });
 
         members.tools.select = new PublicaMundi.Maps.SelectTool({
@@ -802,15 +748,6 @@
     var enableInteraction = function(name) {
         members.map.interactions[name].control.setActive(true);
     };
-
-    var downloadShapeFile = function(data, execution) {
-        members.actions.export.resumeUI();
-
-        if(data.success) {
-            jQuery('#export-download-frame').remove();
-            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + members.config.api.endpoint + 'api/download?code=' + data.code + '"></iframe></div>');
-        }
-    }
     
     var initializeResourcePreview = function () {
         if (!members.resource) {
@@ -852,9 +789,7 @@
 				members.components.layerTreeOrganization.refresh();
 
 				$('#loading-text').html('Loading Metadata ... 0%');
-				members.resources.updateQueryableResources().then(function(resources) {				
-					members.query = new PublicaMundi.Data.Query(members.config.api.endpoint);
-					
+				members.resources.updateQueryableResources().then(function(resources) {					
 					$('#loading-text').html('Loading Metadata ... 100%');
 					
 					setTimeout(function () {
@@ -871,9 +806,6 @@
 				});
 			});
 		});
-
-        // Debug ...
-        window.members = members;
     };
 
     return PublicaMundi;
