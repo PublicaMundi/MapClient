@@ -1494,7 +1494,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         style: 'primary'
                     },
                     close : {
-                        text: 'Κλείσιμο',
+                        text: 'Ακύρωση',
                         style: 'default'
                     }
                 },
@@ -1579,7 +1579,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.interaction.on('change:active', function (e) {
                 if(this.getActive()) {
-                    self.values.overlay.setMap(members.map.control);
+                    self.values.overlay.setMap(self.values.map);
                 } else {
                     self.values.overlay.setMap(null);
                 }
