@@ -590,3 +590,9 @@ ul {
     vertical-align: top;
     border-bottom: 1px solid #dddddd;
 }
+
+.dialog-container {
+    width: 100%; 
+    height: 100%;
+    padding-left: 10px;
+}

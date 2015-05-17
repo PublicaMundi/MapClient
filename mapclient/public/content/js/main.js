@@ -47,10 +47,7 @@
             deps: ['jquery']
         },
         ol: {
-            deps: [
-                'proj4'
-            ],
-            exports: 'ol'
+            deps: ['proj4']
         },
         ckan: {
             deps: [

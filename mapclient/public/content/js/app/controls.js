@@ -1085,13 +1085,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     enabled: '',
                     diabled: ''
                 },
-                title: null,
-                actions: []
+                title: null
 			});
 			
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
+            
+            this.values.actions = [];
             
             this.event('tool:toggle');
             
@@ -1380,21 +1381,155 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+    var _ExportActionHandler = function(e) {
+        if(this.values.action.isBusy()) {
+            return;
+        };
+        this.values.dialog.show();
+        this.values.dialog.moveToCenter();
+    };
+    
+    var _ExportDialogActionExportHandler = function(e) {
+        this.values.dialog.hide();
+        
+        if(this.values.action.isBusy()) {
+            return;
+        };
+
+        var feature = this.getFeature();
+
+        if(feature) {
+            var format = new ol.format.GeoJSON();
+            var polygon = JSON.parse(format.writeGeometry(feature.getGeometry()));
+
+            var layers = this.values.resources.getSelectedLayers();
+            var resources = this.values.resources.getQueryableResources();
+
+            var quyarable = [];
+            for(var i=0; i<layers.length; i++) {
+                for(var j=0; j<resources.length; j++) {
+                    if(layers[i].resource_id == resources[j].wms) {
+                        quyarable.push({
+                            table: resources[j].table,
+                            title: layers[i].title
+                        });
+                        break;
+                    }
+                }
+            }
+
+            if(quyarable.length > 0) {
+                this.values.action.suspendUI();
+                                        
+                var query = this.values.query;
+                console.log($('#' + this.values.element + '-crs').val());
+                query.reset().format(PublicaMundi.Data.Format.GeoJSON).crs($('#' + this.values.element + '-crs').val());
+
+                var files= [];
+                for(var i=0; i<quyarable.length; i++) {
+                    files.push(quyarable[i].title);
+                    
+                    query.resource(quyarable[i].table).
+                          contains(
+                            polygon, {
+                                resource: quyarable[i].table, 
+                                name : 'the_geom'
+                            });
+                    if(i < (quyarable.length-1)) {
+                        query.queue();
+                    }
+                }
+                query.export(_DownloadExportFile, files, this);
+            }
+        }
+    };
+    
+    var _DownloadExportFile = function(data, execution) {
+        this.values.action.resumeUI();
+
+        if(data.success) {
+            jQuery('#export-download-frame').remove();
+            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + this.values.endpoint + 'api/download?code=' + data.code + '"></iframe></div>');
+        }
+    }
+    
     PublicaMundi.Maps.ExportTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
         initialize: function (options) {
 			var self = this;
 
             this.values.map = null;
-            this.values.overlay = null;
-            this.values.interaction = null;
 
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
 
             this.event('feature:change');
-            
+
+            this.values.overlay = null;
+            this.values.interaction = null;            
             this.values.feature = null;
+            
+            this.values.crs = PublicaMundi.Maps.CRS.Mercator;
+            
+            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            
+            // Actions
+            if(this.values.action) {
+                this.values.actions.push(this.values.action);
+                
+                this.values.action.on('action:execute', _ExportActionHandler, this);
+            }
+            
+            // Dialogs
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'Εξαγωγή αντικειμένων σε Shape File',
+                element: this.values.element + 'dialog',
+                visible: false,
+                width: 400,
+                height: 200,
+                autofit: true,
+                buttons: {
+                    export: {
+                        text: 'Δημιουργία',
+                        style: 'primary'
+                    },
+                    close : {
+                        text: 'Κλείσιμο',
+                        style: 'default'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+                    
+                    content.push('<div class="clearfix">');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px;">Export to</label>');
+                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="120px">');
+                    content.push('<option value="EPSG:3857" selected="selected">3857</option>');
+                    content.push('<option value="EPSG:4326">4326</option>');
+                    content.push('<option value="EPSG:2100">2100</option>');
+                    content.push('<option value="EPSG:4258">4258</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+                    
+                    return content;
+                }
+            });
+            
+            $('#' + this.values.element + '-crs').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-crs"]').blur();
+            });
+                    
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){ 
+                        case 'close':
+                            this.hide();
+                            break;
+                        case 'export':
+                            this.hide()
+                            _ExportDialogActionExportHandler.apply(self);
+                            break;
+                    }
+            });
             
             // Feature overlay
             this.values.overlay = new ol.FeatureOverlay({
@@ -1589,7 +1724,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
             this.values.features = new ol.Collection;
             this.values.focus = null;
-            
+
             if(this.values.buffer < 0) {
                 this.values.buffer = 2;
             }
@@ -1887,7 +2022,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 height: 400,
                 buttons: {
                 },
-                closeOnEscape: true
+                closeOnEscape: true,
+                autofit: false
 			});
 			
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
@@ -1916,7 +2052,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('<h4 class="modal-title">' + this.values.title + '</h4>');
             content.push('</div>');
             
-            content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) + 'px; overflow: auto;" >');
+            content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) + 
+                         'px; overflow: ' + (this.values.autofit ? 'unset': 'auto') + '" >');
             if(typeof this.values.renderContent === 'function'){
                 content = content.concat(this.values.renderContent());
             }
@@ -1937,7 +2074,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('</div>');
             content.push('</div>');
             
-            $('#' + this.values.target).append(content.join(''));
+            var target = $('.dialog-container').first();
+            if(target.length === 0) {
+                throw 'Dialog container does not exist.';
+            } else {
+                target.append(content.join(''));
+            }
             
             $('#' + this.values.element).draggable({
                 handle : '.modal-header',
@@ -2113,4 +2255,3 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     
     return PublicaMundi;
 });
-

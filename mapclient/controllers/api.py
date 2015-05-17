@@ -36,6 +36,9 @@ SESSION_METADATA_KEY = 'DATA_API_348A4EBF-0CDE-4EFB-BC42-D16F3D8FE250'
 FORMAT_JSON = 'json'
 FORMAT_GEOJSON = 'geojson'
 
+CRS_SUPPORTED = ['EPSG:900913', 'EPSG:3857', 'EPSG:4326', 'EPSG:2100', 'EPSG:4258']
+CRS_DEFAULT = 2100
+
 ACTION_QUERY = 'query'
 ACTION_EXPORT = 'export'
 
@@ -191,21 +194,21 @@ class ApiController(BaseController):
         if operator == OP_AREA:
             if len(f['arguments']) != 3:  
                 raise DataApiException('Operator {operator} expects three arguments.'.format(operator = operator))        
-            return self._create_filter_area(metadata, mapping, f, operator, srid)
+            return self._create_filter_area(metadata, mapping, f, operator)
         elif operator == OP_DISTANCE:
             if len(f['arguments']) != 4:  
                 raise DataApiException('Operator {operator} expects four arguments.'.format(operator = operator))                
-            return self._create_filter_distance(metadata, mapping, f, operator, srid)
+            return self._create_filter_distance(metadata, mapping, f, operator)
         elif operator == OP_CONTAINS:
             if len(f['arguments']) != 2:  
                 raise DataApiException('Operator {operator} expects two.'.format(operator = operator))        
-            return self._create_filter_spatial_relation(metadata, mapping, f, operator, 'ST_Contains', srid)
+            return self._create_filter_spatial_relation(metadata, mapping, f, operator, 'ST_Contains')
         elif operator == OP_INTERSECTS:
             if len(f['arguments']) != 2:
                 raise DataApiException('Operator {operator} expects two arguments.'.format(operator = operator))        
-            return self._create_filter_spatial_relation(metadata, mapping, f, operator, 'ST_Intersects', srid)
+            return self._create_filter_spatial_relation(metadata, mapping, f, operator, 'ST_Intersects')
             
-    def _create_filter_area(self, metadata, mapping, f, operator, srid):
+    def _create_filter_area(self, metadata, mapping, f, operator):
         arg1 = f['arguments'][0]
         arg2 = f['arguments'][1]
         arg3 = f['arguments'][2]
@@ -216,7 +219,7 @@ class ApiController(BaseController):
             raise DataApiException('Expression {expression} for operator {operator} is not valid.'.format(expression = arg2, operator = operator))
                 
         arg1_is_field = self._is_field(metadata, mapping, arg1)
-        arg1_srid = srid
+        arg1_srid = CRS_DEFAULT
         arg1_is_field_geom = self._is_field_geom(metadata, mapping, arg1)
         if arg1_is_field_geom:
             arg1_srid = self._get_field_srid(metadata, mapping, arg1)
@@ -233,17 +236,18 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            if arg1_srid != srid: 
+
+            if arg1_srid != CRS_DEFAULT: 
                 aliased_arg1 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg1,
-                srid = srid
+                srid = CRS_DEFAULT
             )
 
             return ('(ST_Area(' + aliased_arg1 + ') ' + arg2 + ' %s)', arg3)
         else:
             return ('(ST_Area(ST_GeomFromText(%s, 3857)) ' + arg2 + ' %s)', shapely.wkt.dumps(arg1), arg3)
 
-    def _create_filter_distance(self, metadata, mapping, f, operator, srid):
+    def _create_filter_distance(self, metadata, mapping, f, operator):
         arg1 = f['arguments'][0]
         arg2 = f['arguments'][1]
         arg3 = f['arguments'][2]
@@ -257,8 +261,8 @@ class ApiController(BaseController):
         arg1_is_field = self._is_field(metadata, mapping, arg1)
         arg2_is_field = self._is_field(metadata, mapping, arg2)
 
-        arg1_srid = srid
-        arg2_srid = srid
+        arg1_srid = CRS_DEFAULT
+        arg2_srid = CRS_DEFAULT
 
         arg1_is_field_geom = self._is_field_geom(metadata, mapping, arg1)
         if arg1_is_field_geom:
@@ -285,20 +289,20 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            if arg1_srid != srid: 
+            if arg1_srid != CRS_DEFAULT: 
                 aliased_arg1 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg1,
-                srid = srid
+                srid = CRS_DEFAULT
             )
 
             aliased_arg2 = '{table}."{field}"'.format(
                 table = metadata[mapping[arg2['resource']]]['alias'],
                 field = arg2['name']
             )
-            if arg2_srid != srid: 
+            if arg2_srid != CRS_DEFAULT: 
                 aliased_arg2 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg2,
-                srid = srid
+                srid = CRS_DEFAULT
             )
             return ('(ST_Distance(' + aliased_arg1 + ',' + aliased_arg2 + ') ' + arg3 + ' %s)', arg4)
         elif arg1_is_field_geom and not arg2_is_field_geom:
@@ -306,35 +310,39 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            if arg1_srid != srid: 
+            if arg1_srid != CRS_DEFAULT: 
                 aliased_arg1 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg1,
-                srid = srid
+                srid = CRS_DEFAULT
             )
-            return ('(ST_Distance(' + aliased_arg1 + ', ST_GeomFromText(%s, 3857)) ' + arg3 + ' %s)', shapely.wkt.dumps(arg2), arg4)
+            return ('(ST_Distance(' + aliased_arg1 + ', ST_Transform(ST_GeomFromText(%s, 3857), ' + str(CRS_DEFAULT) + ')) ' + arg3 + ' %s)', shapely.wkt.dumps(arg2), arg4)
         elif not arg1_is_field_geom and arg2_is_field_geom:
             aliased_arg2 = '{table}."{field}"'.format(
                 table = metadata[mapping[arg2['resource']]]['alias'],
                 field = arg2['name']
             )
-            if arg2_srid != srid: 
+            if arg2_srid != CRS_DEFAULT: 
                 aliased_arg2 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg2,
-                srid = srid
+                srid = CRS_DEFAULT
             )
-            return ('(ST_Distance(' + aliased_arg2 + ', ST_GeomFromText(%s, 3857)) ' + arg3 + ' %s)', shapely.wkt.dumps(arg1), arg4)
+            return ('(ST_Distance(' + aliased_arg2 + ', ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + ')) ' + arg3 + ' %s)', shapely.wkt.dumps(arg1), arg4)
         else:
-            return ('(ST_Distance(ST_GeomFromText(%s, 3857), ST_GeomFromText(%s, 3857)) ' + arg3 + ' %s)', shapely.wkt.dumps(arg1), shapely.wkt.dumps(arg2), arg4)
+            return ('(ST_Distance(ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + 
+                    '), ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + ')) ' + arg3 + ' %s)', shapely.wkt.dumps(arg1), shapely.wkt.dumps(arg2), arg4)
 
-    def _create_filter_spatial_relation(self, metadata, mapping, f, operator, spatial_operator, srid):
+    def _create_filter_spatial_relation(self, metadata, mapping, f, operator, spatial_operator):
         arg1 = f['arguments'][0]
         arg2 = f['arguments'][1]
         
         arg1_is_field = self._is_field(metadata, mapping, arg1)
         arg2_is_field = self._is_field(metadata, mapping, arg2)
 
-        arg1_srid = srid
-        arg2_srid = srid
+        arg1_srid = CRS_DEFAULT
+        arg2_srid = CRS_DEFAULT
 
         arg1_is_field_geom = self._is_field_geom(metadata, mapping, arg1)
         if arg1_is_field_geom:
@@ -358,20 +366,20 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            if arg1_srid != srid: 
+            if arg1_srid != CRS_DEFAULT: 
                 aliased_arg1 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg1,
-                srid = srid
+                srid = CRS_DEFAULT
             )
 
             aliased_arg2 = '{table}."{field}"'.format(
                 table = metadata[mapping[arg2['resource']]]['alias'],
                 field = arg2['name']
             )
-            if arg2_srid != srid: 
+            if arg2_srid != CRS_DEFAULT: 
                 aliased_arg2 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg2,
-                srid = srid
+                srid = CRS_DEFAULT
             )
             return ('(' + spatial_operator +'(' + aliased_arg1 + ',' + aliased_arg2 + ') = TRUE)', )
         elif arg1_is_field_geom and not arg2_is_field_geom:
@@ -379,25 +387,30 @@ class ApiController(BaseController):
                 table = metadata[mapping[arg1['resource']]]['alias'],
                 field = arg1['name']
             )
-            if arg1_srid != srid: 
+            if arg1_srid != CRS_DEFAULT: 
                 aliased_arg1 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg1,
-                srid = srid
+                srid = CRS_DEFAULT
             )
-            return ('(' + spatial_operator +'(' + aliased_arg1 + ', ST_GeomFromText(%s, 3857)) = TRUE)', shapely.wkt.dumps(arg2))
+            return ('(' + spatial_operator +'(' + aliased_arg1 + ', ST_Transform(ST_GeomFromText(%s, 3857), ' + str(CRS_DEFAULT) + ')) = TRUE)', shapely.wkt.dumps(arg2))
         elif not arg1_is_field_geom and arg2_is_field_geom:
             aliased_arg2 = '{table}."{field}"'.format(
                 table = metadata[mapping[arg2['resource']]]['alias'],
                 field = arg2['name']
             )
-            if arg2_srid != srid: 
+            if arg2_srid != CRS_DEFAULT: 
                 aliased_arg2 = 'ST_Transform({field}, {srid})'.format(
                 field = aliased_arg2,
-                srid = srid
+                srid = CRS_DEFAULT
             )
-            return ('(' + spatial_operator +'(ST_GeomFromText(%s, 3857), ' + aliased_arg2 + ') = TRUE)', shapely.wkt.dumps(arg1))
+            return ('(' + spatial_operator +'(ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + 
+                    '), ' + aliased_arg2 + ') = TRUE)', shapely.wkt.dumps(arg1))
         else:
-            return ('(' + spatial_operator +'(ST_GeomFromText(%s, 3857), ST_GeomFromText(%s, 3857))  = TRUE)', shapely.wkt.dumps(arg1), shapely.wkt.dumps(arg2))
+            return ('(' + spatial_operator +'(ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + 
+                    '), ST_Transform(ST_GeomFromText(%s, 3857), ' + 
+                    str(CRS_DEFAULT) + '))  = TRUE)', shapely.wkt.dumps(arg1), shapely.wkt.dumps(arg2))
 
     def _is_field(self, metadata, mapping, f):
         if f is None:
@@ -519,6 +532,7 @@ class ApiController(BaseController):
         try:
             result = self._execute_collection(ACTION_EXPORT)
             
+            crs = result['crs']
             files = result['files']
             
             result = {
@@ -526,7 +540,7 @@ class ApiController(BaseController):
                 'success': True,
                 'message': None
             }
-            
+
             path = tempfile.mkdtemp()
             token = str(uuid.uuid4())
 
@@ -537,9 +551,9 @@ class ApiController(BaseController):
                     filename = files[i]
 
                 if len(result['data'][i]['features']) > 0:
-                    self._export_partial_result(self._format_response(result['data'][i], None, FORMAT_GEOJSON), path, filename)
+                    self._export_partial_result(self._format_response(result['data'][i], None, FORMAT_GEOJSON), path, filename, crs)
                     index+=1
-            
+
             f_output_zipped = os.path.join(path, 'exported-layers.zip')
             
             self._zip_folder(path, f_output_zipped)
@@ -632,6 +646,7 @@ class ApiController(BaseController):
             query = None
             callback = None
             output_format = FORMAT_GEOJSON
+            crs = 3857
             
             method = request.environ["REQUEST_METHOD"]
             
@@ -659,6 +674,13 @@ class ApiController(BaseController):
                     raise DataApiException('Output format {format} is not supported.'.format(format = query['format']))
 
                 output_format = query['format']
+
+            # Set CRS
+            if 'crs' in query:
+                if not query['crs'] in CRS_SUPPORTED:
+                    raise DataApiException('CRS {crs} is not supported.'.format(format = query['crs']))
+
+                crs = int(query['crs'].split(':')[1])
 
             # Get queue
             if not 'queue' in query:
@@ -696,6 +718,7 @@ class ApiController(BaseController):
             context = {
                 'query': None, 
                 'output_format' : output_format,
+                'crs' : crs,
                 'engine_ckan' : engine_ckan,
                 'engine_data' : engine_data,
                 'connection_ckan' : connection_ckan,
@@ -726,7 +749,8 @@ class ApiController(BaseController):
                 'message': None,
                 'format': output_format,
                 'callback': callback,
-                'files': files
+                'files': files,
+                'crs' : crs
             }
         finally:
             if not connection_ckan is None:
@@ -744,7 +768,7 @@ class ApiController(BaseController):
         engine_data = context['engine_data']
         connection_data = context['connection_data']
         
-        srid = 3857
+        srid = context['crs']
         timeout = config['dataapi.timeout'] if 'dataapi.timeout' in config else 10000
         offset = 0
         limit = 10000
@@ -1091,7 +1115,7 @@ class ApiController(BaseController):
 
         return result
 
-    def _export_partial_result(self, text, path, filename):
+    def _export_partial_result(self, text, path, filename, crs):
         # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
         
         f_input = os.path.join(path, filename + '.geojson')
@@ -1100,7 +1124,7 @@ class ApiController(BaseController):
         with open(f_input, "w") as text_file:
             text_file.write(text)
 
-        ogr_export(['', '-t_srs', 'EPSG:4326', '-s_srs', 'EPSG:3857', '-f', 'ESRI Shapefile', f_output, f_input])
+        ogr_export(['', '-t_srs', 'EPSG:' + str(crs), '-s_srs', 'EPSG:' + str(crs), '-f', 'ESRI Shapefile', f_output, f_input])
 
     def _zip_folder(self, path, filename):       
         shapeFiles = [ f for f in os.listdir(path) if (os.path.splitext(f)[-1].lower() <> '.geojson') ]

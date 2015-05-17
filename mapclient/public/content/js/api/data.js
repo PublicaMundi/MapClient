@@ -530,6 +530,22 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
         throw new PublicaMundi.Data.SyntaxException('Format is not supported.');
     };  
     
+    PublicaMundi.Data.Query.prototype.crs = function (crs) {
+        var parts = crs.split(':');
+        if((parts.length != 2) || (parts[0] != 'EPSG')) {
+            throw new PublicaMundi.Data.SyntaxException('CRS is not supported.');
+        }
+        
+        for (var prop in PublicaMundi.Maps.CRS) {
+            if (PublicaMundi.Maps.CRS[prop] === crs) {
+                this.request.crs = crs;
+                return this;
+            }
+        }
+
+        throw new PublicaMundi.Data.SyntaxException('CRS is not supported.');
+    };  
+    
     PublicaMundi.Data.Query.prototype.execute = function (callback, context) {
         callback = callback || this.callback;
 
@@ -561,7 +577,7 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
         return this;
     };
 
-    PublicaMundi.Data.Query.prototype.export = function (callback, files) {
+    PublicaMundi.Data.Query.prototype.export = function (callback, files, context) {
         callback = callback || this.callback;
 
         files = files || [];
@@ -594,7 +610,7 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
             }
 
             if (typeof callback === 'function') {
-                callback.call(this, data, execution);
+                callback.call( context || this, data, execution);
             }
         });
 
