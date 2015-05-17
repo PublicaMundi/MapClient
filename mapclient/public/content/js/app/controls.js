@@ -834,7 +834,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             }
                         }
 
-						self.values.resources.createLayer(self.values.map.control, metadata, layer, id, title);
+						self.values.resources.createLayer(self.values.map, metadata, layer, id, title);
 						
 						var title = $('[data-layer="' + id +'"]').first().closest('li').find('.tree-text').html();
 						
@@ -859,7 +859,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				$('[data-layer="' + id +'"]').data('selected', false);
 				$('[data-layer="' + id +'"]').attr('src', 'content/images/unchecked.png');
 			
-				this.values.resources.destroyLayer(this.values.map.control, id);
+				this.values.resources.destroyLayer(this.values.map, id);
 										
 				this.trigger('layer:removed', { id: id});
 			}
@@ -996,7 +996,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						self.remove(id);
 						break;
 					case 'up':
-						if(self.values.resources.moveLayerUp(self.values.map.control, id)) {						
+						if(self.values.resources.moveLayerUp(self.values.map, id)) {						
 							parent.prevAll().first().insertAfter(parent);
 							self.values.updateActions();
 							
@@ -1004,7 +1004,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 						break;
 					case 'down':
-						if(self.values.resources.moveLayerDown(self.values.map.control, id)) {						
+						if(self.values.resources.moveLayerDown(self.values.map, id)) {						
 							parent.nextAll().first().insertBefore(parent);
 							self.values.updateActions();
 						
@@ -1321,7 +1321,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.interaction.on('change:active', function (e) {
                 if(this.getActive()) {
-                    self.values.overlay.setMap(members.map.control);
+                    self.values.overlay.setMap(self.values.map);
                 } else {
                     self.values.overlay.setMap(null);
                 }
@@ -1627,8 +1627,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if(this.isBusy()) {
             return;
         }
-        var layers = members.resources.getSelectedLayers();
-        var resources = members.resources.getQueryableResources();
+        var layers = this.values.resources.getSelectedLayers();
+        var resources = this.values.resources.getQueryableResources();
 
         var quyarable = [];
         for(var i=0; i<layers.length; i++) {
@@ -1874,7 +1874,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('</div>');
             content.push('<div class="popover-content">');
             
-            content.push('<div class="feature-table"><table style="width: 100%;">');
+            content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table"><table style="width: 100%;">');
             var keys = feature.getKeys();
             for (var i = 0; i < keys.length; i++) {
                 if (keys[i] != feature.getGeometryName()) {
@@ -1882,7 +1882,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
                 }
             }
-            content.push('</div></table>')
+            content.push('</div></table></div>')
             
             content.push('</div>');
             content.push('</div>');

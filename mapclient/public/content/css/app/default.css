@@ -568,8 +568,7 @@ ul {
 
 .feature-table {
     border-collapse: collapse;
-    height: max-height: 200px;
-    overflow: auto;
+    max-height: 250px;
 }
 
 .feature-row {
