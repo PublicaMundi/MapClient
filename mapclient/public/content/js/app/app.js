@@ -358,7 +358,7 @@
 
 		members.components.layerTreeGroup = new PublicaMundi.Maps.LayerTree({
 			element: 'layer-tree-group',
-			map: members.map,
+			map: members.map.control,
 			ckan: members.ckan,
 			resources: members.resources,
 			mode: PublicaMundi.Maps.LayerTreeViewMode.ByGroup,
@@ -367,7 +367,7 @@
 		
 		members.components.layerTreeOrganization = new PublicaMundi.Maps.LayerTree({
 			element: 'layer-tree-organization',
-			map: members.map,
+			map: members.map.control,
 			ckan: members.ckan,
 			resources: members.resources,
 			mode: PublicaMundi.Maps.LayerTreeViewMode.ByOrganization,
@@ -376,7 +376,7 @@
 
         members.components.layerTreeSearch = new PublicaMundi.Maps.LayerTree({
 			element: 'layer-tree-search',
-			map: members.map,
+			map: members.map.control,
 			ckan: members.ckan,
 			resources: members.resources,
 			mode: PublicaMundi.Maps.LayerTreeViewMode.ByFilter,
@@ -385,7 +385,7 @@
 
 		members.components.layerSelection = new PublicaMundi.Maps.LayerSelection({
 			element: 'layer-selection',
-			map: members.map,
+			map: members.map.control,
 			ckan: members.ckan,
 			resources: members.resources
 		});
