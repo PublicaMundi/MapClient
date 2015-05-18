@@ -2,6 +2,8 @@
 
 Provides the BaseController class for subclassing.
 """
+import logging
+
 from pylons.controllers import WSGIController
 from pylons.templating import render_jinja2 as render
 from pylons import config, request, response
@@ -9,6 +11,8 @@ from pylons import config, request, response
 from paste.deploy.converters import asbool
 
 from mapclient.model import meta
+
+log = logging.getLogger(__name__)
 
 class BaseController(WSGIController):
 
@@ -24,7 +28,7 @@ class BaseController(WSGIController):
 
     def __after__(self, action, **params):
         # Do we have CORS settings in config?
-        if config['dataapi.cors.enabled'] and request.headers.get('Origin'):
+        if config['dataapi.cors.enabled'] and request.headers.get('Origin') and not request.environ['PATH_INFO'].endswith('proxy/proxy_resource'):
             self._set_cors()
 
     def _set_cors(self):
