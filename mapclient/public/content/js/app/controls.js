@@ -1502,12 +1502,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     var content = [];
                     
                     content.push('<div class="clearfix">');
-                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px;">Export to</label>');
-                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="120px">');
-                    content.push('<option value="EPSG:3857" selected="selected">3857</option>');
-                    content.push('<option value="EPSG:4326">4326</option>');
-                    content.push('<option value="EPSG:2100">2100</option>');
-                    content.push('<option value="EPSG:4258">4258</option>');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px;">Εξαγωγή σε</label>');
+                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
+                    content.push('<option value="EPSG:3857">Web Mercator</option>');
+                    content.push('<option value="EPSG:4326">WGS84</option>');
+                    content.push('<option value="EPSG:2100" selected="selected">ΕΓΣΑ87</option>');
+                    content.push('<option value="EPSG:4258">ETRS89</option>');
                     content.push('</select>');
                     content.push('</div>');
                     
