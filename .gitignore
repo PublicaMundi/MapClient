@@ -55,3 +55,6 @@ target/
 # Development files
 development.ini
 *~
+
+# Configuration files
+*.ini
