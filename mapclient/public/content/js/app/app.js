@@ -29,7 +29,16 @@
         actions: {
             export: null
         },
-        resource: null
+        resource: null,
+        i18n: {
+            locale : 'el',
+            strings : {
+            },
+            loaded: {
+                el : false,
+                en : false
+            }
+        }
     };
 
     var initializeParameters = function () {
@@ -67,6 +76,11 @@
             // Check for resource in query string (overrides main page parameter)
             if(params.resource) {
                 resource = params.resource;
+            }
+
+            // Set locale
+            if (params.locale) {
+                members.i18n.locale = params.locale;
             }
         }
 
@@ -399,7 +413,7 @@
             height: 200,
             buttons: {
                 close : {
-                    text: 'Κλείσιμο',
+                    text: 'button.close',
                     style: 'primary'
                 }
             }
@@ -421,7 +435,7 @@
             height: 400,
             buttons: {
                 close : {
-                    text: 'Κλείσιμο',
+                    text: 'button.close',
                     style: 'primary'
                 }
             },
@@ -441,7 +455,7 @@
             element: 'action-export',
             name: 'export',
             image: 'content/images/download-w.png',
-            title: 'Εξαγωγή σε ShapeFile',
+            title: 'action.export.title',
             visible: false
         });
               
@@ -453,7 +467,7 @@
                 enabled: 'content/images/ruler-w.png',
                 disabled: 'content/images/ruler.png'
             },
-            title: 'Μέτρηση απόστασης',
+            title: 'tool.length.title',
             map: members.map.control,
             type: PublicaMundi.Maps.MeasureToolType.Length
         });
@@ -465,7 +479,7 @@
                 enabled: 'content/images/surface-w.png',
                 disabled: 'content/images/surface.png'
             },
-            title: 'Μέτρηση εμβαδού',
+            title: 'tool.area.title',
             map: members.map.control,
             type: PublicaMundi.Maps.MeasureToolType.Area
         });
@@ -477,7 +491,7 @@
                 enabled: 'content/images/polygon-w.png',
                 disabled: 'content/images/polygon.png'
             },
-            title: 'Σχεδίαση πολυγώνου',
+            title: 'tool.export.title',
             map: members.map.control,
             resources: members.resources,
             action: members.actions.export,
@@ -491,7 +505,7 @@
                 enabled: 'content/images/cursor-w.png',
                 disabled: 'content/images/cursor.png'
             },
-            title: 'Επιλογή αντικειμένου',
+            title: 'tool.select.title',
             map: members.map.control,
             resources: members.resources,
             endpoint: members.config.api.endpoint
@@ -530,27 +544,27 @@
 				switch(members.ui.section) {
 					case 'group':
 						$('.panel-left-label').css({
-							bottom: 125,
-							right: -80
+							bottom: PublicaMundi.getResource('index.topics.position')[1],
+							right: PublicaMundi.getResource('index.topics.position')[0]
 						});
 						$('.panel-left-label').find('img').attr('src', 'content/images/comments.png');
-						$('.panel-left-label').find('span').html('Θεματικές Ενότητες');
+						$('.panel-left-label').find('span').html(PublicaMundi.getResource('index.topics'));
 						break;
 					case 'organization':
 						$('.panel-left-label').css({
-							bottom: 90,
-							right: -47
+							bottom: PublicaMundi.getResource('index.organizations.position')[1],
+							right: PublicaMundi.getResource('index.organizations.position')[0]
 						});
 						$('.panel-left-label').find('img').attr('src', 'content/images/organization.png');
-						$('.panel-left-label').find('span').html('Οργανισμοί');
+						$('.panel-left-label').find('span').html(PublicaMundi.getResource('index.organizations'));
 						break;
 					case 'search':
 						$('.panel-left-label').css({
-							bottom: 90,
-							right: -44
+							bottom: PublicaMundi.getResource('index.search.position')[1],
+							right: PublicaMundi.getResource('index.search.position')[0]
 						});
 						$('.panel-left-label').find('img').attr('src', 'content/images/search.png');
-						$('.panel-left-label').find('span').html('Αναζήτηση');
+						$('.panel-left-label').find('span').html(PublicaMundi.getResource('index.search'));
 						break;
 				}
 				$('.panel-left-label').show();
@@ -689,7 +703,15 @@
         
         members.components.layerSelection.on('layer:removed', layerSelectionRemoved);
         
-        // Initialize layeout
+        // Enable locale selection
+        $("#locale_selection").val(members.i18n.locale);
+
+        $('#locale_selection').selectpicker().change(function () {
+            setLocale($('#locale_selection option:selected').val());
+            $('[data-id="locale_selection"]').blur();
+        });
+        
+        // Initialize layout
         resize();
         
         $(window).resize(resize);
@@ -769,44 +791,119 @@
         });
     };
 
+    var localizeUI = function() {
+        $('[data-i18n-id]').each(function(index, element) {
+            var type = $(this).data('i18n-type');
+            switch(type) {
+                case 'title':
+                    $(this).attr('title', PublicaMundi.getResource($(this).data('i18n-id')));
+                    break;
+                case 'attribute':
+                    $(this).attr($(this).data('i18n-name'), PublicaMundi.getResource($(this).data('i18n-id')));
+                    break;
+                default:
+                    var text = PublicaMundi.getResource($(this).data('i18n-id'));
+                    if(text) {
+                        $(this).html(text);
+                    }
+                    break;
+            }
+        });
+    };
+
+    var loadResources = function() {
+        var uri = new URI(members.config.path ? members.config.path + '/' : '');
+        uri.segment(['content', 'js', 'i18n', members.i18n.locale, 'strings.js']);
+        uri.addQuery({ 'v': (new Date()).getTime() });
+        
+        return new Promise(function(resolve, reject) {
+            if(members.i18n.loaded[members.i18n.locale]) {
+                resolve(members.i18n.strings[members.i18n.locale]);
+                return;
+            }
+            $.ajax({
+                url: uri.toString(),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                context: self
+            }).done(function (data) {
+                members.i18n.loaded[members.i18n.locale] = true;
+
+                members.i18n.strings[members.i18n.locale] = data;
+
+                resolve(members.i18n.strings[members.i18n.locale]);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log('Failed to load resources : ' + uri.toString());
+
+                reject(errorThrown);
+            });
+        });
+    };
+
+    var setLocale = function(locale) {
+        if(members.i18n.loaded.hasOwnProperty(locale)) {
+            members.i18n.locale = locale;
+        } else {
+            members.i18n.locale = 'el';
+        }
+
+        loadResources().then(function() {
+            localizeUI();
+        });
+    };
+    
+    PublicaMundi.getLocale = function() {
+        return members.locale;
+    };
+    
+    PublicaMundi.getResource = function(id, text) {
+        return members.i18n.strings[members.i18n.locale][id] || text || '';
+    };
+    
     PublicaMundi.initialize = function () {
         initializeParameters();
 
-        initializeMap();
+        loadResources().then(function(strings) {
+            localizeUI();
+            
+            initializeMap();
 
-		initializeUI();
-		
-        attachEvents();
+            initializeUI();
+            
+            attachEvents();
 
-		$('#loading-text').html('Initializing Catalog ... 0%');
-		
-        members.ckan.loadGroups().then(function(groups) {
-			$('#loading-text').html('Initializing Catalog ... 50%');
-			members.ckan.loadOrganizations().then(function(organization) {
-				$('#loading-text').html('Initializing Catalog ... 100%');
+            $('#loading-text').html('Initializing Catalog ... 0%');
+            
+            members.ckan.loadGroups().then(function(groups) {
+                $('#loading-text').html('Initializing Catalog ... 50%');
+                members.ckan.loadOrganizations().then(function(organization) {
+                    $('#loading-text').html('Initializing Catalog ... 100%');
 
-				members.components.layerTreeGroup.refresh();
-				members.components.layerTreeOrganization.refresh();
+                    members.components.layerTreeGroup.refresh();
+                    members.components.layerTreeOrganization.refresh();
 
-				$('#loading-text').html('Loading Metadata ... 0%');
-				members.resources.updateQueryableResources().then(function(resources) {					
-					$('#loading-text').html('Loading Metadata ... 100%');
-					
-					setTimeout(function () {
-						$('#block-ui').fadeOut(500).hide();
-						$('body').css('overflow-y', 'auto');
+                    $('#loading-text').html('Loading Metadata ... 0%');
+                    members.resources.updateQueryableResources().then(function(resources) {					
+                        $('#loading-text').html('Loading Metadata ... 100%');
+                        
+                        setTimeout(function () {
+                            $('#block-ui').fadeOut(500).hide();
+                            $('body').css('overflow-y', 'auto');
 
-						if ($('#view-layers').hasClass('ui-panel-closed')) {
-							$('#view-layers').panel('toggle');
-						}
-						$('#search').focus();
-						
-						initializeResourcePreview();
-					}, 500);
-				});
-			});
-		});
+                            if ($('#view-layers').hasClass('ui-panel-closed')) {
+                                $('#view-layers').panel('toggle');
+                            }
+                            $('#search').focus();
+                            
+                            initializeResourcePreview();
+                        }, 500);
+                    });
+                });
+            });
+        });
     };
-
+    
+    window.members = members;
+    
     return PublicaMundi;
 });

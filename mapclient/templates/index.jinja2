@@ -80,15 +80,22 @@
 				<a class="navbar-brand" href="{{config['mapclient.url.catalog']}}" target="_blank">
 					<img src="content/images/geodata-biglogo.png" alt="GeoData.gov.gr">
 				</a>
+				<div style="float: right; padding: 8px 0px 0px 15px;">
+					<select name="locale_selection" id="locale_selection" data-width="100px">
+						<option value="el">Ελληνικά</option>
+                        <option value="en">English</option>
+					</select>
+				</div>
 				<div class="device" style="float: right; padding-top: 17px;" >
 					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" type="range" style="width: 150px;">
 				</div>
-				<div class="device img-text" style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" title="Διαφάνεια">
+				<div class="device img-text" style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" data-i18n-id="index.title.opacity" data-i18n-type="title" title="Διαφάνεια">
 					<img src="content/images/opacity.png" alt="" />
 				</div>
 				<div class="device" style="float: right; padding-top: 8px; padding-right: 6px;">
 					<select name="base_layer" id="base_layer" data-width="250px">
-						<option data-key=""
+						<option data-i18n-id="index.layer.ktimatologio"
+                                data-key=""
 								data-type="ktimatologio"
 								data-set=""
 								value="ktimatologio">Κτηματολόγιο</option>
@@ -136,7 +143,7 @@
 								value="mapquest" selected>Stamen - Watercolor</option>
 					</select>
 				</div>
-				<div class="device img-text"  style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" title="Υπόβαθρο">
+				<div class="device img-text"  style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" data-i18n-id="index.title.base-layer" data-i18n-type="title" title="Υπόβαθρο">
 					<img src="content/images/map.png" alt="" />
 				</div>
 		</div>
@@ -150,15 +157,15 @@
 				<div style="float: left; padding-top: 1px;">
 					<img class="inactive"id="group" style="" src="content/images/comments.png" alt="" data-selected="true"/>
 				</div>
-				<div id="group-label" style="float: left; padding-left: 7px;" class="section-label">Θεματικές Ενότητες</div>
+				<div id="group-label" style="float: left; padding-left: 7px;" class="section-label" data-i18n-id="index.topics">Θεματικές Ενότητες</div>
 				<div style="float: left;">
 					<img class="active" id="organization" src="content/images/organization.png" alt="" data-selected="false"/>
 				</div>
-				<div id="organization-label" style="float: left; padding-left: 7px;"  class="section-label section-label-hidden">Οργανισμοί</div>
+				<div id="organization-label" style="float: left; padding-left: 7px;" class="section-label section-label-hidden" data-i18n-id="index.organizations">Οργανισμοί</div>
 				<div style="float: left; padding-top: 1px;">
 					<img class="active" id="search" src="content/images/search.png" alt="" data-selected="false"/>
 				</div>
-				<div style="float: left;" id="search-label" style="float: left; padding-left: 7px;" class="section-label section-label-hidden">Αναζήτηση</div>
+				<div style="float: left;" id="search-label" style="float: left; padding-left: 7px;" class="section-label section-label-hidden" data-i18n-id="index.search">Αναζήτηση</div>
 			</div>
 			
             <div id="layer-tree-group" class="clearfix layer-tree-group"></div>
@@ -166,13 +173,13 @@
             <div id="layer-tree-search" class="clearfix layer-tree-search"></div>
 
 			<div id="layer-selection-header" class="clearfix layer-selection-header">
-				<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px;">Επιλογές</span>
+				<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.selected-layers">Επιλογές</span>
 			</div>
             
 			<div id="layer-selection" class="clearfix layer-selection"></div>
             
 			<div id="tools-header" class="clearfix tools-header">
-				<img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;">Εργαλεία</span>
+				<img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
 			</div>
 			
             <div id="tools" class="clearfix tools">
@@ -184,20 +191,17 @@
 			</div>
 		</div>
 		<div class="panel-left-label">
-			<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px; font-size: 1.3em; color: #485AA8">Κατάλογος</span>
+			<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px; font-size: 1.3em; color: #485AA8" data-i18n-id="index.catalog">Κατάλογος</span>
 		</div>
 	</div>
     	
 	<footer class="footer">
-        <div style="position: absolute; width: 100%; text-align: center; padding-top: 10px;">
+        <div style="position: absolute; left: 50%; margin-left: -50; padding-top: 10px;">
             <a href="https://icons8.com/web-app/">Icons by Icons8</a>
         </div>
         <div class="mouse-pos">
-            <div style="float: left; padding-top: 5px; padding-left: 2px; cursor: pointer; display: none;">
-                <img class="img-text" src="content/images/center-direction.png" alt="" data-placement="bottom" title="Αναζήτηση θέσης" />
-            </div>
             <div style="float: left; padding-top: 5px;">
-                <img class="img-text" src="content/images/location.png" alt="" data-placement="bottom" title="Θέση" />
+                <img class="img-text" src="content/images/location.png" alt="" data-placement="bottom" data-i18n-id="index.title.position" data-i18n-type="title" title="Θέση" />
             </div>
         </div>
         <div class="combo-crs" style="width: 80px;">
@@ -206,12 +210,12 @@
                 <option value="EPSG:4326">4326</option>
             </select>
         </div>
-        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" title="Σύστημα αναφοράς">
+        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.crs" data-i18n-type="title" title="Σύστημα αναφοράς">
             <img src="content/images/earth.png" alt="" />
         </div>
         <div id="scale-line" style="float: right; padding: 18px 10px 0px 2px;">
         </div>
-        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" title="Κλίμακα χάρτη">
+        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.scale" data-i18n-type="title" title="Κλίμακα χάρτη">
             <img src="content/images/ruler.png" alt="" />
         </div>
 	</footer>

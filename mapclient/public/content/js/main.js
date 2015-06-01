@@ -28,7 +28,9 @@
         wms: 'app/wms',
         proj4: 'lib/proj4js/proj4',
         ckan: 'app/ckan',
-        api: 'api/data'
+        api: 'api/data',
+        locale_en: 'i18n/en/strings',
+        locale_el: 'i18n/el/strings'
     },
     shim: {
 		jquery: {
@@ -76,6 +78,7 @@
                 'proj4',
                 'ol',
                 'URIjs/URI',
+                'shared',
                 'ckan',
                 'controls',                
                 'wms',

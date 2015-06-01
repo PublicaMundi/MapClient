@@ -4,8 +4,15 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
 	PublicaMundi.define('Data');
 
     PublicaMundi.Data.Format = {
-        JSON: 'json',
-        GeoJSON: 'geojson'
+        JSON : 'JSON',
+        ESRI : 'ESRI Shapefile',
+        GML : 'GML',
+        KML : 'KML',
+//        GPKG : 'GPKG',
+        DXF : 'DXF',
+        CSV : 'CSV',
+        GeoJSON : 'GeoJSON',
+        PDF : 'PDF'
     };
 
     var operators = {
@@ -632,4 +639,6 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
         this.query.offset = value;
         return this;
     };
+
+    return PublicaMundi;
 });
