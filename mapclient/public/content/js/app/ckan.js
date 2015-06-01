@@ -34,7 +34,7 @@
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
-					context: self,
+					context: self
 				}).done(function (response) {
 					var organizations = [];
 					if ((response.success) && (response.result)) {
@@ -75,7 +75,7 @@
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
-					context: self,
+					context: self
 				}).done(function (response) {
 					var groups = [];
 					if ((response.success) && (response.result)) {
@@ -119,7 +119,7 @@
             return new Promise(function(resolve, reject) {
 				self.values.xhr = $.ajax({
 					url: uri.toString(),
-					context: self,
+					context: self
 				}).done(function (response) {
 					self.values.xhr = null;
 
@@ -295,7 +295,7 @@
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
-					context: self,
+					context: self
 				}).done(function (response) {
 					var organization = null, o
 					if ((response.success) && (response.result)) {
@@ -384,7 +384,7 @@
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
-					context: self,
+					context: self
 				}).done(function (response) {
 					var group = null, o
 					if ((response.success) && (response.result)) {

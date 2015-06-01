@@ -133,9 +133,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 
 				for(var i = 0; i < groups.length; i++) {
+                    var caption = PublicaMundi.getResource('group.' + groups[i].id, groups[i].title);
+                    
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
-					content.push('<div class="tree-text tree-text-1">' + groups[i].title + '</div>');
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
                     if((groups[i].description) && (groups[i].title != groups[i].description)) {
                         content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
@@ -153,9 +155,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				organizations.sort(sortByCaption);
 				
 				for(var i = 0; i < organizations.length; i++) {
+                    var caption = PublicaMundi.getResource('organization.' + organizations[i].id, organizations[i].caption);
+                    
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
-					content.push('<div class="tree-text tree-text-1">' + organizations[i].caption + '</div>');
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
                     if((organizations[i].description) && (organizations[i].caption != organizations[i].description)) {
                         content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
@@ -210,10 +214,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < group_organizations.length; i++) {
+                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption);
+                        
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
-						content.push('<div class="tree-text tree-text-2">' + group_organizations[i].caption + '</div>');
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
                         if((group_organizations[i].description) && (group_organizations[i].caption != group_organizations[i].description)) {
                             content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
@@ -364,10 +370,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < organization_groups.length; i++) {
+                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].id, organization_groups[i].title);
+                        
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
-						content.push('<div class="tree-text tree-text-2">' + organization_groups[i].title + '</div>');
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
                         if((organization_groups[i].description) & (organization_groups[i].title != organization_groups[i].description)) {
                             content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
@@ -879,26 +887,28 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     
                     content.push('<div class="form-group">');
                     content.push('<div style="float: left; padding-left: 15px; width: 19em;">');
-                    content.push('<input id="' + this.values.element + '-text" placeholder="Search resources ..." class="form-control input-md" type="text">');
+                    content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.getResource('control.tree.search.prompt') + 
+                                 '" data-i18n-id="control.tree.search.prompt" data-i18n-type="attribute" data-i18n-name="placeholder" class="form-control input-md" type="text">');
                     content.push('</div>');
                     content.push('</div>');
 
                     
                     content.push('<div class="clearfix">');
                     content.push('<div style="float: left; padding-right: 10px;"  id="' + this.values.element + '-box-draw">');
-                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" title="Σχεδίαση πλαισίου για χωρική αναζήτηση. Κρατήστε πατημένο το πλήκτρο shift και το δεξί πλήκτρο του ποντικιού για την έναρξη της σχεδίασης."><img src="content/images/edit-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.draw" ' + 
+                                 'data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.draw') + '"><img src="content/images/edit-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-remove">');
-                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" title="Αφαίρεση φίλτρου"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.remove" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.remove') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-apply">');
-                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" title="Εφαρμογή φίλτρου"><img src="content/images/apply-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" data-i18n-id="control.tree.search.button.apply" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.apply') + '"><img src="content/images/apply-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-cancel">');
-                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" title="Ακύρωση"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.discard" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.discard') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px;" id="' + this.values.element + '-search">');
-                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" title="Αναζήτηση"><img src="content/images/search-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.search" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.search') + '"><img src="content/images/search-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('</div>');
 
@@ -1049,7 +1059,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			content.push('</div>');
             
 			content.push('<div class="clearfix">');
-			content.push('<div class="selected-layer-opacity-label" title="Διαφάνεια υποβάθρου" ><img src="content/images/opacity.png" class="img-16" /></div>');
+			content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
 			content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
 			content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
             content.push('</div>');
@@ -1060,6 +1070,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			
 			$('#' + this.values.element).prepend(content.join(''));
 			
+            $('.selected-layer-opacity-label').tooltip();
+            
 			this.values.updateActions();
 						
 			this.trigger('layer:added', { id : id });
@@ -1137,7 +1149,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var self = this;
             
             var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-toggle btn btn-default" title="' + ( this.values.title || '') + '">');
+            content.push('<a data-action="' + this.values.name + '" class="tool-toggle btn btn-default" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + (this.values.active ? this.values.images.enabled : this.values.images.disabled ) + '">');
             content.push('</a>');
             
@@ -1422,9 +1434,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.action.suspendUI();
                                         
                 var query = this.values.query;
-                console.log($('#' + this.values.element + '-crs').val());
-                query.reset().format(PublicaMundi.Data.Format.GeoJSON).crs($('#' + this.values.element + '-crs').val());
-
+                query.reset().crs($('#' + this.values.element + '-crs').val());
+                query.reset().format($('#' + this.values.element + '-format').val());
+                
                 var files= [];
                 for(var i=0; i<quyarable.length; i++) {
                     files.push(quyarable[i].title);
@@ -1482,27 +1494,28 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             // Dialogs
             this.values.dialog = new PublicaMundi.Maps.Dialog({
-                title: 'Εξαγωγή αντικειμένων σε Shape File',
+                title: 'control.export.dialog.title',
                 element: this.values.element + 'dialog',
                 visible: false,
-                width: 400,
+                width: 430,
                 height: 200,
                 autofit: true,
                 buttons: {
                     export: {
-                        text: 'Δημιουργία',
+                        text: 'control.export.dialog.button.export',
                         style: 'primary'
                     },
                     close : {
-                        text: 'Ακύρωση',
+                        text: 'control.export.dialog.button.cancel',
                         style: 'default'
                     }
                 },
                 renderContent: function() {
                     var content = [];
                     
-                    content.push('<div class="clearfix">');
-                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px;">Εξαγωγή σε</label>');
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' + 
+                                 PublicaMundi.getResource('control.export.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326">WGS84</option>');
@@ -1510,7 +1523,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<option value="EPSG:4258">ETRS89</option>');
                     content.push('</select>');
                     content.push('</div>');
-                    
+
+                    content.push('<div class="clearfix">');
+                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.format">' + 
+                                 PublicaMundi.getResource('control.export.dialog.label.format') + '</label>');
+                    content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" class="selectpicker" data-width="250px">');
+                    content.push('<option value="ESRI Shapefile" selected="selected">ESRI Shapefile</option>');
+                    content.push('<option value="GML">GML</option>');
+                    content.push('<option value="KML">KML</option>');
+                    //content.push('<option value="GPKG">Geo Package</option>');
+                    content.push('<option value="DXF">AutoCAD DXF</option>');
+                    content.push('<option value="CSV">Comma Separated Value (.csv)</option>');
+                    content.push('<option value="GeoJSON">GeoJSON</option>');
+                    content.push('<option value="PDF">Geospatial PDF</option>');
+                    content.push('</select>');
+                    content.push('</div>');
                     return content;
                 }
             });
@@ -1518,7 +1545,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element + '-crs').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-crs"]').blur();
             });
-                    
+
+            $('#' + this.values.element + '-format').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-format"]').blur();
+            });
+                                
             this.values.dialog.on('dialog:action', function(args){
                     switch(args.action){ 
                         case 'close':
@@ -1865,7 +1896,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
             content.push('<div class="arrow"></div>');
             content.push('<div class="clearfix popover-title" id="popover-top">');
-            content.push('<div style="float: left;">Στοιχεία αντικειμένου</div>');
+            content.push('<div style="float: left;" data-i18n-id="tool.select.dialog.title">' + PublicaMundi.getResource('tool.select.dialog.title') + '</div>');
             if(features.length > 1) {
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-12" src="content/images/right.png"></div>');
                 content.push('<div style="float: right; font-size: 0.9em; padding-top: 2px;">' + (index + 1 ) + '</div>');
@@ -1976,7 +2007,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var self = this;
             
             var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" title="' + ( this.values.title || '') + '">');
+            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + this.values.image + '">');
             content.push('</a>');
             
@@ -2049,7 +2080,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             content.push('<div class="modal-header">');
             content.push('<button id="' + this.values.element + '-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>');
-            content.push('<h4 class="modal-title">' + this.values.title + '</h4>');
+            content.push('<h4 class="modal-title" data-i18n-id="' + this.values.title + '">' + PublicaMundi.getResource(this.values.title) + '</h4>');
             content.push('</div>');
             
             content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) + 
@@ -2064,8 +2095,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 for(var action in this.values.buttons) {
                     this.values.buttons[action].style = this.values.buttons[action].style || 'default';
                     
-                    content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-action="' + action + 
-                                 '">' + this.values.buttons[action].text + '</button>');
+                    content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-i18n-id="' + this.values.buttons[action].text + 
+                                 '" data-action="' + action + 
+                                 '">' + PublicaMundi.getResource(this.values.buttons[action].text) + '</button>');
                 }
             }
             content.push('</div>');
@@ -2135,7 +2167,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     });
 
     var _DialogTableBrowserRenderTable = function(response) {
-        console.log(response);
         if(response.success) {
             this.values.page.data = response.data[0].records;
             
