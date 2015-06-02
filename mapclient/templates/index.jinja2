@@ -204,10 +204,12 @@
                 <img class="img-text" src="content/images/location.png" alt="" data-placement="bottom" data-i18n-id="index.title.position" data-i18n-type="title" title="Θέση" />
             </div>
         </div>
-        <div class="combo-crs" style="width: 80px;">
-            <select name="pos_epsg" id="pos_epsg" class="selectpicker" data-width="80px">
-                <option value="EPSG:3857" selected="selected">3857</option>
-                <option value="EPSG:4326">4326</option>
+        <div class="combo-crs" style="width: 140px;">
+            <select name="pos_epsg" id="pos_epsg" class="selectpicker" data-width="140px">
+                <option value="EPSG:3857" selected="selected">Web Mercator</option>
+                <option value="EPSG:4326">WGS84</option>
+                <option value="EPSG:2100">ΕΓΣΑ87</option>
+                <option value="EPSG:4258">ETRS89</option>
             </select>
         </div>
         <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.crs" data-i18n-type="title" title="Σύστημα αναφοράς">
