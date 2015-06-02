@@ -238,7 +238,7 @@
             view.fitExtent(members.config.map.bbox, size);
         }
 
-        if ((navigator.geolocation) && (members.config.geolocation)) {
+        if ((!members.resource) && (navigator.geolocation) && (members.config.geolocation)) {
             navigator.geolocation.getCurrentPosition(function (position) {
                 var center = ol.proj.transform([position.coords.longitude, position.coords.latitude], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
                 view.setCenter(center);
@@ -362,7 +362,7 @@
 		});
 
         // Resources
-		members.resources = new PublicaMundi.Maps.Resources.ResourceManager({
+		members.resources = new PublicaMundi.Maps.LayerManager({
             path: (members.config.path ? members.config.path + '/' : ''),
 			proxy: PublicaMundi.getProxyUrl(module.config().proxy)
 		});

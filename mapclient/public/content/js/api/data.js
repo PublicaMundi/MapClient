@@ -8,7 +8,7 @@ define(['jquery', 'shared'], function ($, PublicaMundi) {
         ESRI : 'ESRI Shapefile',
         GML : 'GML',
         KML : 'KML',
-//        GPKG : 'GPKG',
+        GPKG : 'GPKG',
         DXF : 'DXF',
         CSV : 'CSV',
         GeoJSON : 'GeoJSON',

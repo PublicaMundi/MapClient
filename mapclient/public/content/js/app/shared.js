@@ -1,4 +1,6 @@
-﻿define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol, proj4, URI) {
+﻿var global = this;
+
+define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol, proj4, URI) {
     "use strict";
 
     // PublicaMundi namespace
@@ -53,6 +55,8 @@
     if(typeof proj4.defs['EPSG:2100'] === 'undefined') {
         proj4.defs("EPSG:2100","+proj=tmerc +lat_0=0 +lon_0=24 +k=0.9996 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=-199.87,74.79,246.62,0,0,0,0 +units=m +no_defs");
     }
+    
+    global.proj4 = proj4;
     
     // Supported resource types
     PublicaMundi.Maps.Resources.Types = {};
@@ -328,9 +332,8 @@
             return styles;
         },
     });
-
-       
-    PublicaMundi.Maps.Resources.ResourceManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
+      
+    PublicaMundi.Maps.LayerManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
         initialize: function (options) {
             if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
@@ -349,12 +352,11 @@
                 throw 'Resource is missing.';
             }
             if (typeof shared.adapters[resource.format.toUpperCase()] !== 'object') {
-                throw 'Resource typ ' + resource.format.toUpperCase() + ' is not registered.';
+                throw 'Resource type ' + resource.format.toUpperCase() + ' is not registered.';
             }
             var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
-
             adapter.setOptions(resource);
-
+            
             return resource;
 		},
         getResourceMetadata: function (type, parameters) {
@@ -381,9 +383,6 @@
             }
 
             resource = this.setCatalogResourceMetadataOptions(resource);
-
-            var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
-            adapter.setOptions(resource);
 
             this.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
                 var layer;

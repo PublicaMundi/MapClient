@@ -1531,7 +1531,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<option value="ESRI Shapefile" selected="selected">ESRI Shapefile</option>');
                     content.push('<option value="GML">GML</option>');
                     content.push('<option value="KML">KML</option>');
-                    //content.push('<option value="GPKG">Geo Package</option>');
+                    content.push('<option value="GPKG">Geo Package</option>');
                     content.push('<option value="DXF">AutoCAD DXF</option>');
                     content.push('<option value="CSV">Comma Separated Value (.csv)</option>');
                     content.push('<option value="GeoJSON">GeoJSON</option>');
