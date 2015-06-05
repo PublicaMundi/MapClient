@@ -486,12 +486,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 var organization_id = parts[1];
 				var package_id = parts[2];
 
-				var _package = null;
-                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    this.values.ckan.getFilteredPackageById(package_id);
-                } else {
-                    this.values.ckan.getPackageById(package_id);
-                }
+				var _package = this.values.ckan.getPackageById(package_id);
 
 				_package.resources.sort(sortByName);
 				
@@ -513,7 +508,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                              organization_id + '_' +
                                                                              package_id + '_' +
                                                                              resource.id + '_' + 
-                                                                             this.values.elemeng + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
+                                                                             this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
 						content.push('</div>');
 						content.push('</li>');
@@ -542,14 +537,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				var package_id = parts[2];
 				var resource_id = parts[3];
 								
-				var resource = null;
+				var resource = this.values.ckan.getResourceById(resource_id);
 
-                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    this.values.ckan.getFilteredResourceById(resource_id);
-                } else {
-                    this.values.ckan.getResourceById(resource_id);
-                }
-                
 				var content = [];
 
 				content.push('<ul class="tree-node" style="display: none;">');
@@ -635,12 +624,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								var parts = id.split('_');
 								var resource_id = parts[3];
 
-								var resource;
-                                if(self.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                                    resource = self.values.ckan.getFilteredResourceById(resource_id);
-                                } else {
-                                    resource = self.values.ckan.getResourceById(resource_id);
-                                }
+								var resource = self.values.ckan.getResourceById(resource_id);
 
 								$(this).attr('src', 'content/images/ajax-loader.gif');
 								$(this).addClass('tree-node-ajax-loader');
@@ -687,11 +671,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         data = self.values.ckan.getOrganizationById(id);
                         break;
                     case 'package':
-                        if(self.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                            data = self.values.ckan.getFilteredPackageById(id);
-                        } else {
-                            data = self.values.ckan.getPackageById(id);   
-                        }
+						data = self.values.ckan.getPackageById(id);   
                         break;
                         
                 }
@@ -813,13 +793,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var parts = id.split('_');
 							
 			if((parts.length > 1) && (!$('[data-layer="' + id +'"]').first().data('loading'))) {
-                var resource;
-                if(self.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    resource = self.values.ckan.getFilteredResourceById(parts[0]);
-                } else {
-                    resource = self.values.ckan.getResourceById(parts[0]);
-                }
-                
+                var resource = self.values.ckan.getResourceById(parts[0]);
+
 				var layer = parts.splice(1).join('_');
 						
 				if(this.values.resources.getLayerCount() < this.values.maxLayerCount) {
@@ -827,26 +802,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					$('[data-layer="' + id +'"]').attr('src', 'content/images/ajax-loader.gif');
 					$('[data-layer="' + id +'"]').addClass('tree-node-ajax-loader');
 							
+					this.values.resources.setCatalogResourceMetadataOptions(resource);
+
 					this.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
 						$('[data-layer="' + id +'"]').data('loading', false)
 						$('[data-layer="' + id +'"]').removeClass('tree-node-ajax-loader');
 						$('[data-layer="' + id +'"]').data('selected', true);
 						$('[data-layer="' + id +'"]').attr('src', 'content/images/checked.png');
 
-                        var title, legend;
-                        for(var i=0; i<metadata.layers.length;i++) {
-                            if(metadata.layers[i].key == layer) {
-                                title = metadata.layers[i].title;
-                                legend = metadata.layers[i].legend;
-                                break;
-                            }
-                        }
-
-						self.values.resources.createLayer(self.values.map, metadata, layer, id, title);
-						
-						var title = $('[data-layer="' + id +'"]').first().closest('li').find('.tree-text').html();
-						
-						self.trigger('layer:added', {id: id, title : title, legend : legend});
+						self.values.resources.createLayer(self.values.map, metadata, id);
+					
+						self.trigger('layer:added', {id: id});
 					});	
 				}
 			}
@@ -854,22 +820,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		remove: function(id) {
 			var parts = id.split('_');
 				
-			if((parts.length > 1) && 
-			   (!$('[data-layer="' + id +'"]').first().data('loading')) &&
-			   ($('[data-layer="' + id +'"]').data('selected'))) {
-                var resource;
-                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    resource = this.values.ckan.getFilteredResourceById(parts[0]);
-                } else {
-                    resource = this.values.ckan.getResourceById(parts[0]);
-                }
+			if(parts.length > 1) {
+				if($('[data-layer="' + id +'"]').size() > 0) {
+					if(($('[data-layer="' + id +'"]').first().data('loading')) || (!$('[data-layer="' + id +'"]').data('selected'))) {
+						return;
+					}
 
-				$('[data-layer="' + id +'"]').data('selected', false);
-				$('[data-layer="' + id +'"]').attr('src', 'content/images/unchecked.png');
-			
-				this.values.resources.destroyLayer(this.values.map, id);
-										
-				this.trigger('layer:removed', { id: id});
+					$('[data-layer="' + id +'"]').data('selected', false);
+					$('[data-layer="' + id +'"]').attr('src', 'content/images/unchecked.png');
+				}
+				if(this.values.resources.destroyLayer(this.values.map, id)) {
+					this.trigger('layer:removed', { id: id});
+				}
 			}
 		},
         render: function() {
@@ -1037,44 +999,77 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         render: function() {
             $('#' + this.values.element).html('');
 		},
-		add: function(id, title, legend) {
-			var content = [];
-			
-			content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
-            
-            content.push('<div style="float: left; width: 24px;">');
-            if(legend) {
-                content.push('<img src="' + legend + '" alt="" />');
-            } else {
-                content.push('&nbsp;');
-            }
-            content.push('</div>');
-            
-            content.push('<div style="float: left;">');
-            
-			content.push('<div class="clearfix" style="padding-bottom: 3px;">');
-			content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
-			content.push('<div class="selected-layer-text">' + title + '</div>');
-			content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
-			content.push('</div>');
-            
-			content.push('<div class="clearfix">');
-			content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
-			content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
-			content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
-            content.push('</div>');
-            
-			content.push('</div>');
+		add: function(id) {
+			var self = this, _resource, _package;
 
-			content.push('</div>');
+			var parts = id.split('_');
+
+			var _resource = this.values.ckan.getResourceById(parts[0]);
+			if(_resource) {
+				this.values.resources.setCatalogResourceMetadataOptions(_resource);
+				
+				_package = this.values.ckan.getPackageById(_resource.package);
+
+				var layer = parts.splice(1).join('_');
+
+				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {
+					var title, legend;
 			
-			$('#' + this.values.element).prepend(content.join(''));
+					for(var i=0; i<metadata.layers.length;i++) {
+						if(metadata.layers[i].key == layer) {
+							title = metadata.layers[i].title;
+							legend = metadata.layers[i].legend;
+							break;
+						}
+					}
+					// Override title with package / resource
+					if((_package.resources.length === 1) && 
+					   (_package.resources[0].metadata) && 
+					   (!!_package.resources[0].metadata.extras.layer)) {
+						title = _package.title
+					} else if(!!_resource.metadata.extras.layer) {
+						title = _resource.name;
+					}
+							   
+					var content = [];
+					
+					content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
+					
+					content.push('<div style="float: left; width: 24px;">');
+					if(legend) {
+						content.push('<img src="' + legend + '" alt="" />');
+					} else {
+						content.push('&nbsp;');
+					}
+					content.push('</div>');
+					
+					content.push('<div style="float: left;">');
+					
+					content.push('<div class="clearfix" style="padding-bottom: 3px;">');
+					content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
+					content.push('<div class="selected-layer-text">' + title + '</div>');
+					content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
+					content.push('</div>');
+					
+					content.push('<div class="clearfix">');
+					content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
+					content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
+					content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
+					content.push('</div>');
+					
+					content.push('</div>');
+
+					content.push('</div>');
+					
+					$('#' + self.values.element).prepend(content.join(''));
+					
+					$('.selected-layer-opacity-label').tooltip();
+					
+					self.values.updateActions();
 			
-            $('.selected-layer-opacity-label').tooltip();
-            
-			this.values.updateActions();
-						
-			this.trigger('layer:added', { id : id });
+					self.trigger('layer:added', {id: id});					
+				});
+			}
 		},
 		remove: function(id) {
 			$('#' + this.values.element).find('[data-id="' + id  +'"]').remove();

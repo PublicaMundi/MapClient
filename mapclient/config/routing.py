@@ -21,10 +21,8 @@ def make_map():
     # CUSTOM ROUTES HERE
     with map.submapper(path_prefix=config['mapclient.url.prefix']) as m1:
         # non-default routes
-        m1.connect('/', controller='home', action='index', resource=None)
-        m1.connect('/{resource}', controller='home', action='index')
+        m1.connect('/', controller='home', action='index')
 
         m1.connect('/{controller}/{action}')
-        m1.connect('/{controller}/{action}/{id}')
-
+        m1.connect('/{controller}/{action}/{id}')        
     return map

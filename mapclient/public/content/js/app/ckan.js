@@ -153,6 +153,7 @@
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
+									_resource.package = _package.id;
 									_package.resources.push(_resource);
 								}
 							}
@@ -226,6 +227,7 @@
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
+									_resource.package = _package.id;
 									_package.resources.push(_resource);
 								}
 							}
@@ -331,6 +333,7 @@
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
+									_resource.package = _package.id;
 									_package.resources.push(_resource);
 								}
 							}
@@ -421,6 +424,7 @@
 								_resource = packages[p].resources[r];
 
 								if(_resource.format === 'wms') {
+									_resource.package = _package.id;
 									_package.resources.push(_resource);
 								}
 							}
@@ -456,6 +460,63 @@
             }
             return null;
         },
+        loadPackageById: function (id) {
+			// Example : http://labs.geodata.gov.gr/api/3/action/package_show?id=8636eeea-e05f-40b1-824b-253c60a1a2c9
+            var self = this;
+
+            var uri = new URI(this.values.endpoint);
+            uri.segment(['api', '3', 'action', 'package_show']);
+            uri.addQuery({ 'id': id });
+
+			return new Promise(function(resolve, reject) {
+				var index = self.getIndexOfPackage(id);
+				if(index >= 0) {
+					resolve(self.values.catalog.packages[index]);
+					return;
+				}
+							
+				$.ajax({
+					url: uri.toString(),
+					dataType: 'jsonp',
+					context: self
+				}).done(function (response) {
+					var _package = null, _resource;
+					if ((response.success) && (response.result)) {
+						_package = {
+							id: response.result.id,
+							name: response.result.name,
+							title: response.result.title,
+							notes: response.result.notes,
+							organization: response.result.organization.id,
+							groups: [],
+							resources: [],
+							spatial: response.result.spatial
+						};
+
+						for (var g = 0; g < response.result.groups.length; g++) {
+							_package.groups.push(response.result.groups[g].id);
+						}
+											
+						for (var r = 0; r < response.result.resources.length; r++) {
+							_resource = response.result.resources[r];
+							if(_resource.format === 'wms') {
+								_resource.package = _package.id;
+								_package.resources.push(_resource);
+							}
+						}
+						
+						if( _package.resources.length > 0) {							
+							self.values.catalog.packages.push(_package);
+						}
+					}
+					resolve(_package);
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					console.log('Failed to load CKAN package : ' + uri.toString());
+					
+					reject(errorThrown);
+				});
+			});
+        },
         getPackageById: function (id) {
             var p;
 
@@ -467,11 +528,6 @@
 				}
 			}
 
-            return null;
-        },
-        getFilteredPackageById: function (id) {
-            var p;
-
 			if(this.values.search.packages) {
 				for (p = 0; p < this.values.search.packages.length; p++) {
 					if (this.values.search.packages[p].id === id) {
@@ -479,7 +535,7 @@
 					}
 				}
 			}
-
+			
             return null;
         },
         getResourceById: function (id) {
@@ -497,11 +553,6 @@
                     }
                 }
             }
-            
-            return null;
-        },
-        getFilteredResourceById: function (id) {
-            var p, r, _package;
 
             if(this.values.search.packages) {
 				for (p = 0; p < this.values.search.packages.length; p++) {
@@ -515,7 +566,7 @@
                     }
                 }
             }
-            
+
             return null;
         }
     });
