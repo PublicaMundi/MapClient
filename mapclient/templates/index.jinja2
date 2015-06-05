@@ -45,9 +45,8 @@
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}'
                     },
-                    resource : '{{c.resource}}',
                     api: {
-						endpoint : '/maps/'
+						endpoint : '{{config['mapclient.url.prefix']}}/'
 					}
                 }
             }

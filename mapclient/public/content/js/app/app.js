@@ -29,7 +29,7 @@
         actions: {
             export: null
         },
-        resource: null,
+        preview: null,
         i18n: {
             locale : 'el',
             strings : {
@@ -42,8 +42,6 @@
     };
 
     var initializeParameters = function () {
-        var resource = module.config().resource;
-
         // Set default values
         members.config.geolocation = true;
         members.config.map.minZoom = 3;
@@ -73,25 +71,18 @@
                 members.config.geolocation = false;
             }
 
-            // Check for resource in query string (overrides main page parameter)
-            if(params.resource) {
-                resource = params.resource;
-            }
-
             // Set locale
             if (params.locale) {
                 members.i18n.locale = params.locale;
             }
-        }
-
-        if(resource) {
-            if ((members.config.ckan) && (members.config.ckan.endpoint)) {
-                var uri = new URI(members.config.ckan.endpoint);
-                uri.segment(['api', '3', 'action', 'resource_show']);
-                uri.addQuery({ id: resource });
-
-                members.resource = uri.toString();
-            }
+                        
+            // Preview resource
+            if((params.package) && (params.resource)) {
+				members.preview = {
+					package : params.package,
+					resource : params.resource
+				};
+			}
         }
     };
 
@@ -238,7 +229,7 @@
             view.fitExtent(members.config.map.bbox, size);
         }
 
-        if ((!members.resource) && (navigator.geolocation) && (members.config.geolocation)) {
+        if ((!members.preview) && (navigator.geolocation) && (members.config.geolocation)) {
             navigator.geolocation.getCurrentPosition(function (position) {
                 var center = ol.proj.transform([position.coords.longitude, position.coords.latitude], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
                 view.setCenter(center);
@@ -526,6 +517,10 @@
         members.tools.export.on('tool:toggle', handleToolToggle);
         members.tools.select.on('tool:toggle', handleToolToggle);
         
+        // Layer manager
+        members.resources.on('layer:add', function(args) {
+			members.components.layerSelection.add(args.id);
+		});
         
         // Left sliding panel
 		$('body').on('click', '.panel-left-hidden', function(e) {
@@ -612,7 +607,7 @@
 		
         // Layer handling events
 		var layerAdded = function(args) {
-			members.components.layerSelection.add(args.id, args.title, args.legend);
+			members.components.layerSelection.add(args.id);
 		};
 		
 		var layerRemoved  = function(args) {
@@ -772,23 +767,18 @@
     };
     
     var initializeResourcePreview = function () {
-        if (!members.resource) {
+        if (!members.preview) {
             return;
         }
 
-        var url = members.resource;
-
-        $.ajax({
-            url: url,
-            dataType: 'jsonp',
-            context: this,
-        }).done(function (response) {
-            if ((response.success) && (response.result)) {
-                members.resources.addResourceFromCatalog(members.map.control, response.result);
-            }
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.log('Failed to load resource ' + url);
-        });
+        members.ckan.loadPackageById(members.preview.package).then(function(data) {
+			var resource = members.ckan.getResourceById(members.preview.resource);
+			if(resource) {
+				members.resources.addResourceFromCatalog(members.map.control, resource);
+			}
+		}, function(error) {
+			console.log('Failed to load resource ' + members.preview.resource + ' from dataset ' + members.preview.dataset);
+		});
     };
 
     var localizeUI = function() {

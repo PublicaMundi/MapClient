@@ -344,8 +344,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             this.values.layerCounter = 0;
             this.values.queryable = [];
             
-            this.event('resource:add');
-            this.event('resource:remove');
+            this.event('layer:add');
         },
         setCatalogResourceMetadataOptions: function(resource) {
             if (!resource) {
@@ -354,6 +353,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             if (typeof shared.adapters[resource.format.toUpperCase()] !== 'object') {
                 throw 'Resource type ' + resource.format.toUpperCase() + ' is not registered.';
             }
+			if(resource.hasOwnProperty('metadata')) {
+				return resource;
+			}
             var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
             adapter.setOptions(resource);
             
@@ -394,7 +396,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     }
                 }
                 if(layer) {
-                    self.createLayer(map, metadata, layer.key, resource.id + '_' + layer.key, layer.title);
+                    self.createLayer(map, metadata, resource.id + '_' + layer.key);
+
+                    self.trigger('layer:add', { id : resource.id + '_' + layer.key});
                 }
             });
             return true;
@@ -442,7 +446,20 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         getQueryableResources: function() {
             return this.values.queryable;
         },
-        createLayer: function (map, metadata, layer, id, title) {
+        createLayer: function (map, metadata, id) {
+			var title = '';
+			
+			var parts = id.split('_');
+			var resource = parts[0];
+			var layer = parts.splice(1).join('_');
+			
+			for(var i=0; i<metadata.layers.length;i++) {
+				if(metadata.layers[i].key == layer) {
+					title = metadata.layers[i].title;
+					break;
+				}
+			}
+                        
 			var __object = null;
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
@@ -481,7 +498,11 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 				this.values.layers.splice(index, 1);
 				
 				this.values.layerCounter--;
+				
+				return true;
             }
+            
+            return false;
         },
         getLayerCount: function() {
 			return this.values.layerCounter;

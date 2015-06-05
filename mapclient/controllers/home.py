@@ -13,7 +13,5 @@ log = logging.getLogger(__name__)
 
 class HomeController(BaseController):
 
-    def index(self, resource):
-        c.resource = '' if resource is None else resource
-
+    def index(self):
         return render('/index.jinja2')
