@@ -133,11 +133,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 
 				for(var i = 0; i < groups.length; i++) {
-                    var caption = PublicaMundi.getResource('group.' + groups[i].id, groups[i].title);
+                    var caption = PublicaMundi.getResource('group.' + groups[i].title, groups[i].title);
                     
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].title + '">' + caption + '</div>');
                     if((groups[i].description) && (groups[i].title != groups[i].description)) {
                         content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
@@ -155,11 +155,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				organizations.sort(sortByCaption);
 				
 				for(var i = 0; i < organizations.length; i++) {
-                    var caption = PublicaMundi.getResource('organization.' + organizations[i].id, organizations[i].caption);
+                    var caption = PublicaMundi.getResource('organization.' + organizations[i].caption, organizations[i].caption);
                     
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].caption + '">' + caption + '</div>');
                     if((organizations[i].description) && (organizations[i].caption != organizations[i].description)) {
                         content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
@@ -214,12 +214,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < group_organizations.length; i++) {
-                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption);
+                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].caption, group_organizations[i].caption);
                         
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].caption + '">' + caption + '</div>');
                         if((group_organizations[i].description) && (group_organizations[i].caption != group_organizations[i].description)) {
                             content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
@@ -370,12 +370,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < organization_groups.length; i++) {
-                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].id, organization_groups[i].title);
+                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].title, organization_groups[i].title);
                         
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].title + '">' + caption + '</div>');
                         if((organization_groups[i].description) & (organization_groups[i].title != organization_groups[i].description)) {
                             content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
@@ -1976,6 +1976,203 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             } else {
                 return this.setFeatureFocus(features.length -1);
             }
+        }
+    });
+
+    PublicaMundi.Maps.TextSearch = PublicaMundi.Class(PublicaMundi.Maps.Component, {
+        initialize: function (options) {
+			var self = this;
+
+			PublicaMundi.extend(this.values, {
+                map: null,
+                endpoint: null
+			});
+            
+			if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
+				PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
+			}
+
+            this.event('selection:changed');
+
+            this.values.selection = null;            
+            this.values.feature = null;
+            this.values.tooltip = null;
+            
+            this.values.overlay = new ol.FeatureOverlay({
+                style: [
+                    new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: [255, 255, 255, 0.4]
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#3399CC',
+                            width: 2
+                        })
+                    }),
+                    new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: [255, 255, 255, 0.4]
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#3399CC',
+                                width: 1
+                            })
+                        }),
+                        zIndex: Infinity
+                    })
+                ]
+            });
+            this.values.overlay.setMap(this.values.map);
+            
+			var nominatim = new Bloodhound({
+				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('display_name'),
+				queryTokenizer: Bloodhound.tokenizers.whitespace,
+				remote: {
+					url: this.values.endpoint + '?q=%QUERY&format=jsonv2&polygon_geojson=1&addressdetails=1&accept-language=' + members.i18n.locale + '&countrycodes=gr&limit=10',
+					wildcard: '%QUERY'
+				}
+			});
+
+			var addTooltip = function(selection) {
+				self.removeTooltip();
+			   
+			   if((selection) && (selection.geojson)) {
+					self.values.selection = selection;
+					
+				    var drawFeature = false;
+				    var extent = null;
+
+					var format = new ol.format.GeoJSON();
+					var geom = format.readGeometry(selection.geojson, {
+						dataProjection: PublicaMundi.Maps.CRS.WGS84,
+						featureProjection: PublicaMundi.Maps.CRS.Mercator
+					});
+					self.values.feature = new ol.Feature({ name: 'selection', geometry: geom });
+					
+					var c1, c2, center, zoom;
+					if (geom instanceof ol.geom.Polygon) {
+						drawFeature = true;
+
+						center = geom.getInteriorPoint().getCoordinates();
+						extent = geom.getExtent();
+					} else if (geom instanceof ol.geom.MultiPolygon) {
+						drawFeature = true;
+												
+						center = geom.getInteriorPoints().getFirstCoordinate();
+						extent = geom.getExtent();
+					} else if (geom instanceof ol.geom.Point) {
+						center = geom.getCoordinates();
+					} else {
+						var singleGeom = geom;
+						if(geom instanceof ol.geom.MultiLineString) {
+							drawFeature = true;
+							
+							var middle= Math.floor(geom.getLineStrings().length / 2);
+							singleGeom = geom.getLineString(middle);
+							
+							extent = geom.getExtent();
+						}
+						
+						drawFeature = true;
+						
+						var coords = singleGeom.getCoordinates();
+						var middle= Math.floor(coords.length / 2);
+
+						center = [0, 0];                    
+						c1 = coords[middle-1];
+						c2 = coords[middle];
+
+						center[0] = (c2[0] + c1[0]) / 2.0;
+						center[1] = (c2[1] + c1[1]) / 2.0;
+					}
+
+					if(drawFeature) {
+						self.values.overlay.addFeature(self.values.feature);
+					}
+
+					var content = [];
+
+					content.push('<div id="' + self.values.element + '-popup" class="popover top text-search ' + (drawFeature ? 'tooltip-popup-inactive' : 'tooltip-popup') +
+								 '" tabIndex="1">');
+					
+					content.push('<div class="arrow"></div>');
+										
+					content.push('<div class="popover-content">');
+					
+					content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table">');
+					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.display_name + '</td></tr></table>');
+					content.push('</div></div>');
+
+					content.push('</div>');
+					
+					content.push('</div>');
+					
+					$('body').append(content.join(''));
+								
+					var element = $('#' + self.values.element + '-popup');
+					self.values.tooltip = new ol.Overlay({
+						element: element[0],
+						offset: [-element.outerWidth() / 2, -element.outerHeight()],
+						positioning: 'bottom-center'
+					});
+					
+					self.values.map.addOverlay(self.values.tooltip);
+				
+					self.values.tooltip.setPosition(center);
+
+					if(extent) {
+						var view = self.values.map.getView();
+						var size = self.values.map.getSize();
+						view.fitExtent(extent, size);
+					} else {
+						self.values.map.getView().setCenter(center);
+						self.values.map.getView().setZoom(17);
+					}
+					
+
+					$('#' + self.values.element + '-popup').focus();
+				}
+			};
+			
+			var selectLocationSearchResult = function(e, selection) {
+				self.removeTooltip();
+
+				if(selection) {
+					addTooltip(selection);
+
+					self.trigger('selection:changed', { selection : selection });
+				}
+			};
+			
+			$('#' + this.values.element).typeahead({
+				hint: true,
+				highlight: true,
+				minLength: 3
+			}, {
+				name: 'nominatim-search',
+				display: 'display_name',
+				source: nominatim
+			}).bind('typeahead:select', selectLocationSearchResult);
+
+            this.render();
+        },
+        getFeature: function() {
+            return this.values.feature;
+        },
+        removeTooltip: function() {
+			if(this.values.overlay) {
+				this.values.overlay.getFeatures().clear();
+			}
+			
+			if(this.values.tooltip) {
+				this.values.map.removeOverlay(this.values.tooltip);
+			}
+			
+			this.values.selection = null;
+			this.values.feature = null;
+			this.values.tooltip = null;
         }
     });
 

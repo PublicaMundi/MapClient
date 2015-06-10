@@ -47,6 +47,9 @@
                     },
                     api: {
 						endpoint : '/maps/'
+					}, 
+					nominatim: {
+						endpoint : '{{config['osm.api.nominatim']}}'
 					}
                 }
             }
@@ -92,18 +95,12 @@
 					<img src="content/images/opacity.png" alt="" />
 				</div>
 				<div class="device" style="float: right; padding-top: 8px; padding-right: 6px;">
-					<select name="base_layer" id="base_layer" data-width="250px">
+					<select name="base_layer" id="base_layer" data-width="250px" autocomplete="off">
 						<option data-i18n-id="index.layer.ktimatologio"
                                 data-key=""
 								data-type="ktimatologio"
 								data-set=""
-								value="ktimatologio">Κτηματολόγιο</option>
-						<!--
-						<option data-key=""
-								data-type="osm"
-								data-set=""
-								value="osm" selected>Open Street Maps</option>
-						-->
+								value="ktimatologio" selected>Κτηματολόγιο</option>
 						<option data-key=""
 								data-type="mapquest"
 								data-set="osm"
@@ -139,11 +136,15 @@
 						<option data-key=""
 								data-type="stamen"
 								data-set="watercolor"
-								value="mapquest" selected>Stamen - Watercolor</option>
+								value="mapquest">Stamen - Watercolor</option>
 					</select>
 				</div>
 				<div class="device img-text"  style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" data-i18n-id="index.title.base-layer" data-i18n-type="title" title="Υπόβαθρο">
 					<img src="content/images/map.png" alt="" />
+				</div>
+				<div class="device" style="float: right; padding:  9px 9px 0px 0px;">
+					<input id="location-search" class="form-control input-md" type="text" data-i18n-id="index.input.search.location" 
+					data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Αναζήτηση ..." style="width: 300px;" autocomplete="off"></input>
 				</div>
 		</div>
 	</nav>

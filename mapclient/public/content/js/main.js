@@ -1,9 +1,10 @@
-﻿requirejs.config({
+﻿var config = {
     enforceDefine: false,
     // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
 		promise: [
+			'lib/promise/promise-6.1.0.min',
 			'https://www.promisejs.org/polyfills/promise-6.1.0.min'
 		],
         jquery: [
@@ -29,6 +30,9 @@
         proj4: 'lib/proj4js/proj4',
         ckan: 'app/ckan',
         api: 'api/data',
+        typeahead : 'lib/typeahead/typeahead.jquery.min',
+        bloodhound: 'lib/typeahead/bloodhound.min',
+        handlebars: 'lib/handlebars/handlebars-v3.0.3',
         locale_en: 'i18n/en/strings',
         locale_el: 'i18n/el/strings'
     },
@@ -42,9 +46,12 @@
 		bootstrap_select : { 
 			deps : ['bootstrap', 'jquery'] 
 		},
-		fuelux: {
-			deps : ['jquery'] 
-		},
+        typeahead: {
+            deps: [
+                'jquery',
+                'bloodhound'
+            ]
+        },
         jqueryui: {
             deps: ['jquery']
         },
@@ -66,7 +73,9 @@
         },
         controls: {
             deps: [
-                'shared'
+                'shared',
+                'typeahead',
+				'handlebars'
             ]
         },
         app: {
@@ -96,15 +105,31 @@
             ]
         }
 	}
-});
+};
+
+requirejs.config(config);
 
 var scriptCounter = 0;
+var scriptTotal = 4;
+
+var scripts = [];
+for(var s in config.shim) {
+	if(scripts.indexOf(s) === -1) {
+		scripts.push(s);
+		scriptTotal++;
+		
+		for(var i=0, count = config.shim[s].deps.length; i < count; i++) {
+			if(scripts.indexOf(config.shim[s].deps[i]) === -1) {
+				scripts.push(config.shim[s].deps[i]);
+				scriptTotal++;
+			}
+		}
+	}
+}
 
 requirejs.onResourceLoad = function (context, map, depArray) {
-	if(typeof $ !== 'undefined') {
-		scriptCounter++;
-		$('#loading-text').html('Loading Scripts ... ' + (100 * scriptCounter / 10).toFixed(0) + '%');
-	}
+	scriptCounter++;
+	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (scriptCounter) / scriptTotal).toFixed(0) + '%'
 };
 
 define(['module'], function (module) {
