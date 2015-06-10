@@ -109,11 +109,6 @@
 					source: new ol.source.MapQuest({layer: set })
 				});
 				break;
-			case 'osm':
-				layer = new ol.layer.Tile({
-					source: new ol.source.OSM()
-				});
-				break;
 			case 'ktimatologio':
 				/* http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx?				   
 				   SERVICE=WMS&VERSION=1.1.0&
@@ -134,7 +129,14 @@
 				var source = new ol.source.TileWMS({
 					url: 'http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',
 					params: params,
-					projection: 'EPSG:900913'
+					projection: 'EPSG:900913',
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="' + PublicaMundi.getResource('attribution.ktimatologio.url') + '" ' + 
+								  'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' + 
+								  '<img src="content/images/ktimatologio-logo.png"/></a>'
+						})
+					]
 				});
 				
 				var fn = source.tileUrlFunction;
@@ -192,7 +194,14 @@
             
 		layers.push(layer);
 		layers.push(new ol.layer.Tile({
-			source: new ol.source.OSM(),
+			source: new ol.source.OSM({
+				attributions: [
+					new ol.Attribution({
+						html: 'Nominatim Search Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+					}),
+					ol.source.OSM.ATTRIBUTION
+				]
+			}),
 			opacity: ($('#base-layer-opacity').val() / 100.0)
 		}));
 
@@ -215,10 +224,21 @@
 
         interactions.push(members.map.interactions.zoom.control);
         
+        var controls = []; //ol.control.defaults();
+        controls.push(new ol.control.Zoom({
+			zoomInTipLabel : '',
+			zoomOutTipLabel : ''
+		}));
+        controls.push(new ol.control.ZoomSlider());
+        controls.push(new ol.control.Attribution({
+			tipLabel: '',
+			collapsible : false
+		}));
+        
         members.map.control = new ol.Map({
             target: members.config.map.target,
             view: view,
-            controls: [],
+            controls: controls,
             interactions: interactions,
             ol3Logo: false,
             layers: layers
@@ -331,6 +351,9 @@
         $('#layer-tree-group').height(height - headerHeight - selectionHeight - toolsHeight - offset);
         $('#layer-tree-organization').height(height - headerHeight - selectionHeight - toolsHeight - offset);
         $('#layer-tree-search').height(height - headerHeight - selectionHeight - toolsHeight - offset);
+        $('#map').height(height - 35);
+        
+        members.map.control.setSize([$('#map').width(), height - $('.footer').height()]);
     };
           
     var initializeUI = function() {
@@ -361,6 +384,12 @@
         // UI components
 		members.components = {};
 
+		members.components.textSearch = new PublicaMundi.Maps.TextSearch({
+			element: 'location-search',
+			map: members.map.control,
+			endpoint: members.config.nominatim.endpoint
+		});
+		
 		members.components.layerTreeGroup = new PublicaMundi.Maps.LayerTree({
 			element: 'layer-tree-group',
 			map: members.map.control,
