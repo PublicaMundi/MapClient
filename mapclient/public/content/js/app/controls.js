@@ -909,6 +909,67 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
     
+    var _LayerSelectionAddItem = function(id, title, legend) {
+		var self = this;
+		
+		var content = [];
+		var safeId = id.replace(/[^\w\s]/gi, '');
+		
+		content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
+		
+		content.push('<div style="float: left; width: 24px;">');
+		if(legend) {
+			content.push('<img id="' + safeId + '-legend-img" src="' + legend + '" alt="" class="legend" />');
+		} else {
+			content.push('&nbsp;');
+		}
+		content.push('</div>');
+		
+		content.push('<div style="float: left;">');
+		
+		content.push('<div class="clearfix" style="padding-bottom: 3px;">');
+		content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
+		content.push('<div class="selected-layer-text">' + title + '</div>');
+		content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
+		content.push('</div>');
+		
+		content.push('<div class="clearfix">');
+		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
+		content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
+		content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
+		content.push('</div>');
+		
+		content.push('</div>');
+
+		content.push('</div>');
+		
+		$('#' + this.values.element).prepend(content.join(''));
+		
+		$('#' + safeId + '-legend-img').load(function() {
+            var nWidth = $(this).prop('naturalWidth');
+            var sWidth = $(this).width();
+            var nHeight = $(this).prop('naturalHeight');
+            var sHeight = $(this).height();
+            var pHeight = $(this).parent().height();
+
+            if ((nWidth > sWidth) || (nHeight > sHeight) || (nHeight > pHeight)) {
+                $(this).css('cursor' , 'pointer');
+                $(this).on('click', function (e) {
+					$('#' +  self.values.element + '-dialog-legend-img').attr('src', $(this).attr('src'));
+
+					self.values.dialog.setTitle(title);
+					self.values.dialog.show();
+				});
+            }
+        });
+		
+		$('.selected-layer-opacity-label').tooltip();
+					
+		this.values.updateActions();
+			
+		this.trigger('layer:added', {id: id});	
+	};
+	
     PublicaMundi.Maps.LayerSelection = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
@@ -916,7 +977,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			PublicaMundi.extend(this.values, {
 				map: null,
 				ckan : null,
-				resources: null
+				resources: null,
+				maxLayerCount: 5
 			});
 			
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
@@ -995,22 +1057,56 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				self.trigger('layer:opacity:changed', { id: id, opacity : $(this).val()});
 			});
 			
+			this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: '',
+                element: this.values.element + '-dialog-legend',
+                visible: false,
+                width: 430,
+                height: 400,
+                autofit: true,
+                buttons: {
+                    close : {
+                        text: 'button.close',
+                        style: 'primary'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+                    
+                    content.push('<div class="clearfix" style="max-height: 350px; overflow: auto;">');
+					content.push('<img id="' + self.values.element + '-dialog-legend-img" src="" alt="" />');
+                    content.push('</div>');
+                    return content;
+                }
+            });
+            
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){ 
+                        case 'close':
+                            this.hide();
+                            break;
+                    }
+            });
 		},
         render: function() {
             $('#' + this.values.element).html('');
 		},
-		add: function(id) {
+		add: function(id, metadata) {
+			if(this.values.resources.getLayerCount() >= this.values.maxLayerCount) {
+				return false;
+			}
+			
 			var self = this, _resource, _package;
 
 			var parts = id.split('_');
-
+			var layer = parts.splice(1).join('_');
+			
 			var _resource = this.values.ckan.getResourceById(parts[0]);
+			
 			if(_resource) {
 				this.values.resources.setCatalogResourceMetadataOptions(_resource);
 				
 				_package = this.values.ckan.getPackageById(_resource.package);
-
-				var layer = parts.splice(1).join('_');
 
 				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {
 					var title, legend;
@@ -1031,45 +1127,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						title = _resource.name;
 					}
 							   
-					var content = [];
-					
-					content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
-					
-					content.push('<div style="float: left; width: 24px;">');
-					if(legend) {
-						content.push('<img src="' + legend + '" alt="" />');
-					} else {
-						content.push('&nbsp;');
-					}
-					content.push('</div>');
-					
-					content.push('<div style="float: left;">');
-					
-					content.push('<div class="clearfix" style="padding-bottom: 3px;">');
-					content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
-					content.push('<div class="selected-layer-text">' + title + '</div>');
-					content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
-					content.push('</div>');
-					
-					content.push('<div class="clearfix">');
-					content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
-					content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
-					content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
-					content.push('</div>');
-					
-					content.push('</div>');
-
-					content.push('</div>');
-					
-					$('#' + self.values.element).prepend(content.join(''));
-					
-					$('.selected-layer-opacity-label').tooltip();
-					
-					self.values.updateActions();
-			
-					self.trigger('layer:added', {id: id});					
+					_LayerSelectionAddItem.call(self, id, title, legend);				
 				});
+				
+				return true;
+			} else if(metadata) {
+				for(var i=0, count=metadata.layers.length; i<count; i++) {
+					if(metadata.layers[i].key == layer) {
+						_LayerSelectionAddItem.call(self, id, metadata.layers[i].title, metadata.layers[i].legend);
+						
+						return true;
+					}
+				}
 			}
+			
+			return false;
 		},
 		remove: function(id) {
 			$('#' + this.values.element).find('[data-id="' + id  +'"]').remove();
@@ -1528,7 +1600,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<option value="KML">KML</option>');
                     content.push('<option value="GPKG">Geo Package</option>');
                     content.push('<option value="DXF">AutoCAD DXF</option>');
-                    content.push('<option value="CSV">Comma Separated Value (.csv)</option>');
+                    content.push('<option value="CSV">Comma Separated Value</option>');
                     content.push('<option value="GeoJSON">GeoJSON</option>');
                     content.push('<option value="PDF">Geospatial PDF</option>');
                     content.push('</select>');
@@ -2199,7 +2271,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var self = this;
             
             var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
+            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title + 
+					     '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + this.values.image + '">');
             content.push('</a>');
             
@@ -2233,6 +2306,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+	var _zIndex = 2000;
+	
     PublicaMundi.Maps.Dialog = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
@@ -2266,8 +2341,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element).remove();
             
             var content = [];
+            _zIndex++;
             
-            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: 2000; width: ' + (this.values.width || 600 ) + 'px; outline: none;" tabIndex="1">');
+            content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: ' + _zIndex+ '; width: ' + (this.values.width || 600 ) + 'px; outline: none; position: absolute;" tabIndex="1">');
             content.push('<div class="modal-content">');
             
             content.push('<div class="modal-header">');
@@ -2475,6 +2551,110 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             return this.values.page.index;
         }
     });
-    
+      
+    PublicaMundi.Maps.ImportWmsTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
+        initialize: function (options) {
+			var self = this;
+
+            if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
+            }
+
+            this.event('metadata:loaded');
+            
+            this.event('layer:added');
+           
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'action.import-wms.title',
+                element: this.values.element + '-dialog',
+                visible: false,
+                width: 430,
+                height: 280,
+                autofit: false,
+                buttons: {
+                    close : {
+                        text: 'button.close',
+                        style: 'primary'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+                    
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    
+                    content.push('<div class="input-group">');
+                    content.push('<span class="input-group-addon">');
+                    content.push('<span class="glyphicon glyphicon-link"></span>');
+                    content.push('</span>');
+                    content.push('<input id="' + self.values.element + '-endpoint" value="http://sedac.ciesin.columbia.edu/geoserver/wms?REQUEST=GetCapabilities&SERVICE_WMS&VERSION=1.3.0" type="text" class="form-control" data-i18n-id="action.import-wms.url.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Διεύθυνση WMS ...">');
+                    content.push('<span class="input-group-btn">');
+                    content.push('<button id="' + self.values.element + '-btn-metadata" class="btn btn-default" type="button">');
+                    content.push('<span class="glyphicon glyphicon-search"></span>');
+                    content.push('</button>');
+                    content.push('</span>');
+                    content.push('</div>');
+                    
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix" style="max-height: 200px; overflow: auto;">');
+                    content.push('<div id="' + self.values.element + '-layers" class="clearfix" style="padding: 0 4px 0 0;"></div>');
+                    content.push('</div>');
+                    content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
+                    return content;
+                }
+            });
+
+					
+			$('#' + this.values.element + '-layers').on('click.' + this.values.element, '.list-group-item-button', function() {
+				var index = $(this).data('index');
+				var id = self.values.metadata.key + '_' + self.values.metadata.layers[index].key;
+
+				self.trigger('layer:added', { metadata : self.values.metadata, id : id});
+			});
+					
+            $('#' + this.values.element + '-btn-metadata').click(function () {
+				self.values.metadata = null;
+
+				$('#' + self.values.element + '-layers').html('');
+				$('#' + self.values.element + '-error').html('');
+									
+                self.values.resources.getResourceMetadata(
+					PublicaMundi.Maps.Resources.Types.WMS, 
+					{ url : $('#' + self.values.element + '-endpoint').val() }
+				).then(function(metadata) {
+					self.values.metadata = metadata;
+
+					var content = [];
+					if((metadata) && (metadata.layers.length > 0)) {
+						content.push('<ul class="list-group">');
+						for(var i=0, count=metadata.layers.length; i<count; i++) {
+							content.push('<li class="list-group-item">' + metadata.layers[i].title + '<span class="list-group-item-button" data-index="' + i + '"><span class="glyphicon glyphicon-plus"></span><span></span></span></li>');
+						}
+						content.push('</ul>');
+					}
+					
+					$('#' + self.values.element + '-layers').html(content.join(''));
+					
+					self.trigger('metadata:loaded', { metadata : metadata});
+				}, function(error) {
+					$('#' + self.values.element + '-error').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.import-wms.error.metadata">' + PublicaMundi.getResource('action.import-wms.error.metadata') + '</div>');
+				});
+            });
+                                
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){ 
+                        case 'close':
+                            this.hide();
+                            break;
+                    }
+            });
+
+            this.render();
+        },
+        execute: function() {
+			this.values.dialog.show();
+		}
+    });
+
     return PublicaMundi;
 });

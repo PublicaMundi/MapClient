@@ -162,7 +162,10 @@
 				}).fail(function (jqXHR) {
 					console.log('Failed to execute request : ' + getCapabilitiesUrl);
 
-					reject(errorThrown);
+					reject({
+						status: jqXHR.status,
+						statusText : jqXHR.statusText
+					});
 				});
 			});
         }
@@ -237,15 +240,6 @@
             });
             
 			map.addLayer(__object);
-
-			for(var i=0; i < metadata.layers.length; i++) {
-				if((metadata.layers[i].name === layer) && (metadata.layers[i].bbox)) {
-					var view = map.getView();
-					var size = map.getSize();
-					view.fitExtent(metadata.layers[i].bbox, size);
-					break;
-				}
-			}
 			
 			return __object;
         }

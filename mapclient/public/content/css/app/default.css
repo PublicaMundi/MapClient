@@ -750,3 +750,27 @@ ul {
 .form-control:focus {
     box-shadow: none;
 }
+
+.list-group-item > .list-group-item-button {
+    float: right;
+}
+
+.list-group-item-button {
+    background-color: #2e6da4;
+    border-radius: 5px;
+    color: #fff;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 10px;
+    padding: 3px 4px;
+    text-align: center;
+    vertical-align: baseline;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+img.legend {
+    max-height: 24px; 
+    max-width: 24px;

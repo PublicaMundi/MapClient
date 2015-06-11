@@ -447,7 +447,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             return this.values.queryable;
         },
         createLayer: function (map, metadata, id) {
-			var title = '';
+			var title = '', bbox = null;
 			
 			var parts = id.split('_');
 			var resource = parts[0];
@@ -456,6 +456,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 			for(var i=0; i<metadata.layers.length;i++) {
 				if(metadata.layers[i].key == layer) {
 					title = metadata.layers[i].title;
+					bbox = metadata.layers[i].bbox;
 					break;
 				}
 			}
@@ -478,8 +479,23 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     title: title
 				});
 
+				if((this.values.extent) && (bbox)) {
+					if((bbox[0] > this.values.extent[0]) &&
+					   (bbox[1] > this.values.extent[1]) && 	
+					   (bbox[2] < this.values.extent[2]) && 	
+					   (bbox[3] < this.values.extent[3])) {
+							var view = map.getView();
+							var size = map.getSize();
+							view.fitExtent(bbox, size);
+					   }
+				}
+	
 				this.values.layerCounter++;
+				
+				return true;
 			}
+			
+			return false;
         },
         destroyLayer: function (map, id) {
 			var index = -1, __object = null;

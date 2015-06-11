@@ -39,6 +39,10 @@
     "control.export.dialog.label.format" : "Format",
     
     "action.export.title" : "Export objects",
+
+    "action.import-wms.title" : "Import WMS",
+    "action.import-wms.url.placeholder" : "WMS endpoint ...",
+    "action.import-wms.error.metadata" : "Get WMS capabilities request has failed.",
     
     "tool.export.title" : "Draw polygon",
     "tool.length.title" : "Measure distance",

@@ -70,8 +70,7 @@ class ProxyController(BaseController):
                 error.response.status_code, error.response.reason)
             abort(409, detail=details)
         except requests.exceptions.ConnectionError, error:
-            details = '''Could not proxy resource because a
-                                connection error occurred. %s''' % error
+            details = '''Could not proxy resource because a connection error occurred. %s''' % error
             abort(502, detail=details)
         except requests.exceptions.Timeout, error:
             details = 'Could not proxy resource because the connection timed out.'
