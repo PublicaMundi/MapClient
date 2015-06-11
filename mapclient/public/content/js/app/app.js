@@ -27,7 +27,9 @@
             export: null
         },
         actions: {
-            export: null
+			import: null,
+            export: null,
+            upload: null
         },
         preview: null,
         i18n: {
@@ -44,7 +46,7 @@
     var initializeParameters = function () {
         // Set default values
         members.config.geolocation = true;
-        members.config.map.minZoom = 3;
+        members.config.map.minZoom = 7;
         members.config.map.maxZoom = 19;
 
         // Get additional configuration from the query string
@@ -184,7 +186,8 @@
             center: members.config.map.center || [0, 0],
             zoom: zoom,
             minZoom: minZoom,
-            maxZoom: maxZoom
+            maxZoom: maxZoom,
+            extent: members.config.map.extent
         });
 
         var layers = [];
@@ -378,7 +381,8 @@
         // Resources
 		members.resources = new PublicaMundi.Maps.LayerManager({
             path: (members.config.path ? members.config.path + '/' : ''),
-			proxy: PublicaMundi.getProxyUrl(module.config().proxy)
+			proxy: PublicaMundi.getProxyUrl(module.config().proxy),
+			extent: members.config.map.extent
 		});
 
         // UI components
@@ -478,7 +482,21 @@
             title: 'action.export.title',
             visible: false
         });
-              
+        
+        members.actions.import = new PublicaMundi.Maps.ImportWmsTool({
+            element: 'action-wms',
+            name: 'wms',
+            image: 'content/images/layers-w.png',
+            title: 'action.import-wms.title',
+            map: members.map.control,
+            resources: members.resources
+        });
+
+		members.actions.import.on('layer:added', function(args) {
+			if(members.components.layerSelection.add(args.id, args.metadata)) {
+				members.resources.createLayer(members.map.control, args.metadata, args.id);
+			}
+		});
         // UI tools
         members.tools.length = new PublicaMundi.Maps.MeasureTool({
             element: 'tool-length',

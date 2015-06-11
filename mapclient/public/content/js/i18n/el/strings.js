@@ -40,12 +40,16 @@
     
     "action.export.title" : "Εξαγωγή αντικειμένων",
     
+    "action.import-wms.title" : "Εισαγωγή WMS",
+    "action.import-wms.url.placeholder" : "Διεύθυνση WMS ...",
+    
     "tool.export.title" : "Σχεδίαση πολυγώνου",
     "tool.length.title" : "Μέτρηση απόστασης",
     "tool.area.title" : "Μέτρηση εμβαδού",
     
     "tool.select.title" : "Επιλογή αντικειμένου",
     "tool.select.dialog.title" : "Στοιχεία αντικειμένου",
+    "action.import-wms.error.metadata" : "Η ανάγνωση των μεταδεδομένων απέτυχε.",
     
     "button.close" : "Κλείσιμο",
 
