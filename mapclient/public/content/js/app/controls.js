@@ -2586,7 +2586,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<span class="input-group-addon">');
                     content.push('<span class="glyphicon glyphicon-link"></span>');
                     content.push('</span>');
-                    content.push('<input id="' + self.values.element + '-endpoint" value="http://sedac.ciesin.columbia.edu/geoserver/wms?REQUEST=GetCapabilities&SERVICE_WMS&VERSION=1.3.0" type="text" class="form-control" data-i18n-id="action.import-wms.url.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Διεύθυνση WMS ...">');
+                    content.push('<input id="' + self.values.element + '-endpoint" value="" type="text" class="form-control" data-i18n-id="action.import-wms.url.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Διεύθυνση WMS ...">');
                     content.push('<span class="input-group-btn">');
                     content.push('<button id="' + self.values.element + '-btn-metadata" class="btn btn-default" type="button">');
                     content.push('<span class="glyphicon glyphicon-search"></span>');
