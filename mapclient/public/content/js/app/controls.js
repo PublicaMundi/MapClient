@@ -630,6 +630,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$(this).addClass('tree-node-ajax-loader');
 								$(this).data('loading', true)
                                 
+                                self.values.resources.setCatalogResourceMetadataOptions(resource);
+                                
 								self.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
 									$(element).attr('src', 'content/images/expand-arrow.png');
 									$(element).removeClass('tree-node-ajax-loader');
@@ -1102,12 +1104,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var layer = parts.splice(1).join('_');
 			
 			var _resource = this.values.ckan.getResourceById(parts[0]);
-			
+
 			if(_resource) {
-				this.values.resources.setCatalogResourceMetadataOptions(_resource);
-				
 				_package = this.values.ckan.getPackageById(_resource.package);
 
+				this.values.resources.setCatalogResourceMetadataOptions(_resource);
+				
 				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {
 					var title, legend;
 			
@@ -2359,6 +2361,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('</div>');
             
             content.push('<div class="modal-footer">');
+            
+            if(typeof this.values.renderFooter === 'function'){
+                content = content.concat(this.values.renderFooter());
+            }
             if(this.values.buttons) {
                 for(var action in this.values.buttons) {
                     this.values.buttons[action].style = this.values.buttons[action].style || 'default';
@@ -2639,6 +2645,185 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}, function(error) {
 					$('#' + self.values.element + '-error').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.import-wms.error.metadata">' + PublicaMundi.getResource('action.import-wms.error.metadata') + '</div>');
 				});
+            });
+                                
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){ 
+                        case 'close':
+                            this.hide();
+                            break;
+                    }
+            });
+
+            this.render();
+        },
+        execute: function() {
+			this.values.dialog.show();
+		}
+    });
+      
+    PublicaMundi.Maps.UploadFileTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
+        initialize: function (options) {
+			var self = this;
+
+            if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
+            }
+           
+            this.event('resource:loaded');
+           
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'action.upload-resource.title',
+                element: this.values.element + '-dialog',
+                visible: false,
+                width: 430,
+                height: 280,
+                autofit: true,
+                buttons: {
+                    close : {
+                        text: 'button.close',
+                        style: 'primary'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+                    
+                    content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.title">' + 
+                                 PublicaMundi.getResource('control.upload.dialog.label.title') + '</label>');
+                    content.push('<input id="' + self.values.element + '-title" class="form-control input-md" type="text" style="width: 250px;">');
+                    content.push('</div>');
+                    
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.format">' + 
+                                 PublicaMundi.getResource('control.upload.dialog.label.format') + '</label>');
+                    content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" autocomplete="off" class="selectpicker" data-width="250px">');
+                    content.push('<option value="gml">GML</option>');
+                    content.push('<option value="kml" selected>KML</option>');
+                    //content.push('<option value="geojson">GeoJSON</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.crs">' + 
+                                 PublicaMundi.getResource('control.upload.dialog.label.crs')  + '</label>');
+                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px" disabled>');
+                    content.push('<option value="EPSG:3857">Web Mercator</option>');
+                    content.push('<option value="EPSG:4326" selected>WGS84</option>');
+                    content.push('<option value="EPSG:2100">ΕΓΣΑ87</option>');
+                    content.push('<option value="EPSG:4258">ETRS89</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+                    
+                    content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
+                    return content;
+                },
+                renderFooter: function() {
+                    var content = [];
+                    
+                    content.push('<span class="btn btn-success fileinput-button">');
+                    content.push('<i class="glyphicon glyphicon-upload"></i>');
+                    content.push('<span data-i18n-id="action.upload-resource.select-file" style="padding-left: 10px;">' + PublicaMundi.getResource('action.upload-resource.select-file') + '</span>');
+                    content.push('<input id="' + self.values.element + '-fileupload" type="file" name="files[]" multiple>');
+                    content.push('</span>');
+
+                    return content;
+                }
+            });
+
+
+            $('#' + this.values.element + '-format').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-format"]').blur();
+                
+                if($('#' + self.values.element + '-format').val() == 'kml') {
+                    $('#' + self.values.element + '-crs').val('EPSG:4326').prop('disabled',true).selectpicker('refresh');
+                } else {
+                    $('#' + self.values.element + '-crs').prop('disabled',false).selectpicker('refresh');
+                }
+            });
+
+            $('#' + this.values.element + '-crs').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-crs"]').blur();
+                if(($('#' + self.values.element + '-format').val() == 'kml') &&
+                   ($('#' + self.values.element + '-crs').val() != 'EPSG:4326')) {
+                    $('#' + self.values.element + '-crs').val('EPSG:4326').selectpicker('refresh');
+                }
+            });
+            
+            $('#' + this.values.element + '-fileupload').fileupload({
+                url: this.values.endpoint + '/upload/upload_resource',
+                dataType: 'json',
+                done: function (e, data) {
+                    $.each(data.result.files, function (index, file) {
+                        if(file.error) {
+                            switch(file.error) {
+                                case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes':
+                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' + 
+                                                                                            PublicaMundi.getResource('action.upload-resource.error.' + file.error) + '</div>');
+                                    break;
+                                default:
+                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' + 
+                                                                                            PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
+                                    break;
+                            };
+                        } else {
+                            self.trigger('resource:loaded', {
+                                id: 'remote_' + file.url,
+                                title: $('#' + self.values.element + '-title').val() || file.name,
+                                format: $('#' + self.values.element + '-format').val(),
+                                name: file.name,
+                                type: file.type,
+                                text: null,
+                                url: file.url,
+                                projection: $('#' + self.values.element + '-crs').val()
+                            });
+                        }
+                    });
+                },
+                add : function (e, data) {
+                    $('#' + self.values.element + '-error').html('');
+
+                    var re = /(\.|\/)(gml|kml|geojson)$/i                    
+                    var submit = true;
+                    
+                    $.each(data.files, function (index, file) {
+                        var ext = file.name.split('.').pop();
+                                               
+                        if((!re.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
+                            $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' + 
+                                                                                    PublicaMundi.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
+                                                                                    
+                            submit = false;
+                        } else if((window.File) && (window.FileReader)) {
+                            var reader = new FileReader();
+
+                            reader.onload = function(e) {
+                                self.trigger('resource:loaded', {
+                                    id: 'local_' + file.name,
+                                    title: $('#' + self.values.element + '-title').val() || file.name,
+                                    format: $('#' + self.values.element + '-format').val(),
+                                    name : file.name,
+                                    type: file.type,
+                                    text : reader.result,
+                                    url : null,
+                                    projection: $('#' + self.values.element + '-crs').val()
+                                });
+                            };
+
+                            reader.readAsText(file);
+                            
+                            submit = false;
+                        }
+                    });
+
+                    if(submit) {
+                        data.submit();
+                    }
+                },
+                fail : function(e, data) {
+                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' + 
+                                                                            PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
+                }
             });
                                 
             this.values.dialog.on('dialog:action', function(args){

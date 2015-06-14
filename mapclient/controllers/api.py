@@ -539,6 +539,7 @@ class ApiController(BaseController):
             shutil.rmtree(os.path.dirname(filename))
 
             del session[request.params['code']]
+            session.save()
 
     def export(self):
         path = tempfile.mkdtemp()

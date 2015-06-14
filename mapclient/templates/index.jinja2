@@ -9,6 +9,7 @@
 	<link rel="stylesheet" href="content/css/lib/bootstrap-select/bootstrap-select.min.css">	
 	<link rel="stylesheet" href="content/css/lib/jquery-ui/current/jquery-ui.min.css">	
     <link rel="stylesheet" href="content/css/lib/ol3/3.4.0/ol.css" />
+    <link rel="stylesheet" href="content/css/lib/fileupload/jquery.fileupload.css" />
     <link rel="stylesheet" href="content/css/app/default.css" />
 
     <title>PublicaMundi - Map Client</title>
@@ -41,7 +42,7 @@
                         {% else %}
                             zoom: 7
                         {% endif %},
-                        extent : [2539489, 4587131, 2806812, 4972628]
+                        extent : null //[2539489, 4587131, 2806812, 4972628]
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}'
@@ -49,6 +50,9 @@
                     api: {
 						endpoint : '/maps/'
 					}, 
+                    upload: {
+                        endpoint : '{{config['mapclient.url.prefix']}}'
+                    },
 					nominatim: {
 						endpoint : '{{config['osm.api.nominatim']}}'
 					}
@@ -189,6 +193,7 @@
                 <div class="tool-wrapper" id="tool-export"></div>
 				<div class="tool-wrapper" id="action-export"></div>
 				<div class="tool-wrapper" id="action-wms"></div>
+                <div class="tool-wrapper" id="action-upload"></div>
 			</div>
 		</div>
 		<div class="panel-left-label">

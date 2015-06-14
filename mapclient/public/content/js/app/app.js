@@ -187,7 +187,7 @@
             zoom: zoom,
             minZoom: minZoom,
             maxZoom: maxZoom,
-            extent: members.config.map.extent
+            extent: members.config.map.extent || [-20026376.39, -20048966.10, 20026376.39, 20048966.10]
         });
 
         var layers = [];
@@ -347,16 +347,14 @@
         var selectionHeight = ( $('#layer-selection').is(':visible') ? $('#layer-selection').outerHeight(true) : 0);
         var toolsHeight = ( $('#tools').is(':visible') ? $('#tools').outerHeight(true) : 0);
 
-        var offset = 100;
-        
-        $('#panel-content-left').height(height - offset);
-        
+        var offset = $('.footer').outerHeight(true) + 60;
+
         $('#layer-tree-group').height(height - headerHeight - selectionHeight - toolsHeight - offset);
         $('#layer-tree-organization').height(height - headerHeight - selectionHeight - toolsHeight - offset);
         $('#layer-tree-search').height(height - headerHeight - selectionHeight - toolsHeight - offset);
         $('#map').height(height - 35);
         
-        members.map.control.setSize([$('#map').width(), height - $('.footer').height()]);
+        members.map.control.setSize([$('#map').width(), height - offset]);
     };
           
     var initializeUI = function() {
@@ -497,6 +495,31 @@
 				members.resources.createLayer(members.map.control, args.metadata, args.id);
 			}
 		});
+        
+        members.actions.upload = new PublicaMundi.Maps.UploadFileTool({
+            element: 'action-upload',
+            name: 'upload',
+            image: 'content/images/upload-w.png',
+            title: 'action.upload-resource.title',
+            map: members.map.control,
+            resources: members.resources,
+            endpoint: members.config.upload.endpoint
+        });
+        
+        members.actions.upload.on('resource:loaded', function(args) {
+            members.resources.getResourceMetadata(args.format.toUpperCase(), {
+                url: args.url,
+                text: args.text,
+                filename: args.name,
+                title: args.title,
+                projection: args.projection
+            }).then(function(metadata) {
+                if(members.components.layerSelection.add(args.id, metadata)) {
+                    members.resources.createLayer(members.map.control, metadata, args.id);
+                }
+            });
+        });
+        
         // UI tools
         members.tools.length = new PublicaMundi.Maps.MeasureTool({
             element: 'tool-length',

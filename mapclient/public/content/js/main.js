@@ -27,12 +27,15 @@
         controls: 'app/controls',
         shared: 'app/shared',
         wms: 'app/wms',
+        file: 'app/file',
         proj4: 'lib/proj4js/proj4',
         ckan: 'app/ckan',
         api: 'api/data',
         typeahead : 'lib/typeahead/typeahead.jquery.min',
         bloodhound: 'lib/typeahead/bloodhound.min',
         handlebars: 'lib/handlebars/handlebars-v3.0.3',
+        fileupload: 'lib/fileupload/jquery.fileupload',
+        iframetransport: 'lib/fileupload/jquery.iframe-transport',
         locale_en: 'i18n/en/strings',
         locale_el: 'i18n/el/strings'
     },
@@ -50,6 +53,17 @@
             deps: [
                 'jquery',
                 'bloodhound'
+            ]
+        },
+        iframetransport: {
+            deps: [
+                'jquery'
+            ]
+        },
+        fileupload: {
+            deps: [
+                'jqueryui',
+                'iframetransport'
             ]
         },
         jqueryui: {
@@ -91,10 +105,17 @@
                 'ckan',
                 'controls',                
                 'wms',
-                'api'
+                'file',
+                'api',
+                'fileupload'
             ]
         },
         wms: {
+            deps: [
+                'shared'
+            ]
+        },
+        file: {
             deps: [
                 'shared'
             ]
