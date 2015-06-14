@@ -479,16 +479,17 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     title: title
 				});
 
-				if((this.values.extent) && (bbox)) {
-					if((bbox[0] > this.values.extent[0]) &&
-					   (bbox[1] > this.values.extent[1]) && 	
-					   (bbox[2] < this.values.extent[2]) && 	
-					   (bbox[3] < this.values.extent[3])) {
-							var view = map.getView();
-							var size = map.getSize();
-							view.fitExtent(bbox, size);
-					   }
-				}
+                if(bbox) {
+                    if((!this.values.extent) || 
+                       ((bbox[0] > this.values.extent[0]) &&
+                        (bbox[1] > this.values.extent[1]) && 	
+                        (bbox[2] < this.values.extent[2]) && 	
+                        (bbox[3] < this.values.extent[3]))) {
+                            var view = map.getView();
+                            var size = map.getSize();
+                            view.fitExtent(bbox, size);
+                    }
+                }
 	
 				this.values.layerCounter++;
 				

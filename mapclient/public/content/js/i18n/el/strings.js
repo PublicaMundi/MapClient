@@ -42,14 +42,25 @@
     
     "action.import-wms.title" : "Εισαγωγή WMS",
     "action.import-wms.url.placeholder" : "Διεύθυνση WMS ...",
+    "action.import-wms.error.metadata" : "Η ανάγνωση των μεταδεδομένων απέτυχε.",
+        
+    "action.upload-resource.title" : "Μεταφόρτωση αρχείου",
+    "action.upload-resource.select-file" : "Επιλογή αρχείου",
+    "action.upload-resource.error.acceptFileTypes" : "Ο επιλεγμένος τύπος αρχείου δεν υποστηρίζεται.",
+    "action.upload-resource.error.minFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μεγαλύτερο από 1 byte.",
+    "action.upload-resource.error.maxFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μικρότερο από 5 MByte.",
+    "action.upload-resource.error.unknown" : "Άγνωστο σφάλμα κατά τη μεταφόρτωση του αρχείου.",
     
+    "control.upload.dialog.label.format" : "Τύπος αρχείου", 
+    "control.upload.dialog.label.title" : "Τίτλος", 
+    "control.upload.dialog.label.crs" : "Σύστημα αναφοράς",
+        
     "tool.export.title" : "Σχεδίαση πολυγώνου",
     "tool.length.title" : "Μέτρηση απόστασης",
     "tool.area.title" : "Μέτρηση εμβαδού",
     
     "tool.select.title" : "Επιλογή αντικειμένου",
     "tool.select.dialog.title" : "Στοιχεία αντικειμένου",
-    "action.import-wms.error.metadata" : "Η ανάγνωση των μεταδεδομένων απέτυχε.",
     
     "button.close" : "Κλείσιμο",
 

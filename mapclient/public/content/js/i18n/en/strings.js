@@ -44,6 +44,17 @@
     "action.import-wms.url.placeholder" : "WMS endpoint ...",
     "action.import-wms.error.metadata" : "Get WMS capabilities request has failed.",
     
+    "action.upload-resource.title" : "Upload resource",
+    "action.upload-resource.select-file" : "Select file",
+    "action.upload-resource.error.acceptFileTypes" : "Selected file type is not supported.",
+    "action.upload-resource.error.minFileSize" : "File size is too small.",
+    "action.upload-resource.error.maxFileSize" : "File size is too big.",
+    "action.upload-resource.error.unknown" : "An unexpected error has occured during file uploading.",
+    
+    "control.upload.dialog.label.format" : "File type", 
+    "control.upload.dialog.label.title" : "Title", 
+    "control.upload.dialog.label.crs" : "Reference System",
+        
     "tool.export.title" : "Draw polygon",
     "tool.length.title" : "Measure distance",
     "tool.area.title" : "Measure area",
