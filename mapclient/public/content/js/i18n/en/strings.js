@@ -49,6 +49,9 @@
     "action.upload-resource.error.acceptFileTypes" : "Selected file type is not supported.",
     "action.upload-resource.error.minFileSize" : "File size is too small.",
     "action.upload-resource.error.maxFileSize" : "File size is too big.",
+    "action.upload-resource.error.invalidContent" : "File content is invalid.",
+    "action.upload-resource.error.conversionFailed" : "File conversion has failed.",
+    "action.upload-resource.error.crsNotSupported" : "Select CRS is not supported.",
     "action.upload-resource.error.unknown" : "An unexpected error has occured during file uploading.",
     
     "control.upload.dialog.label.format" : "File type", 

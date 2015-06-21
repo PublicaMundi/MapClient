@@ -20,7 +20,7 @@
 			'lib/bootstrap-select/bootstrap-select.min'
 		],
         ol: [
-            'lib/ol3/ol.3.4.0'
+            'lib/ol3/ol.3.5.0'
         ],
         URIjs: 'lib/uri',
         app: 'app/app',

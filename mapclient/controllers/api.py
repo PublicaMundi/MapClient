@@ -110,7 +110,7 @@ class ShapelyGeoJsonEncoder(geojson.codec.GeoJSONEncoder):
 
 class ApiController(BaseController):
 
-    def _create_filter(self, metadata, mapping, f, srid):
+    def _create_filter(self, metadata, mapping, f):
         if not type(f) is dict:
             raise DataApiException('Filter must be a dictionary.')
 
@@ -132,7 +132,7 @@ class ApiController(BaseController):
                 return self._create_filter_compare(metadata, mapping, f, f['operator'], COMPARE_EXPRESSIONS[index])
                 
             if f['operator'] in SPATIAL_OPERATORS:
-                return self._create_filter_spatial(metadata, mapping, f, f['operator'], srid)
+                return self._create_filter_spatial(metadata, mapping, f, f['operator'])
                 
         except ValueError as ex:
             raise DataApiException('Operator {operator} is not supported.'.format(operator = f['operator']))
@@ -201,7 +201,7 @@ class ApiController(BaseController):
         else:
             return ('(%s ' + expression + ' %s)', arg1, arg2)
 
-    def _create_filter_spatial(self, metadata, mapping, f, operator, srid):
+    def _create_filter_spatial(self, metadata, mapping, f, operator):
         if operator == OP_AREA:
             if len(f['arguments']) != 3:  
                 raise DataApiException('Operator {operator} expects three arguments.'.format(operator = operator))        
@@ -1012,7 +1012,7 @@ class ApiController(BaseController):
 
         if 'filters' in query and len(query['filters']) > 0:
             for f in query['filters']:
-                parsed_query['filters'].append(self._create_filter(local_metadata, resource_mapping, f, srid))
+                parsed_query['filters'].append(self._create_filter(local_metadata, resource_mapping, f))
 
         # Get order by
         if 'sort' in query:
@@ -1175,7 +1175,7 @@ class ApiController(BaseController):
         if output_format != FORMAT_GEOJSON:
             f_output = os.path.join(path, filename + ext)
 
-            if not ogr_export(['', '-t_srs', 'EPSG:' + str(crs), '-s_srs', 'EPSG:' + str(crs), '-f', output_format, f_output, f_input]):
+            if not ogr_export(['', '-lco', 'ENCODING=UTF-8', '-t_srs', 'EPSG:' + str(crs), '-s_srs', 'EPSG:' + str(crs), '-f', output_format, f_output, f_input]):
                 raise DataApiException('Export operation for CRS [{crs}] and format [{output_format}] has failed'.format(crs = crs, output_format = output_format))
 
             os.remove(f_input)

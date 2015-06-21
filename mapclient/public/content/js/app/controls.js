@@ -1503,8 +1503,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.action.suspendUI();
                                         
                 var query = this.values.query;
-                query.reset().crs($('#' + this.values.element + '-crs').val());
-                query.reset().format($('#' + this.values.element + '-format').val());
+                query.
+                    reset().
+                    crs($('#' + this.values.element + '-crs').val()).
+                    format($('#' + this.values.element + '-format').val());
                 
                 var files= [];
                 for(var i=0; i<quyarable.length; i++) {
@@ -1724,9 +1726,33 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     });
 
     var _SelectToolClickHandler = function(e) {
-        if(this.isBusy()) {
+        if((this.isBusy()) || (!this.getActive())) {
             return;
         }
+        
+        var id = 1;
+
+        // Clear selection
+        this.clearFeatureFocus();
+        this.values.overlay.getFeatures().clear();
+        this.values.features = new ol.Collection();
+                
+        // Get external features
+        var externalFeatures = [];
+        
+        this.values.map.forEachFeatureAtPixel(e.pixel,
+            function(feature, layer) {
+                if((layer) && (layer instanceof ol.layer.Vector)) {
+                    feature = feature.clone();
+                    feature.id = id;
+                    externalFeatures.push(feature);
+                    i++;
+                }
+            },
+            this
+        );
+        
+        // Get queryable resources
         var layers = this.values.resources.getSelectedLayers();
         var resources = this.values.resources.getQueryableResources();
 
@@ -1743,6 +1769,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
         }
 
+        // Search remote resources
         var point = {
             type: 'Point', 
             coordinates: e.coordinate
@@ -1767,16 +1794,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     query.queue();
                 }
             }
-
-            this.clearFeatureFocus();
             
             query.execute(function(response) {
-                this.values.overlay.getFeatures().clear();
-                this.values.features = new ol.Collection();
-                
                 if(response.success) {
                     var format = new ol.format.GeoJSON();
-                    var id = 1;
                     
                     for(var i=0; i< response.data.length; i++) {
                         if(response.data[i].features.length > 0) {
@@ -1793,6 +1814,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             this.values.features.extend(features);
                         }
                     }
+                    
+                    // Append external features
+                    if(externalFeatures.length > 0) {
+                        this.values.features.extend(externalFeatures);
+                    }
+                    
                     this.values.overlay.setFeatures(this.values.features);
                     
                     this.setFeatureFocus(0);
@@ -1801,6 +1828,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 this.resumeUI();
             }, this);
+        } else if(externalFeatures.length > 0) {
+            this.values.features.extend(externalFeatures);
+            this.values.overlay.setFeatures(this.values.features);
+
+            this.setFeatureFocus(0);
+            
+            this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
         }
     };
     
@@ -1881,11 +1915,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     })
                 ]
             };
+            
             // Feature overlay
             this.values.overlay = new ol.FeatureOverlay({
                 style: this.values.styles.select
             });
-            
+
             this.render();
         },
         setActive: function(active) {
@@ -2700,7 +2735,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" autocomplete="off" class="selectpicker" data-width="250px">');
                     content.push('<option value="gml">GML</option>');
                     content.push('<option value="kml" selected>KML</option>');
-                    //content.push('<option value="geojson">GeoJSON</option>');
+                    content.push('<option value="zip">ESRI Shapefile (compressed file)</option>');
+                    content.push('<option value="geojson">GeoJSON</option>');
                     content.push('</select>');
                     content.push('</div>');
 
@@ -2757,7 +2793,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $.each(data.result.files, function (index, file) {
                         if(file.error) {
                             switch(file.error) {
-                                case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes':
+                                case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes': case 'invalidContent': case 'conversionFailed':
+                                case 'crsNotSupported':
                                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' + 
                                                                                             PublicaMundi.getResource('action.upload-resource.error.' + file.error) + '</div>');
                                     break;
@@ -2767,10 +2804,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     break;
                             };
                         } else {
+                            var format = $('#' + self.values.element + '-format').val();
+                            if(format == 'zip') {
+                                format = 'geojson';
+                            }
+                    
                             self.trigger('resource:loaded', {
                                 id: 'remote_' + file.url,
                                 title: $('#' + self.values.element + '-title').val() || file.name,
-                                format: $('#' + self.values.element + '-format').val(),
+                                format: format,
                                 name: file.name,
                                 type: file.type,
                                 text: null,
@@ -2780,28 +2822,38 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         }
                     });
                 },
+                submit: function(e, data) {
+                    data.formData = { crs : $('#' + self.values.element + '-crs').val() };
+                },
                 add : function (e, data) {
                     $('#' + self.values.element + '-error').html('');
 
-                    var re = /(\.|\/)(gml|kml|geojson)$/i                    
+                    var allowed = /(\.|\/)(gml|kml|geojson|zip)$/i
+                    var supportedLocally = /(\.|\/)(gml|kml|geojson)$/i
+                    
                     var submit = true;
+
+                    var format = $('#' + self.values.element + '-format').val();
+                    if(format == 'zip') {
+                        format = 'geojson';
+                    }
                     
                     $.each(data.files, function (index, file) {
                         var ext = file.name.split('.').pop();
                                                
-                        if((!re.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
+                        if((!allowed.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
                             $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' + 
                                                                                     PublicaMundi.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
                                                                                     
                             submit = false;
-                        } else if((window.File) && (window.FileReader)) {
+                        } else if((window.File) && (window.FileReader) && (supportedLocally.test(file.name))) {
                             var reader = new FileReader();
 
                             reader.onload = function(e) {
                                 self.trigger('resource:loaded', {
                                     id: 'local_' + file.name,
                                     title: $('#' + self.values.element + '-title').val() || file.name,
-                                    format: $('#' + self.values.element + '-format').val(),
+                                    format: format,
                                     name : file.name,
                                     type: file.type,
                                     text : reader.result,

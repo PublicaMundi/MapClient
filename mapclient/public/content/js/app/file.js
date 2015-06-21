@@ -2,6 +2,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
 
     PublicaMundi.Maps.Resources.Types.KML = PublicaMundi.Maps.Resources.Types.KML || 'KML';
     PublicaMundi.Maps.Resources.Types.GML = PublicaMundi.Maps.Resources.Types.GML || 'GML';
+    PublicaMundi.Maps.Resources.Types.GEOJSON = PublicaMundi.Maps.Resources.Types.GEOJSON || 'GEOJSON';
     
     PublicaMundi.Maps.Resources.FileMetadataReader = PublicaMundi.Class(PublicaMundi.Maps.Resources.ResourceMetadataReader, {
         initialize: function (options) {
@@ -65,7 +66,17 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             this.values.type = PublicaMundi.Maps.Resources.Types.GML;
         }
     });
-    
+
+    PublicaMundi.Maps.Resources.GeoJSONMetadataReader = PublicaMundi.Class(PublicaMundi.Maps.Resources.FileMetadataReader, {
+        initialize: function (options) {
+            if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
+            }
+            
+            this.values.type = PublicaMundi.Maps.Resources.Types.GEOJSON;
+        }
+    });
+
     PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter = PublicaMundi.Class(PublicaMundi.Maps.Resources.CkanResourceMetadataReaderAdapter, {
         initialize: function (options) {
             PublicaMundi.extend(this.values, options);
@@ -87,6 +98,9 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                         break;
                     case 'GML':
                         resource.metadata.type = PublicaMundi.Maps.Resources.Types.GML;
+                        break;
+                    case 'GEOJSON':
+                        resource.metadata.type = PublicaMundi.Maps.Resources.Types.GEOJSON;
                         break;
                 }
             }
@@ -111,6 +125,9 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                     break;
                 case PublicaMundi.Maps.Resources.Types.GML:
                     format = new ol.format.GML();
+                    break;
+                case PublicaMundi.Maps.Resources.Types.GEOJSON:
+                    format = new ol.format.GeoJSON();
                     break;
             }
             
@@ -169,7 +186,12 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                                                      'GML',
                                                      PublicaMundi.Maps.Resources.GmlMetadataReader,
                                                      PublicaMundi.Maps.Resources.FileLayerFactory);
-                                                     
+
+    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.GEOJSON, 
+                                                     'GEOJSON',
+                                                     PublicaMundi.Maps.Resources.GeoJSONMetadataReader,
+                                                     PublicaMundi.Maps.Resources.FileLayerFactory);
+                                                                                                          
     PublicaMundi.Maps.Resources.registerResourceTypeAdapter('KML',
                                                             PublicaMundi.Maps.Resources.Types.KML,
                                                             PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
@@ -177,7 +199,10 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
     PublicaMundi.Maps.Resources.registerResourceTypeAdapter('GML',
                                                             PublicaMundi.Maps.Resources.Types.GML,
                                                             PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
-
+                                                            
+    PublicaMundi.Maps.Resources.registerResourceTypeAdapter('GEOJSON',
+                                                            PublicaMundi.Maps.Resources.Types.GEOJSON,
+                                                            PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
     return PublicaMundi;
 
 });
