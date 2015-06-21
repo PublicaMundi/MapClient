@@ -49,6 +49,9 @@
     "action.upload-resource.error.acceptFileTypes" : "Ο επιλεγμένος τύπος αρχείου δεν υποστηρίζεται.",
     "action.upload-resource.error.minFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μεγαλύτερο από 1 byte.",
     "action.upload-resource.error.maxFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μικρότερο από 5 MByte.",
+    "action.upload-resource.error.invalidContent" : "Το περιεχόμενο του αρχείου δεν υποστηρίζεται.",
+    "action.upload-resource.error.conversionFailed" : "Σφάλμα κατά τη μετατροπή του αρχείου.",
+    "action.upload-resource.error.crsNotSupported" : "Το επιλεγμένο σύστημα αναφοράς δεν υποστηρίζεται.",
     "action.upload-resource.error.unknown" : "Άγνωστο σφάλμα κατά τη μεταφόρτωση του αρχείου.",
     
     "control.upload.dialog.label.format" : "Τύπος αρχείου", 

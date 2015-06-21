@@ -423,7 +423,9 @@ ul {
     overflow: hidden;
 }
 
-
+.logo-header {
+    width: 190px;
+}
 
 .footer {
     position: absolute;

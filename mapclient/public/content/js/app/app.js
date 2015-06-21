@@ -340,21 +340,24 @@
         
         var height = $(window).height();
 
-        var headerHeight = $('#layer-tree-header').outerHeight(true) + 
-                           $('#layer-selection-header').outerHeight(true) + 
-                           $('#tools-header').outerHeight(true);
+        var headerHeight = $('.header').outerHeight(true);
+
+        var catalogHeight = $('#layer-tree-header').outerHeight(true) + 
+                            $('#layer-selection-header').outerHeight(true) + 
+                            $('#tools-header').outerHeight(true);
 
         var selectionHeight = ( $('#layer-selection').is(':visible') ? $('#layer-selection').outerHeight(true) : 0);
         var toolsHeight = ( $('#tools').is(':visible') ? $('#tools').outerHeight(true) : 0);
 
-        var offset = $('.footer').outerHeight(true) + 60;
+        var footerHeight = $('.footer').outerHeight(true) + 60;
 
-        $('#layer-tree-group').height(height - headerHeight - selectionHeight - toolsHeight - offset);
-        $('#layer-tree-organization').height(height - headerHeight - selectionHeight - toolsHeight - offset);
-        $('#layer-tree-search').height(height - headerHeight - selectionHeight - toolsHeight - offset);
-        $('#map').height(height - 35);
+        $('#layer-tree-group').height(height - catalogHeight - selectionHeight - toolsHeight - footerHeight);
+        $('#layer-tree-organization').height(height - catalogHeight - selectionHeight - toolsHeight - footerHeight);
+        $('#layer-tree-search').height(height - catalogHeight - selectionHeight - toolsHeight - footerHeight);
         
-        members.map.control.setSize([$('#map').width(), height - offset]);
+        $('#map').offset({top : headerHeight , left : 0}).height(height - footerHeight + 10);
+
+        members.map.control.setSize([$('#map').width(), $('#map').height()]);
     };
           
     var initializeUI = function() {
