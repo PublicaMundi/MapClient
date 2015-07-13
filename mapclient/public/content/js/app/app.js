@@ -42,6 +42,8 @@
             }
         }
     };
+    
+    members.config.path = members.config.path || '/';
 
     var initializeParameters = function () {
         // Set default values
@@ -381,7 +383,7 @@
 
         // Resources
 		members.resources = new PublicaMundi.Maps.LayerManager({
-            path: (members.config.path ? members.config.path + '/' : ''),
+            path: members.config.path,
 			proxy: PublicaMundi.getProxyUrl(module.config().proxy),
 			extent: members.config.map.extent
 		});
@@ -464,7 +466,7 @@
                     style: 'primary'
                 }
             },
-            endpoint: (members.config.path ? members.config.path + '/' : '') + members.config.api.endpoint
+            endpoint: members.config.path
         });
 
         members.components.tableBrowserDialog.on('dialog:action', function(args){
@@ -506,7 +508,7 @@
             title: 'action.upload-resource.title',
             map: members.map.control,
             resources: members.resources,
-            endpoint: members.config.upload.endpoint
+            endpoint: members.config.path
         });
         
         members.actions.upload.on('resource:loaded', function(args) {
@@ -559,7 +561,7 @@
             map: members.map.control,
             resources: members.resources,
             action: members.actions.export,
-            endpoint: members.config.api.endpoint
+            endpoint: members.config.path
         });
 
         members.tools.select = new PublicaMundi.Maps.SelectTool({
@@ -572,7 +574,7 @@
             title: 'tool.select.title',
             map: members.map.control,
             resources: members.resources,
-            endpoint: members.config.api.endpoint
+            endpoint: members.config.path
         });
 
         var handleToolToggle = function(args) {
@@ -875,7 +877,7 @@
     };
 
     var loadResources = function() {
-        var uri = new URI(members.config.path ? members.config.path + '/' : '');
+        var uri = new URI(config.path);
         uri.segment(['content', 'js', 'i18n', members.i18n.locale, 'strings.js']);
         uri.addQuery({ 'v': (new Date()).getTime() });
         
