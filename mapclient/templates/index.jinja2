@@ -18,7 +18,7 @@
         var ﻿require = {
             config: {
                 app: {
-					path: '{{config['mapclient.url.prefix']}}',
+					path: '{{config['mapclient.relative.path']}}',
                     proxy: {
                         path: '{{ h.url_for(controller='proxy', action='proxy_resource')}}',
                         param: 'url'
@@ -46,12 +46,6 @@
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}'
-                    },
-                    api: {
-						endpoint : '/maps/'
-					}, 
-                    upload: {
-                        endpoint : '{{config['mapclient.url.prefix']}}'
                     },
 					nominatim: {
 						endpoint : '{{config['osm.api.nominatim']}}'

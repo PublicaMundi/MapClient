@@ -2787,7 +2787,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
             
             $('#' + this.values.element + '-fileupload').fileupload({
-                url: this.values.endpoint + '/upload/upload_resource',
+                url: this.values.endpoint + 'upload/upload_resource',
                 dataType: 'json',
                 done: function (e, data) {
                     $.each(data.result.files, function (index, file) {
