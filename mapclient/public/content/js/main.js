@@ -1,5 +1,6 @@
 ﻿var config = {
     enforceDefine: false,
+    waitSeconds: 30,
     // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
