@@ -378,7 +378,8 @@
                 
         // CKAN catalog
 		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
-			endpoint: module.config().ckan.endpoint
+			endpoint: module.config().ckan.endpoint,
+            preloading: true
 		});
 
         // Resources
@@ -693,13 +694,13 @@
             if(args.data) {
                 switch(args.type) {
                     case 'group':
-                        members.components.catalogInfoDialog.setTitle(args.data.caption);
-                        members.components.catalogInfoDialog.setContent(args.data.description);
+                        members.components.catalogInfoDialog.setTitle(args.data.caption[PublicaMundi.getLocale()]);
+                        members.components.catalogInfoDialog.setContent(args.data.description[PublicaMundi.getLocale()]);
                         members.components.catalogInfoDialog.show();
                         break;
                     case 'organization':
-                        members.components.catalogInfoDialog.setTitle(args.data.caption);
-                        members.components.catalogInfoDialog.setContent(args.data.description);
+                        members.components.catalogInfoDialog.setTitle(args.data.caption[PublicaMundi.getLocale()]);
+                        members.components.catalogInfoDialog.setContent(args.data.description[PublicaMundi.getLocale()]);
                         members.components.catalogInfoDialog.show();
                         break;
                     case 'package':
@@ -876,13 +877,28 @@
         });
     };
 
+    var mergeCkanResources = function() {
+        if(members.ckan) {
+            var organizations = members.ckan.getOrganizations();
+
+            for(var o=0; o < organizations.length; o++) {
+                members.i18n.strings[members.i18n.locale]['organization.' + organizations[o].id] = organizations[o].caption[members.i18n.locale];
+            }
+            var groups = members.ckan.getGroups();
+            for(var g=0; g < groups.length; g++) {
+                members.i18n.strings[members.i18n.locale]['group.' + groups[g].id] = groups[g].title[members.i18n.locale];
+            }
+        }
+    }
     var loadResources = function() {
-        var uri = new URI(members.config.path);
+        var uri = new URI();
         uri.segment([members.config.path, 'content', 'js', 'i18n', members.i18n.locale, 'strings.js']);
         uri.addQuery({ 'v': (new Date()).getTime() });
         
         return new Promise(function(resolve, reject) {
             if(members.i18n.loaded[members.i18n.locale]) {
+                mergeCkanResources();
+                
                 resolve(members.i18n.strings[members.i18n.locale]);
                 return;
             }
@@ -896,6 +912,8 @@
 
                 members.i18n.strings[members.i18n.locale] = data;
 
+                mergeCkanResources();
+                
                 resolve(members.i18n.strings[members.i18n.locale]);
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 console.log('Failed to load resources : ' + uri.toString());
@@ -918,7 +936,7 @@
     };
     
     PublicaMundi.getLocale = function() {
-        return members.locale;
+        return members.i18n.locale;
     };
     
     PublicaMundi.getResource = function(id, text) {
@@ -938,33 +956,43 @@
             attachEvents();
 
             $('#loading-text').html('Initializing Catalog ... 0%');
-            
-            members.ckan.loadGroups().then(function(groups) {
-                $('#loading-text').html('Initializing Catalog ... 50%');
-                members.ckan.loadOrganizations().then(function(organization) {
-                    $('#loading-text').html('Initializing Catalog ... 100%');
 
-                    members.components.layerTreeGroup.refresh();
-                    members.components.layerTreeOrganization.refresh();
+            var afterPreload = function() {
+                // Refresh localization strings (CKAN metadata may have added new resources)
+                localizeUI();
+                
+                members.components.layerTreeGroup.refresh();
+                members.components.layerTreeOrganization.refresh();
 
-                    $('#loading-text').html('Loading Metadata ... 0%');
-                    members.resources.updateQueryableResources().then(function(resources) {					
-                        $('#loading-text').html('Loading Metadata ... 100%');
+                $('#loading-text').html('Loading Metadata ... 0%');
+                members.resources.updateQueryableResources().then(function(resources) {					
+                    $('#loading-text').html('Loading Metadata ... 100%');
+                    
+                    setTimeout(function () {
+                        $('#block-ui').fadeOut(500).hide();
+                        $('body').css('overflow-y', 'auto');
+
+                        if ($('#view-layers').hasClass('ui-panel-closed')) {
+                            $('#view-layers').panel('toggle');
+                        }
+                        $('#search').focus();
                         
-                        setTimeout(function () {
-                            $('#block-ui').fadeOut(500).hide();
-                            $('body').css('overflow-y', 'auto');
+                        initializeResourcePreview();
+                    }, 500);
+                });
+            }
+            if(members.ckan.isPreloadingEnabled()) {
+                members.ckan.preload().then(afterPreload);
+            } else {
+                members.ckan.loadGroups().then(function(groups) {
+                    $('#loading-text').html('Initializing Catalog ... 50%');
+                    members.ckan.loadOrganizations().then(function(organization) {
+                        $('#loading-text').html('Initializing Catalog ... 100%');
 
-                            if ($('#view-layers').hasClass('ui-panel-closed')) {
-                                $('#view-layers').panel('toggle');
-                            }
-                            $('#search').focus();
-                            
-                            initializeResourcePreview();
-                        }, 500);
+                        afterPreload();
                     });
                 });
-            });
+            }
         });
     };
     

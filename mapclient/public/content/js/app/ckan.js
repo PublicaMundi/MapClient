@@ -20,6 +20,39 @@
                 PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
             }
         },
+        isPreloadingEnabled: function() {
+            return this.values.preloading;
+        },
+        preload: function() {
+            var self = this;
+            
+            var uri = new URI();
+			uri.segment([members.config.path, 'data', 'metadata.json']);
+            
+			return new Promise(function(resolve, reject) {
+				$.ajax({
+					url: uri.toString(),
+					context: self
+				}).done(function (response) {
+					self.values.catalog.organizations = response.organizations;
+                    self.values.catalog.groups = response.groups;
+                    self.values.catalog.packages = response.packages;
+                    
+                    for(var i = 0; i < self.values.catalog.organizations.length; i++) {
+                        self.values.catalog.organizations[i].loaded = true;
+                    }
+                    for(var i = 0; i < self.values.catalog.groups.length; i++) {
+                        self.values.catalog.groups[i].loaded = true;
+                    }
+                    
+					resolve(response);
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					console.log('Failed to load CKAN organizations : ' + uri.toString());
+					
+					reject(errorThrown);
+				});
+			});
+        },
         loadOrganizations: function () {
 			// Example : http://labs.geodata.gov.gr/api/3/action/organization_list?all_fields=true						           
 			this.values.catalog.organizations = [];
@@ -42,9 +75,18 @@
 							return {
 								id: value.id,
 								name: value.name,
-								caption: value.display_name,
-								title: value.title,
-								description: value.description,
+								caption: {
+                                    el: value.display_name,
+                                    en: value.display_name
+                                },
+								title: {
+                                    el: value.title,
+                                    en: value.title
+                                },
+								description: {
+                                    el: value.description,
+                                    en: value.description
+                                },
 								image: value.image_display_url,
 								loaded: false
 							};
@@ -83,9 +125,18 @@
 							return {
 								id: value.id,
 								name: value.name,
-								caption: value.display_name,
-								title: value.title,
-								description: value.description,
+								caption: {
+                                    el: value.display_name,
+                                    en: value.display_name
+                                },
+								title: {
+                                    el: value.title,
+                                    en: value.title
+                                },
+								description: {
+                                    el: value.description,
+                                    en: value.description
+                                },
 								image: value.image_display_url,
 								loaded: false
 							};

@@ -65,25 +65,5 @@
     "tool.select.title" : "Επιλογή αντικειμένου",
     "tool.select.dialog.title" : "Στοιχεία αντικειμένου",
     
-    "button.close" : "Κλείσιμο",
-
-    "group.Intelligence - Military" : "Στρατιωτικές Πληροφορίες",
-    "group.Elevation" : "Υψομετρία",
-    "group.Biota" : "Βιόκοσμος",
-    "group.Boundaries" : "Όρια",
-    "group.Imagery Base Maps Earth Cover" : "Ορθοεικόνες Βασικοί Χάρτες Κάλυψη Γης",
-    "group.Economy" : "Οικονομία",
-    "group.Environment" : "Περιβάλλον",
-    "group.Geoscientific Information" : "Γεωεπιστημονικές Πληροφορίες",
-    "group.Farming" : "Γεωργία",
-    "group.Health" : "Υγεία",
-    "group.Meteorology" : "Μετεωρολογία Κλιματολογία Ατμόσφαιρα",
-    "group.Utilities - Communication" : "Επιχειρήσεις Κοινής Ωφελείας Επικοινωνία",
-    "group.Transportation" : "Μεταφορές",
-    "group.Society" : "Κοινωνία",
-    "group.Structure" : "Κατασκευές",
-    "group.Location" : "Γεωγραφική Θέση",
-    "group.Oceans" : "Θάλασσες",
-    "group.Inland Waters" : "Εσωτερικά Ύδατα",
-    "group.Planning Cadastre" : "Χωροταξία Κτηματολόγιο"
+    "button.close" : "Κλείσιμο"
 }
