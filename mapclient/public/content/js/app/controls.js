@@ -71,7 +71,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             this.event('catalog:search');
             this.event('catalog:info');
-            
+
 			var sortByTitle = function(a, b) {
 				if(a.title < b.title) {
 					return -1;
@@ -101,7 +101,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 				return 0;
 			};
-			
+
 			this.values.renderGroups = function() {
 				$('#' + this.values.contentElement).html('');
 				
@@ -133,12 +133,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 
 				for(var i = 0; i < groups.length; i++) {
-                    var caption = PublicaMundi.getResource('group.' + groups[i].title, groups[i].title);
+                    var caption = PublicaMundi.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.getLocale()]);
                     
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].title + '">' + caption + '</div>');
-                    if((groups[i].description) && (groups[i].title != groups[i].description)) {
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
+                    if((groups[i].description) && (groups[i].title[PublicaMundi.getLocale()] != groups[i].description[PublicaMundi.getLocale()])) {
                         content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
 					content.push('</div></li>');
@@ -155,12 +155,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				organizations.sort(sortByCaption);
 				
 				for(var i = 0; i < organizations.length; i++) {
-                    var caption = PublicaMundi.getResource('organization.' + organizations[i].caption, organizations[i].caption);
+                    var caption = PublicaMundi.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.getLocale()]);
                     
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].caption + '">' + caption + '</div>');
-                    if((organizations[i].description) && (organizations[i].caption != organizations[i].description)) {
+					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
+                    if((organizations[i].description) && (organizations[i].caption[PublicaMundi.getLocale()] != organizations[i].description[PublicaMundi.getLocale()])) {
                         content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                     }
 					content.push('</div></li>');
@@ -214,13 +214,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < group_organizations.length; i++) {
-                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].caption, group_organizations[i].caption);
+                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.getLocale()]);
                         
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].caption + '">' + caption + '</div>');
-                        if((group_organizations[i].description) && (group_organizations[i].caption != group_organizations[i].description)) {
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
+                        if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.getLocale()] != group_organizations[i].description[PublicaMundi.getLocale()])) {
                             content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
 						content.push('</div>');				
@@ -370,13 +370,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 					
 					for(var i = 0; i < organization_groups.length; i++) {
-                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].title, organization_groups[i].title);
+                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.getLocale()]);
                         
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].title + '">' + caption + '</div>');
-                        if((organization_groups[i].description) & (organization_groups[i].title != organization_groups[i].description)) {
+						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
+                        if((organization_groups[i].description) && (organization_groups[i].title[PublicaMundi.getLocale()] != organization_groups[i].description[PublicaMundi.getLocale()])) {
                             content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
 						content.push('</div>');

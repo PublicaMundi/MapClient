@@ -65,25 +65,5 @@
     "tool.select.title" : "Select object",
     "tool.select.dialog.title" : "Object properties",
     
-    "button.close" : "Close",
-    
-    "group.Intelligence - Military" : "Intelligence - Military",
-    "group.Elevation" : "Elevation",
-    "group.Biota" : "Biota",
-    "group.Boundaries" : "Boundaries",
-    "group.Imagery Base Maps Earth Cover" : "Imagery Base Maps Earth Cover",
-    "group.Economy" : "Economy",
-    "group.Environment" : "Environment",
-    "group.Geoscientific Information" : "Geoscientific Information",
-    "group.Farming" : "Farming",
-    "group.Health" : "Health",
-    "group.Meteorology" : "Meteorology",
-    "group.Utilities - Communication" : "Utilities - Communication",
-    "group.Transportation" : "Transportation",
-    "group.Society" : "Society",
-    "group.Structure" : "Structure",
-    "group.Location" : "Location",
-    "group.Oceans" : "Oceans",
-    "group.Inland Waters" : "Inland Waters",
-    "group.Planning Cadastre" : "Planning Cadastre"
+    "button.close" : "Close"
 }
