@@ -877,7 +877,7 @@
     };
 
     var loadResources = function() {
-        var uri = new URI(config.path);
+        var uri = new URI(members.config.path);
         uri.segment(['content', 'js', 'i18n', members.i18n.locale, 'strings.js']);
         uri.addQuery({ 'v': (new Date()).getTime() });
         
