@@ -379,7 +379,10 @@
         // CKAN catalog
 		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
 			endpoint: module.config().ckan.endpoint,
-            preloading: true
+            metadata: {
+                path: module.config().ckan.metadata.path,
+                version: module.config().ckan.metadata.version
+            }
 		});
 
         // Resources

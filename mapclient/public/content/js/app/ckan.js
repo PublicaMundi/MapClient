@@ -21,13 +21,19 @@
             }
         },
         isPreloadingEnabled: function() {
-            return this.values.preloading;
+            return ((this.values.metadata) && (this.values.metadata.path));
         },
         preload: function() {
+            if(!this.isPreloadingEnabled()) {
+                return;
+            }
+            
             var self = this;
             
-            var uri = new URI();
-			uri.segment([members.config.path, 'data', 'metadata.json']);
+            var uri = new URI(this.values.metadata.path);
+            if(this.values.metadata.version) {
+                uri.addQuery({ 'v': this.values.metadata.version });
+            }
             
 			return new Promise(function(resolve, reject) {
 				$.ajax({
