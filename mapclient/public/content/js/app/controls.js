@@ -1107,7 +1107,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			if(_resource) {
 				_package = this.values.ckan.getPackageById(_resource.package);
-
 				this.values.resources.setCatalogResourceMetadataOptions(_resource);
 				
 				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {

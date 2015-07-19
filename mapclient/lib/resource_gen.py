@@ -196,15 +196,14 @@ def load_package(catalog, timeout, metadata, p):
         if 'resources' in p:
             for r in p['resources']:
                 if r['format'] == 'wms':
-                    r['package'] = package['id']
-                    
                     resource = {
                         'id': r['id'],
                         'resource_group_id': r['resource_group_id'],
                         'format': r['format'],
                         'name': r['name'],
                         'description': r['description'],
-                        'url': r['url']
+                        'url': r['url'],
+                        'package': p['id']
                     }
                     if 'wms_server' in r:
                         resource['wms_server'] = r['wms_server']
