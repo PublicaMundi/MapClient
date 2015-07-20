@@ -27,7 +27,10 @@ app_instance_uuid = ${app_instance_uuid}
 
 # Map Client - Application Settings
 mapclient.url.prefix = 
+mapclient.relative.path = /
 mapclient.url.catalog = http://web.dev.publicamundi.eu/
+mapclient.catalog.metadata.relative = 
+mapclient.catalog.metadata.physical = 
 
 # Data API
 dataapi.sqlalchemy.catalog = postgresql://user:password@host:port/database
@@ -45,6 +48,9 @@ osm.api.nominatim = http://open.mapquestapi.com/nominatim/v1/search/
 # Map center expected to be in the form of X, Y
 mapclient.map.center = 2448716, 4600000
 mapclient.map.zoom = 7
+
+# File upload settings
+upload.path = %(here)s/data/uploads/
 
 # If you would like to fine-tune the individual locations of the cache data dirs
 # for the Cache data, or the Session saves, un-comment the desired settings
