@@ -19,7 +19,7 @@
     "index.title.crs" : "Σύστημα αναφοράς",
     "index.title.scale" : "Κλίμακα χάρτη",
     
-    "index.layer.ktimatologio" : "Κτηματολόγιο",
+    "index.layer.ktimatologio" : "ΕΚΧΑ Α.Ε.",
 
     "attribution.ktimatologio.title" : "ΕΚΧΑ Α.Ε.",
     "attribution.ktimatologio.url" : "http://www.ktimatologio.gr/Pages/Default.aspx",

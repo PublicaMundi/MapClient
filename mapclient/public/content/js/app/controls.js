@@ -33,7 +33,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		hide: function() {
 			$('#' + this.values.element).hide();
 			this.trigger('hide');
-		}
+		},
+        localizeUI: function(locale) {
+        }
     });
     
     PublicaMundi.Maps.LayerTreeViewMode = {

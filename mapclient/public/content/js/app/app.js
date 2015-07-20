@@ -861,6 +861,8 @@
     };
 
     var localizeUI = function() {
+        var locale = PublicaMundi.getLocale();
+        
         $('[data-i18n-id]').each(function(index, element) {
             var type = $(this).data('i18n-type');
             switch(type) {
@@ -878,6 +880,12 @@
                     break;
             }
         });
+
+        for(var c in members.components) {
+            members.components[c].localizeUI(locale);
+        }
+        
+        $('#base_layer').selectpicker('refresh');
     };
 
     var mergeCkanResources = function() {

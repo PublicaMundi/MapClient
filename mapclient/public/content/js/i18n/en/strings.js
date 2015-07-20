@@ -19,7 +19,7 @@
     "index.title.crs" : "Coordinates Reference System",
     "index.title.scale" : "Map Scale",
     
-    "index.layer.ktimatologio" : "Κτηματολόγιο",
+    "index.layer.ktimatologio" : "National Cadastre & Mapping Agency S.A.",
     
     "attribution.ktimatologio.title" : "NCMA S.A.",
     "attribution.ktimatologio.url" : "http://www.ktimatologio.gr/sites/en/Pages/Default.aspx",
