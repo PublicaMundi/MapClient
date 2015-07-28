@@ -256,15 +256,12 @@ def get_metadata(output, catalog, timeout, pretty, verbose):
         if verbose:
             print 'Export completed. Metadata is writen at [{filename}].'.format(filename = filename)
     except requests.exceptions.HTTPError as ex:
-        details = 'Could not load resource. Server responded with %s %s' % (
-            ex.response.status_code, error.response.reason)
-        abort(409, detail=details)
+        print 'Export has failed (HTTPError): ' + str(ex)
     except requests.exceptions.ConnectionError as ex:
-        details = 'Could not load resource because a connection error occurred. %s' % ex
-        abort(502, detail=details)
+        print 'Export has failed (ConnectionError): ' + str(ex)
     except requests.exceptions.Timeout as ex:
-        details = 'Could not load resource because the connection timed out.'
-        abort(504, detail=details)
+        print 'Export has failed (Timeout): ' + str(ex)
+        
 
 try:
     parser = argparse.ArgumentParser(description='Downloads organization, group and package metadata from the catalog and extracts information for the Map Client application')
