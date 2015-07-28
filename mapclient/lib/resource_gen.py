@@ -41,7 +41,7 @@ def get_orginizations(catalog, timeout, metadata, verbose):
                     'image': o['image_display_url']
                 }
 
-                query = query + '&terms=' + o['display_name'] + '&terms' +  o['description'] + '&terms=' + o['title']
+                query = query + '&terms=' + o['display_name'] + '&terms=' +  o['description'] + '&terms=' + o['title']
                 
                 resource = urlparse.urljoin(catalog, 'api/3/action/term_translation_show' + query)
                 translation_request = requests.get(resource, timeout = timeout)
@@ -91,7 +91,7 @@ def get_groups(catalog, timeout, metadata, verbose):
                     'image': g['image_display_url']
                 }
 
-                query = query + '&terms=' + g['display_name'] + '&terms' +  g['description'] + '&terms=' + g['title']
+                query = query + '&terms=' + g['display_name'] + '&terms=' +  g['description'] + '&terms=' + g['title']
                 
                 resource = urlparse.urljoin(catalog, 'api/3/action/term_translation_show' + query)
                 translation_request = requests.get(resource, timeout = timeout)
