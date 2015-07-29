@@ -127,7 +127,9 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                     format = new ol.format.GML();
                     break;
                 case PublicaMundi.Maps.Resources.Types.GEOJSON:
-                    format = new ol.format.GeoJSON();
+                    format = new ol.format.GeoJSON({
+                        defaultDataProjection: 'EPSG:3857'
+                    });
                     break;
             }
             

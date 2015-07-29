@@ -149,7 +149,10 @@ class UploadController(BaseController):
                     if not layer is None:
                         crs = layer.GetSpatialRef()
                         if not crs is None:
-                            crs.AutoIdentifyEPSG()
+                            try:
+                                crs.AutoIdentifyEPSG()
+                            except Exception as ex:
+                                pass
 
                             if 'GGRS87' in str(crs):
                                 in_crs = 'EPSG:2100'
