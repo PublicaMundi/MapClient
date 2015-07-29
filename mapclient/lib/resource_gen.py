@@ -3,6 +3,7 @@
 import sys
 import os
 import json
+import csv
 import argparse
 import urlparse
 import requests
@@ -59,7 +60,23 @@ def get_orginizations(catalog, timeout, metadata, verbose):
                     
                 metadata['organizations'].append(organization)
 
-def get_groups(catalog, timeout, metadata, verbose):
+def get_groups(catalog, groups, timeout, metadata, verbose):
+    group_translations = None
+
+    if groups:
+        group_translations = {}
+
+        with open(groups, mode='r') as topics_file:
+            reader = csv.reader(topics_file)
+            for row in reader:
+                group_translations[row[0]] = {
+                    'title_el' : row[1],
+                    'title_en' : row[2],
+                    'description_el' : row[3],
+                    'description_en' : row[4],
+                    'logo_url' : row[5]
+                }
+   
     # Example : http://labs.geodata.gov.gr/api/3/action/group_list?all_fields=true
     
     metadata['groups'] = []
@@ -71,41 +88,62 @@ def get_groups(catalog, timeout, metadata, verbose):
         groups = request_groups.json()
         if groups['success'] == True:
             for g in groups['result']:
-                query = '?lang_codes=el'
+                name = g['name']
                 
+                translate = True
+                
+                title_en = g['title']
+                title_el = g['title']
+                
+
+                description_en = g['description']
+                description_el = g['description']
+                
+                if name in group_translations:
+                    translate = False
+
+                    title_en = group_translations[name]['title_en']
+                    title_el = group_translations[name]['title_el']
+
+                    description_en = group_translations[name]['description_en']
+                    description_el = group_translations[name]['description_el']
+
                 group = {
                     'id': g['id'],
-                    'name': g['name'],
+                    'name': name,
                     'caption': {
-                        'en': g['display_name'],
-                        'el': g['display_name']
+                        'en': title_en,
+                        'el': title_el
                     },
                     'title': {
-                        'en': g['title'],
-                        'el': g['title']
+                        'en': title_en,
+                        'el': title_el
                     },
                      'description': {
-                         'en': g['description'],
-                         'el': g['description']
+                         'en': description_en,
+                         'el': description_el
                      },
                     'image': g['image_display_url']
                 }
 
-                query = query + '&terms=' + g['display_name'] + '&terms=' +  g['description'] + '&terms=' + g['title']
-                
-                resource = urlparse.urljoin(catalog, 'api/3/action/term_translation_show' + query)
-                translation_request = requests.get(resource, timeout = timeout)
-                
-                if translation_request.status_code == 200:
-                    translation = translation_request.json()
-                    if translation['success'] == True:
-                        for t in translation['result']:
-                            if group['caption']['en'] == t['term']:
-                                group['caption']['el'] = t['term_translation']
-                            if group['title']['en'] == t['term']:
-                                group['title']['el'] = t['term_translation']
-                            if group['description']['en'] == t['term']:
-                                group['description']['el'] = t['term_translation']
+                if translate:
+                    query = '?lang_codes=el'
+                    
+                    query = query + '&terms=' + g['display_name'] + '&terms=' + g['title'] + '&terms=' +  g['description']
+                    
+                    resource = urlparse.urljoin(catalog, 'api/3/action/term_translation_show' + query)
+                    translation_request = requests.get(resource, timeout = timeout)
+                    
+                    if translation_request.status_code == 200:
+                        translation = translation_request.json()
+                        if translation['success'] == True:
+                            for t in translation['result']:
+                                if group['caption']['en'] == t['term']:
+                                    group['caption']['el'] = t['term_translation']
+                                if group['title']['en'] == t['term']:
+                                    group['title']['el'] = t['term_translation']
+                                if group['description']['en'] == t['term']:
+                                    group['description']['el'] = t['term_translation']
                     
                 metadata['groups'].append(group)
 
@@ -217,13 +255,17 @@ def load_package(catalog, timeout, metadata, p):
         if len(package['resources']) > 0:               
             metadata['packages'].append(package)
 
-def get_metadata(output, catalog, timeout, pretty, verbose):
+def get_metadata(output, catalog, groups, timeout, pretty, verbose):
     parts = urlparse.urlsplit(catalog)
+
     if not parts.scheme or not parts.netloc:
         raise Exception('Invalid URL.')
 
     if not os.path.isdir(output):
         raise Exception('Folder [{output}] does not exist.'.format(output = output))
+
+    if not groups is None and not os.path.isfile(groups):
+        raise Exception('File [{groups}] does not exist.'.format(groups = groups))
 
     try:
         metadata = {
@@ -238,7 +280,7 @@ def get_metadata(output, catalog, timeout, pretty, verbose):
 
         if verbose:
             print 'Loading groups ...'
-        get_groups(catalog, timeout, metadata, verbose)
+        get_groups(catalog, groups, timeout, metadata, verbose)
 
         get_packages(catalog, timeout, metadata, verbose)
 
@@ -267,12 +309,13 @@ try:
     parser = argparse.ArgumentParser(description='Downloads organization, group and package metadata from the catalog and extracts information for the Map Client application')
     parser.add_argument('-output', '-o', metavar='path', type=str, help='folder where the produced files are created', required=True)
     parser.add_argument('-catalog', '-c', metavar='url', type=str, help='CKAN catalog endpoint', required=True)
+    parser.add_argument('-group', '-g', metavar='groups', type=str, help='CSV with CKAN topics used for initialization', required=False)
     parser.add_argument('-timeout', '-t', metavar='N', type=int, help='HTTP requests will timeout after N seconds', required=False, default=30)
     parser.add_argument('-pretty', '-p', action='store_true', help='JSON elements and object members will be pretty-printed')
     parser.add_argument('-verbose', '-v', action='store_true', help='Print detailed information for export execution')
     
     args = parser.parse_args()
 
-    get_metadata(args.output, args.catalog, args.timeout, args.pretty, args.verbose)
+    get_metadata(args.output, args.catalog, args.group, args.timeout, args.pretty, args.verbose)
 except Exception as ex:
     print 'Export has failed: ' + str(ex)
