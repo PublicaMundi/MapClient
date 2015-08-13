@@ -71,7 +71,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     ]
                 }]
             }],
-			format: 'geojson'
+			format: 'GeoJSON'
 		},
 		method: function(callback) {
 			var query = new PublicaMundi.Data.Query(endpoint);
@@ -153,7 +153,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                   }
                 ]
             }],
-			format: "geojson"
+			format: "GeoJSON"
 		},
 		method: function(callback) {
 			var query = new PublicaMundi.Data.Query(endpoint);
@@ -243,7 +243,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                   }
                 ]
             }],
-			format: "geojson"
+			format: "GeoJSON"
 		},
 		method: function(callback) {
 			var query = new PublicaMundi.Data.Query(endpoint);

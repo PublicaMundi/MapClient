@@ -78,12 +78,12 @@ def get_groups(catalog, groups, timeout, metadata, verbose):
                 }
    
     # Example : http://labs.geodata.gov.gr/api/3/action/group_list?all_fields=true
-    
+
     metadata['groups'] = []
     
     resource = urlparse.urljoin(catalog, 'api/3/action/group_list?all_fields=true')
     request_groups = requests.get(resource, timeout = timeout)
-   
+
     if request_groups.status_code == 200:           
         groups = request_groups.json()
         if groups['success'] == True:
@@ -99,7 +99,7 @@ def get_groups(catalog, groups, timeout, metadata, verbose):
                 description_en = g['description']
                 description_el = g['description']
                 
-                if name in group_translations:
+                if not group_translations is None and name in group_translations:
                     translate = False
 
                     title_en = group_translations[name]['title_en']
@@ -307,7 +307,7 @@ def get_metadata(output, catalog, groups, timeout, pretty, verbose):
 
 try:
     parser = argparse.ArgumentParser(description='Downloads organization, group and package metadata from the catalog and extracts information for the Map Client application')
-    parser.add_argument('-output', '-o', metavar='path', type=str, help='folder where the produced files are created', required=True)
+    parser.add_argument('-output', '-o', metavar='path', type=str, help='Folder where the produced files are created', required=True)
     parser.add_argument('-catalog', '-c', metavar='url', type=str, help='CKAN catalog endpoint', required=True)
     parser.add_argument('-group', '-g', metavar='groups', type=str, help='CSV with CKAN topics used for initialization', required=False)
     parser.add_argument('-timeout', '-t', metavar='N', type=int, help='HTTP requests will timeout after N seconds', required=False, default=30)
