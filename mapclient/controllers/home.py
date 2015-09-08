@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 class HomeController(BaseController):
 
     def index(self):
+        # Get metadata version
         c.metadata = {
             'version' : ''
         }
@@ -25,5 +26,10 @@ class HomeController(BaseController):
         
             if os.path.exists(filename):
                 c.metadata['version'] = os.stat(filename).st_mtime
+        
+        # Export disabled format
+        c.exportDisabledFormats = []
+        if 'dataapi.export.formats.disabled' in config:
+           c.exportDisabledFormats =  filter(None, config['dataapi.export.formats.disabled'].split(','))
 
         return render('/index.jinja2')

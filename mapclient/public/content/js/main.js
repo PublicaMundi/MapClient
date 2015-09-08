@@ -31,14 +31,23 @@
         file: 'app/file',
         proj4: 'lib/proj4js/proj4',
         ckan: 'app/ckan',
-        api: 'api/data',
+        data_api: 'lib/data-api/data',
+        data_api_wps: 'lib/data-api/extensions/wps',
         typeahead : 'lib/typeahead/typeahead.jquery.min',
         bloodhound: 'lib/typeahead/bloodhound.min',
         handlebars: 'lib/handlebars/handlebars-v3.0.3',
         fileupload: 'lib/fileupload/jquery.fileupload',
         iframetransport: 'lib/fileupload/jquery.iframe-transport',
         locale_en: 'i18n/en/strings',
-        locale_el: 'i18n/el/strings'
+        locale_el: 'i18n/el/strings',
+        // WPS support
+        hogan: 'lib/hogan/hogan-3.0.2.min',
+        xml2json: 'lib/x2js/xml2json.min',
+        queryString: 'lib/query-string/query-string',
+        wpsPayloads: 'lib/zoo-client/payloads',
+        wpsPayload: 'lib/zoo-client/wps-payload',
+        utils: 'lib/zoo-client/utils',
+        zoo: 'lib/zoo-client/zoo'
     },
     shim: {
 		jquery: {
@@ -107,7 +116,8 @@
                 'controls',                
                 'wms',
                 'file',
-                'api',
+                'data_api',
+                'data_api_wps',
                 'fileupload'
             ]
         },
@@ -121,37 +131,64 @@
                 'shared'
             ]
         },
-        api: {
+        data_api: {
             deps: [
                 'shared'
             ]
+        },
+        data_api_wps: {
+            deps: [
+                'data_api',
+                'zoo',
+                'wpsPayload'
+            ]
+        },
+        wpsPayloads: {
+            deps: ['hogan'],
+        },
+        wpsPayload: {
+            deps: ['wpsPayloads'],
+            exports: 'wpsPayload',
+        },
+        hogan: {
+            exports: 'Hogan',
+        },
+        xml2json: {
+          exports: "X2JS",
+        },
+        queryString: {
+            exports: 'queryString',
         }
 	}
 };
 
 requirejs.config(config);
 
-var scriptCounter = 0;
-var scriptTotal = 4;
+var initialization = {
+    scriptCounter : 0,
+    scriptTotal : 6,
+    scripts : []
+};
 
-var scripts = [];
 for(var s in config.shim) {
-	if(scripts.indexOf(s) === -1) {
-		scripts.push(s);
-		scriptTotal++;
-		
-		for(var i=0, count = config.shim[s].deps.length; i < count; i++) {
-			if(scripts.indexOf(config.shim[s].deps[i]) === -1) {
-				scripts.push(config.shim[s].deps[i]);
-				scriptTotal++;
-			}
-		}
+	if(initialization.scripts.indexOf(s) === -1) {
+		initialization.scripts.push(s);
+		initialization.scriptTotal++;
+
+        if(config.shim[s].deps) {
+            for(var i=0, count = config.shim[s].deps.length; i < count; i++) {
+                if(initialization.scripts.indexOf(config.shim[s].deps[i]) === -1) {
+                    initialization.scripts.push(config.shim[s].deps[i]);
+                    initialization.scriptTotal++;
+                }
+            }
+        }
 	}
 }
 
 requirejs.onResourceLoad = function (context, map, depArray) {
-	scriptCounter++;
-	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (scriptCounter) / scriptTotal).toFixed(0) + '%'
+	initialization.scriptCounter++;
+	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (initialization.scriptCounter) / initialization.scriptTotal).toFixed(0) + '%'
 };
 
 define(['module'], function (module) {

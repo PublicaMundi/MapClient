@@ -17,20 +17,19 @@
     <script type="text/javascript" src="../content/js/lib/codemirror/javascript.js"></script>
     <script type="text/javascript" src="../content/js/lib/codemirror/show-hint.js"></script>
     <script type="text/javascript" src="../content/js/lib/codemirror/data-api-hint.js"></script>
-   
+
     <script type="text/javascript">
         var ﻿require = {
             config: {
                 app: {
-					path : '/'
+                    debug: true
                 }
             }
         };
     </script>
+
     <script type="text/javascript" data-main="../content/js/demo.js" src="../content/js/lib/requirejs/require.js"></script>
     <script type="text/javascript">
-        var result = null;
-
         if (typeof requirejs === 'undefined') {
             document.write(decodeURI("%3Cscript type='text/javascript' data-main='content/js/demo.js' src='../content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
         }
@@ -45,20 +44,30 @@
     <div id="content">
         <div id="header">
             <div class="actions">
-                <div class="action-container">
-                    <button class="action" id="resource_show" type="button">Show Resources</button>
+                <div class="clearfix" style="max-width: 740px; float: left;">
+                    <div class="action-container">
+                        <button class="action" id="resource_show" type="button" style="width: 180px;">Show Resources</button>
+                    </div>
+                    <div class="action-container">
+                        <select type="text" id="resource_id" style="width: 300px;" autocomplete="off"></select>
+                    </div>
+                    <div class="action-container">
+                        <button class="action" id="resource_describe" type="button" style="width: 235px;">Get Resource Metadata</button>
+                    </div>
                 </div>
-                <div class="action-container">
-                    <select type="text" id="resource_id" style="width: 400px;" autocomplete="off"></select>
-                </div>
-                <div class="action-container">
-                    <button class="action" id="resource_describe" type="button">Get Resource Metadata</button>
+                <div class="clearfix" style="max-width: 740px;">
+                    <div class="action-container">
+                        <button class="action" id="process_show" type="button" style="width: 180px;">Show Processes</button>
+                    </div>
+                    <div class="action-container">
+                        <select type="text" id="process_id" style="width: 300px;" autocomplete="off" data-size="10"></select>
+                    </div>
+                    <div class="action-container">
+                        <button class="action" id="process_describe" type="button" style="width: 235px;">Get Process Metadata</button>
+                    </div>
                 </div>
             </div>
             <div class="logo-container">
-                <div class="progress-loader">
-                    <img src="../content/images/ajax-loader.gif" alt="" />
-                </div>
                 <div class="logo-publicamundi"></div>
             </div>
         </div>
@@ -66,10 +75,13 @@
             <div id="accordion">
                 <h3>Query
                     <div id="query_exec" class="query-run" title="Execute selected query">
-                        <img src="../content/images/demo/run.png" alt="" />
+                        <img src="../content/images/demo/run.png" alt="" class="action-button"/>
                     </div>
                     <div id="query_export" class="query-export" title="Execute query & export results to shape file">
-                        <img src="../content/images/demo/download.png" alt="" style="height: auto; width: auto; max-width: 18px; max-height: 18px; cursor: pointer;" />
+                        <img src="../content/images/demo/download.png" alt="" class="action-button" />
+                    </div>
+                    <div id="query_wps" class="query-wps" title="Execute wps process">
+                        <img src="../content/images/demo/wps.png" alt="" class="action-button" />
                     </div>
                     <div id="query_size" class="query-size">
                     </div>
@@ -100,6 +112,12 @@
                             <div id="query_mode_fluent" class="query-mode-option" data-mode="fluent">
                                 Fluent
                             </div>
+                            <div id="query_mode_wps" class="query-mode-option" data-mode="wps">
+                                WPS
+                            </div>
+                            <div class="progress-loader" style="display: none;">
+                                <img alt="" src="../content/images/ajax-loader.gif">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -128,6 +146,13 @@
         <div id="feature-dialog" title="Feature Information">
             <div class="feature-dialog-content">
             </div>
+        </div>
+    </div>
+    <div style="display: none;">
+        <div id="dialog-message" title="Application message" style="margin: 1px;">
+        <p>
+            <span id="dialog-message-text"></span>
+        </p>
         </div>
     </div>
 </body>

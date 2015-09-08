@@ -1523,7 +1523,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         query.queue();
                     }
                 }
-                query.export(_DownloadExportFile, files, this);
+                query.export({
+                    context: this,
+                    success: _DownloadExportFile, 
+                    files: files
+                });
             }
         }
     };
@@ -1542,7 +1546,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var self = this;
 
             this.values.map = null;
-
+            this.values.disabledFormats = [];
+                        
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
@@ -1556,7 +1561,34 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.crs = PublicaMundi.Maps.CRS.Mercator;
             
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
-            
+
+            this.values.formats = [{
+                value: 'ESRI Shapefile',
+                text: 'ESRI Shapefile',
+                selected: true
+            },{
+                value: 'GML',
+                text: 'GML'
+            },{
+                value: 'KML',
+                text: 'KML'
+            },{
+                value: 'GPKG',
+                text: 'Geo Package'
+            },{
+                value: 'DXF',
+                text: 'AutoCAD DXF'
+            },{
+                value: 'CSV',
+                text: 'Comma Separated Value'
+            },{
+                value: 'GeoJSON',
+                text: 'GeoJSON'
+            },{
+                value: 'PDF',
+                text: 'Geospatial PDF'
+            }];
+
             // Actions
             if(this.values.action) {
                 this.values.actions.push(this.values.action);
@@ -1600,14 +1632,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.format">' + 
                                  PublicaMundi.getResource('control.export.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" class="selectpicker" data-width="250px">');
-                    content.push('<option value="ESRI Shapefile" selected="selected">ESRI Shapefile</option>');
-                    content.push('<option value="GML">GML</option>');
-                    content.push('<option value="KML">KML</option>');
-                    content.push('<option value="GPKG">Geo Package</option>');
-                    content.push('<option value="DXF">AutoCAD DXF</option>');
-                    content.push('<option value="CSV">Comma Separated Value</option>');
-                    content.push('<option value="GeoJSON">GeoJSON</option>');
-                    content.push('<option value="PDF">Geospatial PDF</option>');
+
+                    for(var i=0, countFormat = self.values.formats.length; i<countFormat; i++) {
+                        var format =  self.values.formats[i];
+
+                        if(self.values.disabledFormats.indexOf(format.value) < 0) {
+                            if(!!format.selected) {
+                                content.push('<option value="' + format.value + '" selected="selected">' + format.text + '</option>');
+                            } else {
+                                content.push('<option value="' + format.value + '">' + format.text + '</option>');
+                            }
+                        }
+                    }
                     content.push('</select>');
                     content.push('</div>');
                     return content;
@@ -1795,40 +1831,43 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     query.queue();
                 }
             }
-            
-            query.execute(function(response) {
-                if(response.success) {
-                    var format = new ol.format.GeoJSON();
-                    
-                    for(var i=0; i< response.data.length; i++) {
-                        if(response.data[i].features.length > 0) {
-                            // Make feature id unique
-                            for(var j=0; j < response.data[i].features.length; j++) {
-                                response.data[i].features[j].id = id;
-                                id++;
-                            }
 
-                            var features = format.readFeatures(response.data[i], {
-                                dataProjection: PublicaMundi.Maps.CRS.Mercator,
-                                featureProjection: PublicaMundi.Maps.CRS.Mercator
-                            });
-                            this.values.features.extend(features);
+            query.execute({
+                success: function(response) {
+                    if(response.success) {
+                        var format = new ol.format.GeoJSON();
+                        
+                        for(var i=0; i< response.data.length; i++) {
+                            if(response.data[i].features.length > 0) {
+                                // Make feature id unique
+                                for(var j=0; j < response.data[i].features.length; j++) {
+                                    response.data[i].features[j].id = id;
+                                    id++;
+                                }
+
+                                var features = format.readFeatures(response.data[i], {
+                                    dataProjection: PublicaMundi.Maps.CRS.Mercator,
+                                    featureProjection: PublicaMundi.Maps.CRS.Mercator
+                                });
+                                this.values.features.extend(features);
+                            }
                         }
+                        
+                        // Append external features
+                        if(externalFeatures.length > 0) {
+                            this.values.features.extend(externalFeatures);
+                        }
+                        
+                        this.values.overlay.setFeatures(this.values.features);
+                        
+                        this.setFeatureFocus(0);
+                        
+                        this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
                     }
-                    
-                    // Append external features
-                    if(externalFeatures.length > 0) {
-                        this.values.features.extend(externalFeatures);
-                    }
-                    
-                    this.values.overlay.setFeatures(this.values.features);
-                    
-                    this.setFeatureFocus(0);
-                    
-                    this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
-                }
-                this.resumeUI();
-            }, this);
+                    this.resumeUI();
+                }, 
+                context : this
+            });
         } else if(externalFeatures.length > 0) {
             this.values.features.extend(externalFeatures);
             this.values.overlay.setFeatures(this.values.features);
