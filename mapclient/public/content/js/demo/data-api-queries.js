@@ -5,7 +5,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     
 	PublicaMundi.queries = [
     {
-        description: 'Selects all cities with population greater than <b>10000</b>.',
+        description: 'Selects all cities with population greater than <b>10000</b>.</br></br>WPS process: <b>Voronoi</b>.',
         query: {
             queue: [{
                 resources: [
@@ -33,10 +33,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 limit: 50
             }]
         },
-        method: function(callback) {
-			var query = new PublicaMundi.Data.Query(endpoint);
-
-			query.setCallback(callback);
+        method: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
 
 			query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38', 
 						   'table1').
@@ -45,10 +43,30 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				  skip(20).
 				  take(50);
 
-			query.execute();
+			query.execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
+		},
+        process: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
+
+			query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38', 
+						   'table1').
+				  greater({name : 'pop'}, 10000).
+				  orderBy('pop', true).
+				  skip(20).
+				  take(50);
+
+			query.processVoronoi().execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
 		}
 	}, {
-		description: 'Selects all city blocks that have area greater or equal to <b>15000</b> square meters.',
+		description: 'Selects all city blocks that have area greater or equal to <b>15000</b> square meters.</br></br>WPS process chain: <b>ConvexHull</b>, <b>Buffer(50)</b>.',
 		query: {
             queue : [{
                 resources: ['d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6'],
@@ -73,10 +91,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }],
 			format: 'GeoJSON'
 		},
-		method: function(callback) {
-			var query = new PublicaMundi.Data.Query(endpoint);
-
-			query.setCallback(callback);
+		method: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
 
 			query.resource('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6').
 				  field('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 'AROT').
@@ -87,11 +103,33 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				  }, 15000.0).
 				  format(PublicaMundi.Data.Format.GeoJSON);
 
-			query.execute();
+			query.execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
 
+		},
+        process: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
+
+			query.resource('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6').
+				  field('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 'AROT').
+				  field('d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 'the_geom', 'polygon').
+				  areaGreaterOrEqual({
+					resource: 'd0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6', 
+					name : 'the_geom'
+				  }, 15000.0).
+				  format(PublicaMundi.Data.Format.GeoJSON);
+
+			query.processConvexHull().processBuffer(50).execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
 		}
 	}, {
-		description: 'Selects fields from  datasets \'Urban and rural regions\' and \'Blue flag beaches (2010)\'. The population of every region must be less than <b>3000</b> and the distance between a region and a beach must be less than <b>5000</b>. Moreover, all results should be inside a specific region.',
+		description: 'Selects fields from  datasets \'Urban and rural regions\' and \'Blue flag beaches (2010)\'. The population of every region must be less than <b>3000</b> and the distance between a region and a beach must be less than <b>5000</b>. Moreover, all results should be inside a specific region.</br></br>WPS process: <b>Voronoi</b>.',
 		query: {
             queue: [{
                 "resources": [
@@ -155,8 +193,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }],
 			format: "GeoJSON"
 		},
-		method: function(callback) {
-			var query = new PublicaMundi.Data.Query(endpoint);
+		method: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
 
 			var polygon = {
 					"type": "Polygon", 
@@ -169,8 +207,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							[2687295.037100175, 4520261.073751386]]
 					]
 			};
-
-			query.setCallback(callback);
 
 			query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38').
 				  resource('ad815665-ec88-4e81-a27a-8d72cffa7dd2').
@@ -193,10 +229,56 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
 
-			query.execute();
+			query.execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
+		},
+		process: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
+
+			var polygon = {
+					"type": "Polygon", 
+					"coordinates": [
+						[
+							[2687295.037100175, 4520261.073751386], 
+							[2687295.037100175, 4368610.009633597], 
+							[2914771.6332768593, 4368610.009633597], 
+							[2914771.6332768593, 4520261.073751386], 
+							[2687295.037100175, 4520261.073751386]]
+					]
+			};
+
+			query.resource('97569331-a2fb-45eb-92c9-064ef4f70d38').
+				  resource('ad815665-ec88-4e81-a27a-8d72cffa7dd2').
+				  field('name_eng').field('city_eng').
+				  field('nisos_eng').field('dimos_eng').
+				  field('pop').field('NOMOS').
+				  field('ad815665-ec88-4e81-a27a-8d72cffa7dd2', 'the_geom').
+				  field('DESCRIPT').field('REGION').
+				  less({ name : 'pop'}, 3000).
+				  distanceLess({
+					resource: '97569331-a2fb-45eb-92c9-064ef4f70d38', 
+					name : 'the_geom'
+				  }, {
+					resource: 'ad815665-ec88-4e81-a27a-8d72cffa7dd2', 
+					name : 'the_geom'
+				  }, 5000).
+				  contains( polygon, {
+					  resource: 'ad815665-ec88-4e81-a27a-8d72cffa7dd2',
+					  name: 'the_geom'
+				  }).
+				  format(PublicaMundi.Data.Format.GeoJSON);
+
+			query.processVoronoi().execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
 		}
 	}, {
-		description: 'Select geometries from the road network for Municipality of Kalamaria is provided that is inside a specific polygon ',
+		description: 'Select geometries from the road network for Municipality of Kalamaria is provided that is inside a specific polygon.</br></br>WPS process: <b>Buffer(15)</b>.',
 		query: {
             queue: [{
                 "resources": [
@@ -245,8 +327,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }],
 			format: "GeoJSON"
 		},
-		method: function(callback) {
-			var query = new PublicaMundi.Data.Query(endpoint);
+		method: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
 
 			var polygon = {
 					"type": "Polygon", 
@@ -261,7 +343,35 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					]
 			};
 
-			query.setCallback(callback);
+			query.resource('9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6').
+				  field('NAME_LABEL').field('the_geom').
+				  contains( polygon, {
+					  resource: '9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6',
+					  name: 'the_geom'
+				  }).
+				  format(PublicaMundi.Data.Format.GeoJSON);
+
+			query.execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
+		},
+        process: function(onSuccess, onFailure, onComplete) {
+			var query = new PublicaMundi.Data.Query();
+
+			var polygon = {
+					"type": "Polygon", 
+					"coordinates": [
+						[
+							[2554722.9073085627, 4951114.104686448],
+							[2554722.9073085627, 4950158.641832884],
+							[2556232.5386171946, 4950158.641832884],
+							[2556232.5386171946, 4951114.104686448],
+							[2554722.9073085627, 4951114.104686448]
+						]
+					]
+			};
 
 			query.resource('9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6').
 				  field('NAME_LABEL').field('the_geom').
@@ -271,7 +381,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
 
-			query.execute();
+			query.processBuffer(15).execute({
+                success: onSuccess,
+                failure: onFailure,
+                complete: onComplete
+            });
 		}
 	}];
 

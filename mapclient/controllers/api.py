@@ -1,15 +1,8 @@
 import logging
 
-from pylons import config, request, response, session, tmpl_context as c
-from pylons.controllers.util import abort, redirect_to
-from pylons.decorators import jsonify
+from pylons import config, request, response, session
 
-from mapclient.lib.base import BaseController, render
-
-from sqlalchemy import create_engine
-from sqlalchemy.sql import text
-from sqlalchemy.engine import ResultProxy
-from sqlalchemy.exc import ProgrammingError, IntegrityError, DBAPIError, DataError
+from mapclient.lib.base import BaseController
 
 import json
 import geojson
@@ -28,10 +21,60 @@ from publicamundi.data.api import *
 
 log = logging.getLogger(__name__)
 
+# Session metadata key
 SESSION_METADATA_KEY = 'DATA_API_348A4EBF-0CDE-4EFB-BC42-D16F3D8FE250'
 
-class ApiController(BaseController):
+# Supported exported formats
+EXPORT_FORMAT_GEOJSON = 'GeoJSON'
+EXPORT_FORMAT_ESRI = 'ESRI Shapefile'
+EXPORT_FORMAT_GML = 'GML'
+EXPORT_FORMAT_KML = 'KML'
+EXPORT_FORMAT_GPKG = 'GPKG'
+EXPORT_FORMAT_DXF = 'DXF'
+EXPORT_FORMAT_CSV = 'CSV'
+EXPORT_FORMAT_PDF = 'PDF'
 
+# Supported formats for export operation
+FORMAT_SUPPORT_EXPORT = {
+    EXPORT_FORMAT_ESRI: {
+        'ext': 'shp',
+        'raw': False
+    }, 
+    EXPORT_FORMAT_GML: {
+        'ext': 'gml',
+        'raw': True,
+        'mimeType': 'text/xml'
+    }, 
+    EXPORT_FORMAT_KML: {
+        'ext': 'kml',
+        'raw': True,
+        'mimeType': 'application/vnd.google-earth.kml+xml'
+    }, 
+    EXPORT_FORMAT_DXF: {
+        'ext': 'dxf',
+        'raw': False
+    }, 
+    EXPORT_FORMAT_CSV: {
+        'ext': 'csv',
+        'raw': False
+    }, 
+    EXPORT_FORMAT_GEOJSON: {
+        'ext': 'geojson',
+        'raw': True,
+        'mimeType': 'application/json'
+    }, 
+    EXPORT_FORMAT_PDF: {
+        'ext': 'pdf',
+        'raw': False
+    }, 
+    EXPORT_FORMAT_GPKG: {
+        'ext': 'gpkg',
+        'raw': False
+    }
+}
+
+class ApiController(BaseController):
+       
     def resource_show(self):
         # Get configuration
         configuration = self._get_configuration()
@@ -41,7 +84,7 @@ class ApiController(BaseController):
         
         try:
             query_executor = QueryExecutor();
-            resources = query_executor._get_resources(configuration)
+            resources = query_executor.getResources(configuration)
             
             result = {
                 "success" : True,
@@ -74,7 +117,7 @@ class ApiController(BaseController):
                 }
             else:
                 query_executor = QueryExecutor();
-                fields = query_executor._resource_describe(configuration, None, id)
+                fields = query_executor.describeResource(configuration, None, id)
                 
                 result = {
                     "success" : True,
@@ -108,46 +151,35 @@ class ApiController(BaseController):
             
             # Get metadata
             metadata = self._get_metadata_from_session()
-            
+
             # Execute query
             query_executor = QueryExecutor();
-            query_result = query_executor.execute(configuration, query, ACTION_QUERY, metadata)
+            query_result = query_executor.execute(configuration, query, metadata)
             
             # Set metadata 
             self._set_metadata_to_session(query_result['metadata'])
             
             # Set response headers
             self._set_headers()
-
-            # Construct response body 
-            output_format = query_result['format']
-           
+          
             result = {
                 'data': query_result['data'],
                 'success': True,
                 'message': None
             }
 
-            return self._format_response(result, callback, output_format)
+            return self._format_response(result, callback, query_result['format'])
         except DataException as apiEx:
             log.error(apiEx)
+
+            details = None
+            if not apiEx.innerException is None and config['dataapi.error.details']:
+                details = apiEx.innerException.message 
 
             return self._format_response({
                 'success' : False,
                 'message' : apiEx.message,
-                'data' : None
-            }, callback)
-        except DBAPIError as dbEx:
-            log.error(dbEx)
-
-            message = 'Unhandled exception has occured.'
-            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
-                message = 'Execution exceeded timeout.'
-
-            return self._format_response({
-                'success': False,
-                'message': message,
-                'details': (dbEx.message if config['dataapi.error.details'] else ''),
+                'details' : details,
                 'data' : None
             }, callback)
         except Exception as ex:
@@ -161,22 +193,74 @@ class ApiController(BaseController):
             }, callback)
 
     def export(self):
-        path = tempfile.mkdtemp()
+        if not 'dataapi.export.enabled' in config or config['dataapi.export.enabled'] == False:
+            return self._format_response({
+                'success': False,
+                'message': 'Operation is not supported.',
+                'token': None
+            })
 
+        path = None
+        
         try:
             # Parse query
             query = self._parse_query()
+
+            # Set export format
+            export_format = EXPORT_FORMAT_ESRI
+
+            if 'format' in query:
+                if not query['format'] in FORMAT_SUPPORT_EXPORT:
+                    raise DataException('Output format {format} is not supported for export results.'.format(format = query['format']))
+
+                export_format = query['format']
             
+            # Get disabled export formats and check selected value
+            disabledFormats = []
+
+            if 'dataapi.export.formats.disabled' in config:
+                disabledFormats = filter(None, config['dataapi.export.formats.disabled'].split(','))
+        
+            if export_format in disabledFormats:
+                message = 'Export format [{format}] is disabled.'.format(format = export_format)
+
+                log.warn(message)
+
+                return self._format_response({
+                    'success': False,
+                    'message': message,
+                    'token': None
+                }, None)
+
+            # Check filenames
+            files = None
+            if 'files' in query and not query['files'] is None:
+                if not type(query['files']) is list:
+                    raise DataException('Parameter files should be a list with at least one item.')
+                if len(query['queue']) <> len(query['files']):
+                    raise DataException('Arrays queue and files should be of the same length.')
+                for i in range(0, len(query['files'])):
+                    query['files'][i] = self._format_filename(query['files'][i])
+                if  len(query['files'])!=len(set(query['files'])):
+                    raise DataException('Filenames must be unique.')
+                files = query['files']
+                
+            # Create temporary folder for exported files
+            path = tempfile.mkdtemp()
+
             # Get configuration
             configuration = self._get_configuration()
             
             # Get metadata
             metadata = self._get_metadata_from_session()
             
+            # Override query format
+            query['format'] = QUERY_FORMAT_GEOJSON
+            
             # Execute query
             query_executor = QueryExecutor();
-            query_result = query_executor.execute(configuration, query, ACTION_EXPORT, metadata)
-            
+            query_result = query_executor.execute(configuration, query, metadata)
+
             # Set metadata 
             self._set_metadata_to_session(query_result['metadata'])
             
@@ -186,8 +270,6 @@ class ApiController(BaseController):
             # Export layer data to files
             data = query_result['data']
             crs = query_result['crs']
-            files = query_result['files']
-            output_format = query_result['format']
 
             token = str(uuid.uuid4())
 
@@ -198,7 +280,7 @@ class ApiController(BaseController):
                     filename = files[i]
 
                 if len(data[i]['features']) > 0:
-                    self._export_partial_result(self._format_response(data[i], None, FORMAT_GEOJSON), path, filename, crs, output_format)
+                    self._export_partial_result(self._format_response(data[i], None, QUERY_FORMAT_GEOJSON), path, filename, crs, export_format)
                     index+=1
 
             # Compress exported data
@@ -206,7 +288,16 @@ class ApiController(BaseController):
             self._zip_folder(path, f_output_zipped)
 
             # Construct response body
-            session[token] = f_output_zipped
+            ext = self._getFormatExtension(export_format)
+
+            session[token] = {
+                'path' : path,
+                'filename' : (os.path.join(path, filename + '.' + ext) if len(data) == 1 else None),
+                'compressed' : f_output_zipped,
+                'format' : export_format,
+                'extension' : (ext if len(data) == 1 else None)
+            }
+
             session.save()
 
             result = { 'success' : True, 'code' : token, 'message' : None }
@@ -218,25 +309,14 @@ class ApiController(BaseController):
             if path != None:
                 shutil.rmtree(path)
 
+            details = None
+            if not apiEx.innerException is None and config['dataapi.error.details']:
+                details = apiEx.innerException.message 
+                
             return self._format_response({
                 'success': False,
                 'message': apiEx.message,
-                'token': None
-            }, None)
-        except DBAPIError as dbEx:
-            log.error(dbEx)
-
-            message = 'Unhandled exception has occured.'
-            if dbEx.orig.pgcode == _PG_ERR_CODE['query_canceled']:
-                message = 'Execution exceeded timeout.'
-
-            if path != None:
-                shutil.rmtree(path)
-
-            return self._format_response({
-                'success': False,
-                'message': message,
-                'details': (dbEx.message if config['dataapi.error.details'] else ''),
+                'details': details,
                 'token': None
             }, None)
         except Exception as ex:
@@ -244,7 +324,7 @@ class ApiController(BaseController):
 
             if path != None:
                 shutil.rmtree(path)
-
+               
             return self._format_response({
                 'success': False,
                 'message': 'Unhandled exception has occured.',
@@ -255,16 +335,27 @@ class ApiController(BaseController):
     def download(self):
         method = request.environ["REQUEST_METHOD"]
         
-        if method == 'GET' and 'code' in request.params and request.params['code'] in session:
-            response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
-            response.headers['Content-Disposition'] = 'attachment; filename="export-' + time.strftime('%Y%m%d') + '.zip"'
+        if method == 'GET' and 'code' in request.params and request.params['code'] in session:          
+            exportResult = session[request.params['code']]
             
-            filename = session[request.params['code']]
+            if 'raw' in request.params and exportResult['format'] in FORMAT_SUPPORT_EXPORT and FORMAT_SUPPORT_EXPORT[exportResult['format']]['raw'] == True and not exportResult['filename'] is None:
+                if 'mimeType' in FORMAT_SUPPORT_EXPORT[exportResult['format']]:
+                    response.headers['Content-Type'] = FORMAT_SUPPORT_EXPORT[exportResult['format']]['mimeType']
+                else:
+                    response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
 
-            with open(filename, 'r') as f:
-                shutil.copyfileobj(f, response)
+                response.headers['Content-Disposition'] = 'attachment; filename="export-' + time.strftime('%Y%m%d') + '.' + exportResult['extension'] +'"'
 
-            shutil.rmtree(os.path.dirname(filename))
+                with open(exportResult['filename'], 'r') as f:
+                    shutil.copyfileobj(f, response)
+            else:
+                response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
+                response.headers['Content-Disposition'] = 'attachment; filename="export-' + time.strftime('%Y%m%d') + '.zip"'
+
+                with open(exportResult['compressed'], 'r') as f:
+                    shutil.copyfileobj(f, response)
+
+            shutil.rmtree(exportResult['path'])
 
             del session[request.params['code']]
             session.save()
@@ -285,26 +376,21 @@ class ApiController(BaseController):
             CONFIG_SQL_TIMEOUT : int(config['dataapi.timeout']) if 'dataapi.timeout' in config else 10000
         }
 
-    def _export_partial_result(self, text, path, filename, crs, output_format):
+    def _export_partial_result(self, text, path, filename, crs, export_format):
         # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
 
-        ext = None
-
-        for i in range(0, len(FORMAT_SUPPORT_EXPORT)):
-            if FORMAT_SUPPORT_EXPORT[i] == output_format:
-                ext = '.' + EXTENSION_EXPORT[i]
-                break;
+        ext = '.' + self._getFormatExtension(export_format)
 
         f_input = os.path.join(path, filename + '.geojson')
 
         with open(f_input, "w") as text_file:
             text_file.write(text)
 
-        if output_format != FORMAT_GEOJSON:
+        if export_format != EXPORT_FORMAT_GEOJSON:
             f_output = os.path.join(path, filename + ext)
 
-            if not ogr_export(['', '-lco', 'ENCODING=UTF-8', '-t_srs', 'EPSG:' + str(crs), '-s_srs', 'EPSG:' + str(crs), '-f', output_format, f_output, f_input]):
-                raise DataException('Export operation for CRS [{crs}] and format [{output_format}] has failed'.format(crs = crs, output_format = output_format))
+            if not ogr_export(['', '-lco', 'ENCODING=UTF-8', '-t_srs', 'EPSG:' + str(crs), '-s_srs', 'EPSG:' + str(crs), '-f', export_format, f_output, f_input]):
+                raise DataException('Export operation for CRS [{crs}] and format [{export_format}] has failed'.format(crs = crs, export_format = export_format))
 
             os.remove(f_input)
 
@@ -315,14 +401,14 @@ class ApiController(BaseController):
             for f in exportedFiles:
                  compressedFile.write(os.path.join(path,f), f)
 
-    def _format_response(self, response, callback=None, output_format=FORMAT_JSON):
+    def _format_response(self, response, callback=None, output_format=QUERY_FORMAT_JSON):
         if not callback is None:
-            if output_format == FORMAT_GEOJSON:
+            if output_format == QUERY_FORMAT_GEOJSON:
                 return '{callback}({response});'.format(
                         callback = callback,
                         response = geojson.dumps(response, cls=ShapelyGeoJsonEncoder, encoding='utf-8')
                 )
-            elif output_format == FORMAT_JSON:
+            elif output_format == QUERY_FORMAT_JSON:
                 return '{callback}({response});'.format(
                         callback = callback,
                         response = json.dumps(response, cls=ShapelyJsonEncoder, encoding='utf-8')
@@ -330,7 +416,7 @@ class ApiController(BaseController):
             else:
                 raise DataException(u'Failed to format response using output format {output_format}.'.format(output_format = output_format))
 
-        if output_format == FORMAT_GEOJSON:
+        if output_format == QUERY_FORMAT_GEOJSON:
             return geojson.dumps(response, cls=ShapelyGeoJsonEncoder, encoding='utf-8')
         else:
             return json.dumps(response, cls=ShapelyJsonEncoder, encoding='utf-8')
@@ -353,3 +439,27 @@ class ApiController(BaseController):
                 response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
             else:
                 response.headers['Content-Type'] = 'application/json; charset=utf-8'
+
+
+    #https://gist.github.com/seanh/93666
+    def _format_filename(self, filename):
+        """Take a string and return a valid filename constructed from the string.
+    Uses a whitelist approach: any characters not present in valid_chars are
+    removed. Also spaces are replaced with underscores.
+     
+    Note: this method may produce invalid filenames such as ``, `.` or `..`
+    When I use this method I prepend a date string like '2009_01_15_19_46_32_'
+    and append a file extension like '.txt', so I avoid the potential of using
+    an invalid filename.
+     
+    """
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        filename = ''.join(c for c in filename if c in valid_chars)
+        filename = filename.replace(' ','_') # I don't like spaces in filenames.
+        return filename
+
+    def _getFormatExtension(self, format):
+        if format in FORMAT_SUPPORT_EXPORT:
+            return FORMAT_SUPPORT_EXPORT[format]['ext']
+
+        raise DataException('Output format {format} is not supported by the export operation.'.format(format = format))

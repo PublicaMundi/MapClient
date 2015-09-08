@@ -4,6 +4,7 @@
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
 		promise: [
+			'lib/promise/promise-6.1.0.min',
 			'https://www.promisejs.org/polyfills/promise-6.1.0.min'
 		],
         jquery: [
@@ -18,9 +19,18 @@
         ],
         URIjs: 'lib/uri',
         shared: 'app/shared',
-		api: 'api/data',
+		data_api: 'lib/data-api/data',
+        data_api_wps: 'lib/data-api/extensions/wps',
 		queries: 'demo/data-api-queries',
-        app: 'demo/data-api'
+        app: 'demo/app',
+        // WPS support
+        hogan: 'lib/hogan/hogan-3.0.2.min',
+        xml2json: 'lib/x2js/xml2json.min',
+        queryString: 'lib/query-string/query-string',
+        wpsPayloads: 'lib/zoo-client/payloads',
+        wpsPayload: 'lib/zoo-client/wps-payload',
+        utils: 'lib/zoo-client/utils',
+        zoo: 'lib/zoo-client/zoo'
     },
     shim: {
 		jquery: {
@@ -48,25 +58,48 @@
                 'proj4',
                 'ol',
                 'URIjs/URI',
-                'api',
+                'data_api',
+                'data_api_wps',
                 'queries'
             ]
         },
         queries: {
             deps: [
-				'api'
+				'data_api'
             ]
         },
-        api: {
+        data_api: {
             deps: [
-				'jquery',
                 'shared'
             ]
+        },
+        data_api_wps: {
+            deps: [
+                'data_api',
+                'zoo',
+                'wpsPayload'
+            ]
+        },
+        wpsPayloads: {
+            deps: ['hogan'],
+        },
+        wpsPayload: {
+            deps: ['wpsPayloads'],
+            exports: 'wpsPayload',
+        },
+        hogan: {
+            exports: 'Hogan',
+        },
+        xml2json: {
+          exports: "X2JS",
+        },
+        queryString: {
+            exports: 'queryString',
         }
 	}
 });
 
-define(['module'], function (module) {
+define(function () {
     "use strict";
 
     require(['jquery', 'app'], function ($, PublicaMundi) {

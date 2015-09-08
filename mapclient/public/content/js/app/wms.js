@@ -118,7 +118,11 @@
 
 				$.ajax({
 					url: getCapabilitiesUrl,
-					context: self
+					context: self,
+                    headers: {
+                        'Accept' : 'text/xml; charset=utf-8',
+                        'Content-Type': 'text/xml; charset=utf-8'
+                    }
 				}).done(function (response) {
 					var parser = new ol.format.WMSCapabilities();
 					var result = parser.read(response);

@@ -1,6 +1,6 @@
 import logging
 
-from pylons import request, response, session, tmpl_context as c
+from pylons import config, request, response, session, tmpl_context as c
 from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import jsonify
 
@@ -17,7 +17,60 @@ CHUNK_SIZE = 512
 
 class ProxyController(BaseController):
 
+    def _validateUrl(self, parts):
+        if not parts.scheme or not parts.netloc:
+            abort(409, detail = 'Invalid URL.')
+
+        if parts.port and not parts.port in [80, 8080]:
+            log.warn('Port {port} in url {url} is not allowed.'.format(port = parts.port, url = urlparse.urlunparse(parts)))
+            abort(409, detail = 'Invalid URL.')
+        
+        if not parts.query:
+            log.warn('Missing query string in url {url}.'.format(url = urlparse.urlunparse(parts)))
+            abort(409, detail = 'Invalid URL.')
+        
+        invalidQuery = False
+        query = urlparse.parse_qs(parts.query)
+        
+        for prop in query:
+            if not prop in ['service', 'request']:
+                invalidQuery = True
+                log.warn('Query string parameter [{parameter}] is not supported.'.format(parameter = prop))
+
+            if prop == 'service' and len(query[prop]) != 1:
+                invalidQuery = True
+                log.warn('Query string parameter [{parameter}] should have a single value.'.format(parameter = prop))               
+
+            if prop == 'service' and query[prop][0].lower() != 'wms':
+                invalidQuery = True
+                log.warn('Value {value} for query string parameter [{parameter}] is not supported.'.format(parameter = prop, value = query[prop]))
+
+            if prop == 'request' and len(query[prop]) != 1:
+                invalidQuery = True
+                log.warn('Query string parameter [{parameter}] should have a single value.'.format(parameter = prop))
+
+            if prop == 'request' and query[prop][0].lower() != 'getcapabilities':
+                invalidQuery = True
+                log.warn('Value {value} for query string parameter [{parameter}] is not supported.'.format(parameter = prop, value = query[prop]))
+            
+        if invalidQuery:
+            abort(409, detail = 'Invalid URL.')
+                
+        
+
+    def _isUrlInWhiteList(self, parts):
+        prefix = urlparse.urlunparse((parts[0], parts[1], parts[2], None, None, None, ))
+
+        if 'mapclient.proxy.white-list' in config and prefix in config['mapclient.proxy.white-list'].split(','):
+            return True
+
+        return False
+
     def proxy_resource(self):
+        size_limit = MAX_FILE_SIZE
+        if 'mapclient.proxy.limit.default' in config:
+            size_limit = config['mapclient.proxy.limit.default']
+
         timeout = 3
 
         if not 'url' in request.params:
@@ -33,8 +86,14 @@ class ProxyController(BaseController):
         than the maximum file size. '''
         parts = urlparse.urlsplit(url)
 
-        if not parts.scheme or not parts.netloc:
-            abort(409, detail = 'Invalid URL.')
+        allowed = self._isUrlInWhiteList(parts)
+
+        if not allowed:
+            self._validateUrl(parts)
+            log.warn('Proxy resource - {url}'.format(url = url))
+
+        if allowed and 'mapclient.proxy.limit.white-list' in config:
+            size_limit = config['mapclient.proxy.limit.white-list']
 
         try:
             method = request.environ["REQUEST_METHOD"]
@@ -48,10 +107,10 @@ class ProxyController(BaseController):
                 r = requests.get(url, stream=True, timeout = timeout)
 
             cl = r.headers['content-length']
-            if cl and int(cl) > MAX_FILE_SIZE:
-                base.abort(409, '''Content is too large to be proxied. Allowed
+            if cl and int(cl) > size_limit:
+                abort(409, '''Content is too large to be proxied. Allowed
                     file size: {allowed}, Content-Length: {actual}.'''.format(
-                    allowed=MAX_FILE_SIZE, actual=cl))
+                    allowed=size_limit, actual=cl))
 
             response.content_type = r.headers['content-type']
             response.charset = r.encoding
@@ -61,8 +120,8 @@ class ProxyController(BaseController):
                 response.body_file.write(chunk)
                 length += len(chunk)
 
-                if length >= MAX_FILE_SIZE:
-                    base.abort(409, headers={'content-encoding': ''},
+                if length >= size_limit:
+                    abort(409, headers={'content-encoding': ''},
                                detail='Content is too large to be proxied.')
 
         except requests.exceptions.HTTPError, error:

@@ -45,6 +45,48 @@
     
     members.config.path = members.config.path || '/';
 
+    PublicaMundi.Data.configure({
+        proxy: PublicaMundi.getProxyUrl(module.config().proxy),
+        endpoint: members.config.path,
+        wps: module.config().api.wps
+    });
+    
+    PublicaMundi.Data.WPS.configure({
+        debug: module.config().debug,
+        mappings : {
+            'Buffer': {
+                id: 'ogr.Buffer',
+                params: [{
+                    name: 'InputPolygon',
+                    type: 'complex',
+                    mimeType: 'text/xml'
+                }, {
+                    name :'BufferDistance',
+                    type: 'literal'
+                }],
+                result: 'Result'
+            },
+            'Voronoi': {
+                id: 'cgal.Voronoi',
+                params: [{
+                    name : 'InputPoints',
+                    type: 'complex',
+                    mimeType: 'text/xml'
+                }],
+                result: 'Result'
+            },
+            'Centroid': {
+                id: 'ogr.Centroid',
+                params: [{
+                    name : 'InputPolygon',
+                    type: 'complex',
+                    mimeType: 'text/xml'
+                }],
+                result: 'Result'
+            }
+        }
+    });
+    
     var initializeParameters = function () {
         // Set default values
         members.config.geolocation = true;
@@ -469,8 +511,7 @@
                     text: 'button.close',
                     style: 'primary'
                 }
-            },
-            endpoint: members.config.path
+            }
         });
 
         members.components.tableBrowserDialog.on('dialog:action', function(args){
@@ -565,6 +606,7 @@
             map: members.map.control,
             resources: members.resources,
             action: members.actions.export,
+            disabledFormats: members.config.export.disabledFormats,
             endpoint: members.config.path
         });
 
@@ -577,8 +619,7 @@
             },
             title: 'tool.select.title',
             map: members.map.control,
-            resources: members.resources,
-            endpoint: members.config.path
+            resources: members.resources
         });
 
         var handleToolToggle = function(args) {

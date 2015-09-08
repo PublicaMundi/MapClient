@@ -18,6 +18,7 @@
         var ﻿require = {
             config: {
                 app: {
+                    debug: {{config['mapclient.debug']}},
 					path: '{{config['mapclient.relative.path']}}',
                     proxy: {
                         path: '{{ h.url_for(controller='proxy', action='proxy_resource')}}',
@@ -53,7 +54,18 @@
                     },
 					nominatim: {
 						endpoint : '{{config['osm.api.nominatim']}}'
-					}
+					},
+                    export: {
+                        disabledFormats : {{c.exportDisabledFormats}}
+                    },
+                    api: {
+                        wps: {
+                            corsEnabled: {{config['dataapi.wps.corsEnabled']}},
+                            endpoint: '{{config['dataapi.wps.endpoint']}}',
+                            delay: {{config['dataapi.wps.delay']}}
+                        }
+                    }
+                    
                 }
             }
         };
