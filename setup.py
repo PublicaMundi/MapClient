@@ -28,6 +28,6 @@ setup(
             ('**.py', 'python', None),
             ('public/**', 'ignore', None)]},
     zip_safe=False,
-    entry_points=entry_points,,
+    entry_points=entry_points,
     scripts=['bin/pm-resource-gen'],
 )
