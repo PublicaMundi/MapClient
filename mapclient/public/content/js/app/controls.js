@@ -2438,6 +2438,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.event('dialog:close');
             this.event('dialog:action');
+            this.event('dialog:show');
 
             this.render();
         },
@@ -2525,6 +2526,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.positionInitialized = true;
                 this.moveToCenter();
             }
+            
+            this.trigger('dialog:show', {sender : this });
+
             $('#' +  this.values.element).focus();
         },
         moveTo: function(left, top) {
@@ -2960,6 +2964,115 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         execute: function() {
 			this.values.dialog.show();
 		}
+    });
+
+    PublicaMundi.Maps.PositionTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
+        initialize: function (options) {
+			var self = this;
+
+            if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
+            }
+
+            this.event('position:changed');
+
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'action.set-position.title',
+                element: this.values.element + '-dialog',
+                visible: false,
+                width: 320,
+                height: 280,
+                autofit: true,
+                buttons: {
+                    update: {
+                        text: 'control.set-position.dialog.button.move',
+                        style: 'primary'
+                    },
+                    close : {
+                        text: 'button.close',
+                        style: 'default'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+
+                    content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.x">' +
+                                 PublicaMundi.getResource('control.set-position.dialog.label.x') + '</label>');
+                    content.push('<input id="' + self.values.element + '-x" class="form-control input-md" type="number" style="width: 250px;">');
+                    content.push('</div>');
+                    
+                    content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.y">' +
+                                 PublicaMundi.getResource('control.set-position.dialog.label.y') + '</label>');
+                    content.push('<input id="' + self.values.element + '-y" class="form-control input-md" type="number" style="width: 250px;">');
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
+                    return content;
+                }
+            });
+            
+            $('#' + this.values.element + '-x, #' + this.values.element + '-y').change(function() {
+                this.value = parseFloat(this.value).toFixed(4);
+            });
+
+            this.values.dialog.on('dialog:show', function(args) {
+                var center = self.values.map.getView().getCenter();
+
+                center = ol.proj.transform(center, 'EPSG:3857' , self.values.projection);
+                
+                $('#' + self.values.element + '-x').val(center[0].toFixed(4));
+                $('#' + self.values.element + '-y').val(center[1].toFixed(4));
+            });
+            
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){
+                        case 'update':
+                            var center = self.getPosition();
+                            if(center) {
+                                center = ol.proj.transform(center, self.values.projection, 'EPSG:3857');
+                                self.values.map.getView().setCenter(center);
+                            }
+                            break;
+                        case 'close':
+                            this.hide();
+                            break;
+                    }
+            });
+
+            this.render();
+        },
+        execute: function() {
+			this.values.dialog.show();
+		},
+        getPosition: function() {
+            if(this.values.projection) {
+                var x = parseFloat(parseFloat($('#' + this.values.element + '-x').val()).toFixed(4));
+                var y = parseFloat(parseFloat($('#' + this.values.element + '-y').val()).toFixed(4));
+
+                if((!isNaN(x)) && (!isNaN(y))) {
+                    return [x,y];
+                }
+            }
+            return null;
+        },
+        setPosition: function(position) {
+            if(position) {
+                $('#' + this.values.element + '-x').val(position[0].toFixed(4));
+                $('#' + this.values.element + '-y').val(position[1].toFixed(4));
+            };
+        },
+        setProjection: function(projection) {
+            var position = this.getPosition();
+            
+            if(position) {
+                position = ol.proj.transform(position,this.values.projection , projection);
+                this.values.projection = projection;
+                
+                this.setPosition(position);
+            }
+        }
     });
 
     return PublicaMundi;

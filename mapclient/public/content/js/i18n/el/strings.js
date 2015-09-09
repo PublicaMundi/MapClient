@@ -65,5 +65,10 @@
     "tool.select.title" : "Επιλογή αντικειμένου",
     "tool.select.dialog.title" : "Στοιχεία αντικειμένου",
     
+    "action.set-position.title" : "Ορισμός θέσης",
+    "control.set-position.dialog.label.x" : "Χ",
+    "control.set-position.dialog.label.y" : "Υ",
+    "control.set-position.dialog.button.move" : "Ενημέρωση",
+    
     "button.close" : "Κλείσιμο"
 }

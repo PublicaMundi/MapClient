@@ -29,7 +29,8 @@
         actions: {
 			import: null,
             export: null,
-            upload: null
+            upload: null,
+            position: null
         },
         preview: null,
         i18n: {
@@ -316,7 +317,11 @@
         members.map.control.addControl(mousePositionControl);
 
         $('#pos_epsg').selectpicker().change(function () {
-            mousePositionControl.setProjection(ol.proj.get($('#pos_epsg option:selected').val()));
+            var projection = ol.proj.get($('#pos_epsg option:selected').val());
+            
+            mousePositionControl.setProjection(projection);
+            members.actions.position.setProjection(projection);
+            
             $('[data-id="pos_epsg"]').blur();
         });
 
@@ -555,7 +560,7 @@
             resources: members.resources,
             endpoint: members.config.path
         });
-        
+               
         members.actions.upload.on('resource:loaded', function(args) {
             members.resources.getResourceMetadata(args.format.toUpperCase(), {
                 url: args.url,
@@ -569,7 +574,16 @@
                 }
             });
         });
-        
+
+        members.actions.position = new PublicaMundi.Maps.PositionTool({
+            element: 'action-position',
+            name: 'position',
+            image: 'content/images/center-direction-w.png',
+            title: 'action.set-position.title',
+            map: members.map.control,
+            projection: ol.proj.get($('#pos_epsg option:selected').val())
+        });
+
         // UI tools
         members.tools.length = new PublicaMundi.Maps.MeasureTool({
             element: 'tool-length',
