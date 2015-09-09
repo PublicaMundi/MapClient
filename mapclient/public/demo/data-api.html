@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Data API - Internal Format</title>
+
+    <title>GEODATA.gov.gr - Data API Examples</title>
     <link rel="shortcut icon" href="../content/images/icons/geodatagovgr.ico" />
+
     <link rel="stylesheet" href="../content/css/lib/jquery-ui/current/jquery-ui.min.css" />
     <link rel="stylesheet" href="../content/css/lib/ol3/current/ol.css" />
     <link rel="stylesheet" href="../content/css/demo/default.css" />
@@ -74,14 +76,17 @@
         <div id="accordion-container">
             <div id="accordion">
                 <h3>Query
-                    <div id="query_exec" class="query-run" title="Execute selected query">
+                    <div id="query_exec" class="action-img-button query-run" title="Execute selected query">
                         <img src="../content/images/demo/run.png" alt="" class="action-button"/>
                     </div>
-                    <div id="query_export" class="query-export" title="Execute query & export results to shape file">
+                    <div id="query_export" class="action-img-button query-export" title="Execute query & export results to shape file">
                         <img src="../content/images/demo/download.png" alt="" class="action-button" />
                     </div>
-                    <div id="query_wps" class="query-wps" title="Execute wps process">
+                    <div id="query_wps" class="action-img-button query-wps" title="Execute wps process">
                         <img src="../content/images/demo/wps.png" alt="" class="action-button" />
+                    </div>
+                    <div class="progress-loader" style="display: none;">
+                        <img alt="" src="../content/images/ajax-loader.gif">
                     </div>
                     <div id="query_size" class="query-size">
                     </div>
@@ -99,7 +104,7 @@
                 </h3>
                 <div>
                     <div id="query-notes">
-                        
+
                     </div>
                     <div id="query-container">
                         <textarea id="query" rows="20" cols="60" autocomplete="off"></textarea>
@@ -114,9 +119,6 @@
                             </div>
                             <div id="query_mode_wps" class="query-mode-option" data-mode="wps">
                                 WPS
-                            </div>
-                            <div class="progress-loader" style="display: none;">
-                                <img alt="" src="../content/images/ajax-loader.gif">
                             </div>
                         </div>
                     </div>

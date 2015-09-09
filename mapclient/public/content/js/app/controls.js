@@ -5,7 +5,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         initialize: function (options) {
 			this.values.element = null;
 			this.values.visible = true;
-			
+
             if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
             }
@@ -13,7 +13,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('render');
             this.event('hide');
             this.event('show');
-            
+
             if(this.values.visible) {
 				this.show();
 			} else {
@@ -37,17 +37,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         localizeUI: function(locale) {
         }
     });
-    
+
     PublicaMundi.Maps.LayerTreeViewMode = {
 		ByGroup: 1,
 		ByOrganization: 2,
         ByFilter: 3
 	};
-	
+
     PublicaMundi.Maps.LayerTree = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
 				map: null,
 				ckan : null,
@@ -56,21 +56,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				maxLayerCount: 5,
                 bbox: null
 			});
-			
+
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
 
             this.values.contentElement = this.values.element + '-result';
-            
+
 			this.event('layer:added');
 			this.event('layer:removed');
-            
+
 			this.event('bbox:draw');
             this.event('bbox:remove');
             this.event('bbox:apply');
             this.event('bbox:cancel');
-            
+
             this.event('catalog:search');
             this.event('catalog:info');
 
@@ -83,7 +83,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 				return 0;
 			};
-			
+
 			var sortByCaption = function(a, b) {
 				if(a.caption < b.caption) {
 					return -1;
@@ -93,7 +93,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 				return 0;
 			};
-			
+
 			var sortByName = function(a, b) {
 				if(a.name < b.name) {
 					return -1;
@@ -106,14 +106,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			this.values.renderGroups = function() {
 				$('#' + this.values.contentElement).html('');
-				
+
 				var content = [];
 				var all_groups = this.values.ckan.getGroups();
                 var groups = [];
 
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     var packages = this.values.ckan.getFilteredPackages();
-                    
+
                     for(var i=0; i < all_groups.length; i++) {
                         for(var j=0; j < packages.length; j++) {
                             if($.inArray(all_groups[i].id, packages[j].groups) !== -1) {
@@ -127,16 +127,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
 
 				groups.sort(sortByTitle);
-				
+
                 if((this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) && (groups.length === 0)) {
                     $('#' + this.values.element + '-result').hide();
                 } else {
                     $('#' + this.values.element + '-result').show();
                 }
-                
+
 				for(var i = 0; i < groups.length; i++) {
                     var caption = PublicaMundi.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.getLocale()]);
-                    
+
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
 					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
@@ -150,15 +150,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			this.values.renderOrganizations = function() {
 				$('#' + this.values.contentElement).html('');
-				
+
 				var content = [];
 				var organizations = this.values.ckan.getOrganizations();
-				
+
 				organizations.sort(sortByCaption);
-				
+
 				for(var i = 0; i < organizations.length; i++) {
                     var caption = PublicaMundi.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.getLocale()]);
-                    
+
 					content.push('<li class="tree-node"><div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
 					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
@@ -169,22 +169,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 				$('#' + this.values.contentElement).append(content.join(''));
 			};
-			
-			var renderGroupOrganizations = function(element, id) {	
+
+			var renderGroupOrganizations = function(element, id) {
                 var parts = id.split('_');
                 var group_id = parts[0];
-                
+
 				var organizations = this.values.ckan.getOrganizations(), group_organizations = [], group_packages = [], packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     packages = this.values.ckan.getFilteredPackages();
                 } else {
                     packages = this.values.ckan.getPackages();
                 }
-				
+
 				for(var p = 0; p < packages.length; p++) {
 					if ($.inArray(group_id, packages[p].groups) !== -1) {
 						group_packages.push(packages[p]);
-					
+
 						if (packages[p].organization) {
 							var index = this.values.ckan.getIndexOfOrganization(packages[p].organization);
 
@@ -203,21 +203,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 				}
-			
+
 				group_organizations.sort(sortByCaption);
-				
+
 				var content = [];
-				
+
 				if(group_packages.length === 0) {
 					$('#' + id).addClass('disabled');
 					$('#' + id).attr('src', 'content/images/empty-node.png');
 					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
-				} else {						
+				} else {
 					content.push('<ul class="tree-node" style="display: none;">');
-					
+
 					for(var i = 0; i < group_organizations.length; i++) {
                         var caption = PublicaMundi.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.getLocale()]);
-                        
+
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
@@ -225,11 +225,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.getLocale()] != group_organizations[i].description[PublicaMundi.getLocale()])) {
                             content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
-						content.push('</div>');				
+						content.push('</div>');
 						content.push('</li>');
 					}
 					content.push('</ul>');
-					
+
 					$(element).append(content.join(''));
 				}
 			}
@@ -245,43 +245,43 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     packages = this.values.ckan.getPackages();
                 }
-				
+
 				for(var p = 0; p < packages.length; p++) {
 					if ((packages[p].organization === organization_id) && ($.inArray(group_id, packages[p].groups) !== -1)) {
 						organization_packages.push(packages[p]);
 					}
 				}
-			
+
 				organization_packages.sort(sortByTitle);
-				
+
 				var content = [];
-				
+
 				if(organization_packages.length === 0) {
 					$('#' + id).addClass('disabled');
 					$('#' + id).attr('src', 'content/images/empty-node.png');
 					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
-				} else {						
+				} else {
 					content.push('<ul class="tree-node" style="display: none;">');
-					
+
 					for(var j = 0; j < organization_packages.length; j++) {
 						for(var r=0; r < organization_packages[j].resources.length; r++) {
 							this.values.resources.setCatalogResourceMetadataOptions(organization_packages[j].resources[r]);
 						}
 
-						if((organization_packages[j].resources.length === 1) && 
-						   (organization_packages[j].resources[0].metadata) && 
+						if((organization_packages[j].resources.length === 1) &&
+						   (organization_packages[j].resources[0].metadata) &&
 						   (!!organization_packages[j].resources[0].metadata.extras.layer)) {
 
 							var resourceId = organization_packages[j].resources[0].id ;
 							var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
 							var selected = this.values.resources.isLayerSelected(layerId);
-                            
+
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
-                                                                                 organization_id + '_' + 
-                                                                                 organization_packages[j].id + '_' + 
-                                                                                 resourceId + '_' + 
+							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+                                                                                 organization_id + '_' +
+                                                                                 organization_packages[j].id + '_' +
+                                                                                 resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
                             if(organization_packages[j].notes) {
@@ -291,13 +291,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							content.push('</li>');
 						} else if(organization_packages[j].resources.length === 1) {
 							var resourceId = organization_packages[j].resources[0].id ;
-							
+
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix">');
 							content.push('<div style="float: left;"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +  
-                                                                                 organization_packages[j].id + '_' + 
-                                                                                 resourceId + '_' + 
+                                                                                 organization_id + '_' +
+                                                                                 organization_packages[j].id + '_' +
+                                                                                 resourceId + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
                             if(organization_packages[j].notes) {
@@ -308,8 +308,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					    } else {
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
-                                                                                 organization_id + '_' +  
+							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+                                                                                 organization_id + '_' +
                                                                                  organization_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
@@ -321,26 +321,26 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 					content.push('</ul>');
-					
+
 					$(element).append(content.join(''));
 				}
 			}
-			
+
 			var renderOrganizationGroups = function(element, id) {
                 var parts = id.split('_');
                 var organization_id = parts[0];
-                
+
 				var groups = this.values.ckan.getGroups(), packages = [], organization_groups = [], organization_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     packages = this.values.ckan.getFilteredPackages();
                 } else {
                     packages = this.values.ckan.getPackages();
                 }
-				
+
 				for(var p = 0; p < packages.length; p++) {
-					if (organization_id === packages[p].organization) {					
+					if (organization_id === packages[p].organization) {
 						organization_packages.push(packages[p]);
-					
+
 						for(var g = 0; g < packages[p].groups.length; g++) {
 							var index = this.values.ckan.getIndexOfGroup(packages[p].groups[g]);
 
@@ -359,21 +359,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 				}
-			
+
 				organization_groups.sort(sortByTitle);
-				
+
 				var content = [];
-				
+
 				if(organization_packages.length === 0) {
 					$('#' + id).addClass('disabled');
 					$('#' + id).attr('src', 'content/images/empty-node.png');
 					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
 				} else {
 					content.push('<ul class="tree-node" style="display: none;">');
-					
+
 					for(var i = 0; i < organization_groups.length; i++) {
                         var caption = PublicaMundi.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.getLocale()]);
-                        
+
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
@@ -385,59 +385,59 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('</li>');
 					}
 					content.push('</ul>');
-					
+
 					$(element).append(content.join(''));
 				}
 			}
-					
+
 			var renderGroupPackages = function(element, id) {
 				var parts = id.split('_');
 				var group_id = parts[0];
 				var organization_id = parts[1];
-                
+
 				var packages = [], group_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     packages = this.values.ckan.getFilteredPackages();
                 } else {
                     packages = this.values.ckan.getPackages();
                 }
-                
+
 				for(var p = 0; p < packages.length; p++) {
 					if ((packages[p].organization === organization_id) && ($.inArray(group_id, packages[p].groups) !== -1)) {
 						group_packages.push(packages[p]);
 					}
 				}
-			
+
 				group_packages.sort(sortByTitle);
-				
+
 				var content = [];
-				
+
 				if(group_packages.length === 0) {
 					$('#' + id).addClass('disabled');
 					$('#' + id).attr('src', 'content/images/empty-node.png');
 					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
-				} else {						
+				} else {
 					content.push('<ul class="tree-node" style="display: none;">');
-					
+
 					for(var j = 0; j < group_packages.length; j++) {
 						for(var r=0; r < group_packages[j].resources.length; r++) {
 							this.values.resources.setCatalogResourceMetadataOptions(group_packages[j].resources[r]);
 						}
 
-						if((group_packages[j].resources.length === 1) && 
-						   (group_packages[j].resources[0].metadata) && 
+						if((group_packages[j].resources.length === 1) &&
+						   (group_packages[j].resources[0].metadata) &&
 						   (!!group_packages[j].resources[0].metadata.extras.layer)) {
-							   
+
 							var resourceId = group_packages[j].resources[0].id ;
 							var layerId = resourceId + '_' + group_packages[j].resources[0].metadata.extras.layer;
                             var selected = this.values.resources.isLayerSelected(layerId);
-							
+
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
+							content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
-                                                                                 group_packages[j].id + '_' + 
-                                                                                 resourceId + '_' + 
+                                                                                 group_packages[j].id + '_' +
+                                                                                 resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
                             if(group_packages[j].notes) {
@@ -447,13 +447,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							content.push('</li>');
 						} else if(group_packages[j].resources.length === 1) {
 							var resourceId = group_packages[j].resources[0].id ;
-							
+
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
+							content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
-                                                                                 group_packages[j].id + '_' + 
-                                                                                 resourceId + '_' + 
+                                                                                 group_packages[j].id + '_' +
+                                                                                 resourceId + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
                             if(group_packages[j].notes) {
@@ -464,7 +464,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					    } else {
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' + 
+							content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
                                                                                  group_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
@@ -477,11 +477,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 					content.push('</ul>');
-					
+
 					$(element).append(content.join(''));
 				}
 			}
-			
+
 			var renderPackageResources = function(element, id) {
 				var parts = id.split('_');
                 var group_id = parts[0];
@@ -491,25 +491,25 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				var _package = this.values.ckan.getPackageById(package_id);
 
 				_package.resources.sort(sortByName);
-				
+
 				var content = [];
 
 				content.push('<ul class="tree-node" style="display: none;">');
-				
+
 				for(var i = 0; i < _package.resources.length; i++) {
 					var resource = _package.resources[i];
 
 					if(!!resource.metadata.extras.layer) {
-						   
+
 						var layerId = resource.id + '_' + resource.metadata.extras.layer;
 						var selected = this.values.resources.isLayerSelected(layerId);
-                        
+
 						content.push('<li class="tree-node tree-node-checkbox">');
 						content.push('<div class="clearfix">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                              organization_id + '_' +
                                                                              package_id + '_' +
-                                                                             resource.id + '_' + 
+                                                                             resource.id + '_' +
                                                                              this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
 						content.push('</div>');
@@ -520,7 +520,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                              organization_id + '_' +
                                                                              package_id + '_' +
-                                                                             resource.id + '_' + 
+                                                                             resource.id + '_' +
                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
 						content.push('</div>');
@@ -528,34 +528,34 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 				content.push('</ul>');
-				
+
 				$(element).append(content.join(''));
 			}
-			
+
 			var renderResourceLayers = function(element, id, layers) {
 				var parts = id.split('_');
                 var group_id = parts[0];
                 var organization_id = parts[1];
 				var package_id = parts[2];
 				var resource_id = parts[3];
-								
+
 				var resource = this.values.ckan.getResourceById(resource_id);
 
 				var content = [];
 
 				content.push('<ul class="tree-node" style="display: none;">');
-				
+
 				for(var i = 0; i < layers.length; i++) {
 					var layerId = resource_id + '_' + layers[i].name;
                     var selected = this.values.resources.isLayerSelected(layerId);
-						
+
 					content.push('<li class="tree-node tree-node-checkbox">');
 					content.push('<div class="clearfix">');
 					content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                          organization_id + '_' +
                                                                          package_id + '_' +
-                                                                         resource_id + '_' + 
-                                                                         layers[i].key + '_' + 
+                                                                         resource_id + '_' +
+                                                                         layers[i].key + '_' +
                                                                          this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 					content.push('<div class="tree-text tree-text-4">' + layers[i].title + '</div>');
 					content.push('</div>');
@@ -563,18 +563,30 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				}
 				content.push('</ul>');
-				
+
 				$(element).append(content.join(''));
 			}
-            
+
+            $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-text-1, .tree-text-2, .tree-text-3, .tree-text-4', function() {
+                var handler = $(this).parent().find('.tree-toggle');
+                if(handler.size() > 0) {
+                    handler.click();
+                } else {
+                    handler = $(this).parent().find('.node-select');
+                    if(handler.size() > 0) {
+                        handler.click();
+                    }
+                }
+            });
+
 			$('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-toggle', function() {
 				var element = this;
-							
+
 				var id = $(this).attr('id');
 				var type = $(this).data('type');
 
                 var parts = id.split('_');
-                
+
 				if($(this).hasClass('disabled')) {
 					return;
 				}
@@ -595,7 +607,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$(element).data('expanded', true);
 								$(element).removeClass('tree-node-collapse');
 								$('#' + id).closest('li').find('ul').first().fadeIn(250);
-							});							
+							});
 						} else if (type === 'organization') {
 							self.values.ckan.loadOrganizationById(parts[0]).then(function(organization) {
 								renderOrganizationGroups.call(self, $('#' + id).closest('li'), id);
@@ -609,19 +621,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);							
+								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 						} else if (type === 'organization_group') {
 								renderGroupPackages.call(self, $('#' + id).closest('li'), id);
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);							
+								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 						} else if (type === 'package') {
 								renderPackageResources.call(self, $('#' + id).closest('li'), id);
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);							
+								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 						} else if (type === 'resource') {
 								var parts = id.split('_');
 								var resource_id = parts[3];
@@ -631,15 +643,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$(this).attr('src', 'content/images/ajax-loader.gif');
 								$(this).addClass('tree-node-ajax-loader');
 								$(this).data('loading', true)
-                                
+
                                 self.values.resources.setCatalogResourceMetadataOptions(resource);
-                                
+
 								self.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
 									$(element).attr('src', 'content/images/expand-arrow.png');
 									$(element).removeClass('tree-node-ajax-loader');
-									
+
 									renderResourceLayers.call(self, $('#' + id).closest('li'), id, metadata.layers);
-									
+
 									$(element).data('loaded', true);
 									$(element).data('expanded', true);
 									$(element).data('loading', false);
@@ -650,23 +662,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 			});
-			
+
 			$('#' + this.values.element).on('click.' + this.values.contentElement, '.node-select', function() {
 				var id = $(this).data('layer');
 
 				if($(this).data('selected')) {
 					self.remove(id);
 				} else {
-					self.add(id);											
+					self.add(id);
 				}
 			});
-		
+
             $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-info', function() {
                 var id = $(this).data('id');
                 var type = $(this).data('type');
-                
+
                 var data = null;
-                
+
                 switch(type) {
                     case 'group':
                         data = self.values.ckan.getGroupById(id);
@@ -675,15 +687,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         data = self.values.ckan.getOrganizationById(id);
                         break;
                     case 'package':
-						data = self.values.ckan.getPackageById(id);   
+						data = self.values.ckan.getPackageById(id);
                         break;
-                        
+
                 }
                 if(data) {
                     self.trigger('catalog:info', { sender: self, type : type, data : data });
                 }
             });
-            
+
             if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-draw-btn', function(e) {
                     e.preventDefault();
@@ -694,12 +706,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + self.values.element  +'-box-remove').hide();
                     $('#' + self.values.element  +'-box-apply').show();
                     $('#' + self.values.element  +'-box-cancel').show();
-                    
+
                     self.trigger('bbox:draw', {});
-                    
+
                     return false;
                 });
-                
+
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-remove-btn', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -707,14 +719,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + self.values.element  +'-box-remove').hide();
                     $('#' + self.values.element  +'-box-draw').show();
                     $('#' + self.values.element  +'-search').show();
-                    
+
                     self.setQueryBoundingBox(null);
-                    
+
                     self.trigger('bbox:remove', {});
-                    
+
                     return false;
                 });
-                
+
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-apply-btn', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -724,12 +736,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + self.values.element  +'-box-draw').show();
                     $('#' + self.values.element  +'-box-remove').show();
                     $('#' + self.values.element  +'-search').show();
-                    
+
                     self.trigger('bbox:apply', {});
-                    
+
                     return false;
                 });
-                
+
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-cancel-btn', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -745,14 +757,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + self.values.element  +'-search').show();
 
                     self.trigger('bbox:cancel', {});
-                    
+
                     return false;
                 });
-                
+
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-search-btn', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                  
+
                     var bbox = null;
                     if(self.values.bbox) {
                         var geom = self.values.bbox.getGeometry().clone();
@@ -765,7 +777,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         self.refresh();
                         self.trigger('catalog:search', { packages : packages });
                     });
-                    
+
                     return false;
                 });
 
@@ -773,18 +785,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     if(e.keyCode == 13) {
                         e.preventDefault();
                         e.stopPropagation();
-                        
+
                         $('#' + self.values.element + '-search-btn').trigger('click');
                     }
                 });
             }
-            
+
 			this.refresh();
         },
         setQueryBoundingBox: function(bbox) {
             if(bbox) {
                 this.values.bbox = bbox;
-            } else {                
+            } else {
                 this.values.bbox = null;
                 $('#' + this.values.element  +'-box-remove').hide();
             }
@@ -795,17 +807,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         add: function(id) {
 			var self = this;
 			var parts = id.split('_');
-							
+
 			if((parts.length > 1) && (!$('[data-layer="' + id +'"]').first().data('loading'))) {
                 var resource = self.values.ckan.getResourceById(parts[0]);
 
 				var layer = parts.splice(1).join('_');
-						
+
 				if(this.values.resources.getLayerCount() < this.values.maxLayerCount) {
 					$('[data-layer="' + id +'"]').data('loading', true)
 					$('[data-layer="' + id +'"]').attr('src', 'content/images/ajax-loader.gif');
 					$('[data-layer="' + id +'"]').addClass('tree-node-ajax-loader');
-							
+
 					this.values.resources.setCatalogResourceMetadataOptions(resource);
 
 					this.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
@@ -815,15 +827,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						$('[data-layer="' + id +'"]').attr('src', 'content/images/checked.png');
 
 						self.values.resources.createLayer(self.values.map, metadata, id);
-					
+
 						self.trigger('layer:added', {id: id});
-					});	
+					});
 				}
 			}
 		},
 		remove: function(id) {
 			var parts = id.split('_');
-				
+
 			if(parts.length > 1) {
 				if($('[data-layer="' + id +'"]').size() > 0) {
 					if(($('[data-layer="' + id +'"]').first().data('loading')) || (!$('[data-layer="' + id +'"]').data('selected'))) {
@@ -840,7 +852,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		},
         render: function() {
             var content = [];
-            
+
             if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                 if($('#' + this.values.element + '-result').size() === 1) {
                     $('#' + this.values.element + '-result').html('');
@@ -848,20 +860,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + this.values.element).html('');
 
                     content.push('<div class="clearfix" id="' + this.values.element + '-form" style="padding: 8px 0px 0px 5px; position: absolute;">');
-                    
+
                     content.push('<form class="form-horizontal">');
-                    
+
                     content.push('<div class="form-group">');
                     content.push('<div style="float: left; padding-left: 15px; width: 19em;">');
-                    content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.getResource('control.tree.search.prompt') + 
+                    content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.getResource('control.tree.search.prompt') +
                                  '" data-i18n-id="control.tree.search.prompt" data-i18n-type="attribute" data-i18n-name="placeholder" class="form-control input-md" type="text">');
                     content.push('</div>');
                     content.push('</div>');
 
-                    
+
                     content.push('<div class="clearfix">');
                     content.push('<div style="float: left; padding-right: 10px;"  id="' + this.values.element + '-box-draw">');
-                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.draw" ' + 
+                    content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.draw" ' +
                                  'data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.draw') + '"><img src="content/images/edit-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-remove">');
@@ -879,24 +891,24 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('</form>');
-                    
+
                     content.push('</div>');
-                    
+
                     content.push('<div id="' + this.values.element + '-result" class="clearfix layer-tree-search-result">');
                     content.push('</div>');
-                    
+
                     $('#' + this.values.element).html(content.join(''));
                     $('#' + this.values.element).find('a').tooltip();
                 }
             } else {
                 $('#' + this.values.element).html('');
-                
+
                 content.push('<div class="clearfix" id="' + this.values.element + '-result">');
                 content.push('</div>');
-                
+
                 $('#' + this.values.element).html(content.join(''));
             }
-                            
+
 			if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByGroup) {
 				this.values.renderGroups.call(this);
 			} else if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByOrganization) {
@@ -912,43 +924,43 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
         }
     });
-    
+
     var _LayerSelectionAddItem = function(id, title, legend) {
 		var self = this;
-		
+
 		var content = [];
 		var safeId = id.replace(/[^\w\s]/gi, '');
-		
+
 		content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
-		
-		content.push('<div style="float: left; width: 24px;">');
+
+		content.push('<div class="legend-container">');
 		if(legend) {
-			content.push('<img id="' + safeId + '-legend-img" src="' + legend + '" alt="" class="legend" />');
+			content.push('<img id="' + safeId + '-legend-img" src="' + legend + '" alt=" " class="legend" />');
 		} else {
 			content.push('&nbsp;');
 		}
 		content.push('</div>');
-		
+
 		content.push('<div style="float: left;">');
-		
+
 		content.push('<div class="clearfix" style="padding-bottom: 3px;">');
 		content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
 		content.push('<div class="selected-layer-text">' + title + '</div>');
 		content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
 		content.push('</div>');
-		
+
 		content.push('<div class="clearfix">');
 		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
 		content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
 		content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
 		content.push('</div>');
-		
+
 		content.push('</div>');
 
 		content.push('</div>');
-		
+
 		$('#' + this.values.element).prepend(content.join(''));
-		
+
 		$('#' + safeId + '-legend-img').load(function() {
             var nWidth = $(this).prop('naturalWidth');
             var sWidth = $(this).width();
@@ -966,25 +978,25 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				});
             }
         });
-		
+
 		$('.selected-layer-opacity-label').tooltip();
-					
+
 		this.values.updateActions();
-			
-		this.trigger('layer:added', {id: id});	
+
+		this.trigger('layer:added', {id: id});
 	};
-	
+
     PublicaMundi.Maps.LayerSelection = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
 				map: null,
 				ckan : null,
 				resources: null,
 				maxLayerCount: 5
 			});
-			
+
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
@@ -993,7 +1005,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('layer:removed');
             this.event('layer:up');
             this.event('layer:down');
-            
+
             this.event('layer:opacity:changed');
 
             this.values.updateActions = function() {
@@ -1022,45 +1034,45 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				});
 			}
-			
+
 			$('#' + this.values.element).on('click.' + this.values.element, '.action', function() {
 				var parent = $(this).closest('.selected-layer');
-				
+
 				var id = parent.data('id');
 				var action =  $(this).data('action');
 
-				switch(action){ 
+				switch(action){
 					case 'remove':
 						self.remove(id);
 						break;
 					case 'up':
-						if(self.values.resources.moveLayerUp(self.values.map, id)) {						
+						if(self.values.resources.moveLayerUp(self.values.map, id)) {
 							parent.prevAll().first().insertAfter(parent);
 							self.values.updateActions();
-							
+
 							self.trigger('layer:up');
 						}
 						break;
 					case 'down':
-						if(self.values.resources.moveLayerDown(self.values.map, id)) {						
+						if(self.values.resources.moveLayerDown(self.values.map, id)) {
 							parent.nextAll().first().insertBefore(parent);
 							self.values.updateActions();
-						
+
 							self.trigger('layer:down');
 						}
 						break;
 				}
 
 			});
-			
+
 			$('#' + this.values.element).on('change.' + this.values.element, '[type="range"]', function() {
 				var id = $(this).closest('.selected-layer').data('id');
-				
+
 				self.values.resources.setLayerOpacity(id, $(this).val());
-				
+
 				self.trigger('layer:opacity:changed', { id: id, opacity : $(this).val()});
 			});
-			
+
 			this.values.dialog = new PublicaMundi.Maps.Dialog({
                 title: '',
                 element: this.values.element + '-dialog-legend',
@@ -1076,16 +1088,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 renderContent: function() {
                     var content = [];
-                    
+
                     content.push('<div class="clearfix" style="max-height: 350px; overflow: auto;">');
 					content.push('<img id="' + self.values.element + '-dialog-legend-img" src="" alt="" />');
                     content.push('</div>');
                     return content;
                 }
             });
-            
+
             this.values.dialog.on('dialog:action', function(args){
-                    switch(args.action){ 
+                    switch(args.action){
                         case 'close':
                             this.hide();
                             break;
@@ -1096,24 +1108,24 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element).html('');
 		},
 		add: function(id, metadata) {
-			if(this.values.resources.getLayerCount() >= this.values.maxLayerCount) {
+			if(this.values.resources.getLayerCount() > this.values.maxLayerCount) {
 				return false;
 			}
-			
+
 			var self = this, _resource, _package;
 
 			var parts = id.split('_');
 			var layer = parts.splice(1).join('_');
-			
+
 			var _resource = this.values.ckan.getResourceById(parts[0]);
 
 			if(_resource) {
 				_package = this.values.ckan.getPackageById(_resource.package);
 				this.values.resources.setCatalogResourceMetadataOptions(_resource);
-				
+
 				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {
 					var title, legend;
-			
+
 					for(var i=0; i<metadata.layers.length;i++) {
 						if(metadata.layers[i].key == layer) {
 							title = metadata.layers[i].title;
@@ -1122,35 +1134,37 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 					// Override title with package / resource
-					if((_package.resources.length === 1) && 
-					   (_package.resources[0].metadata) && 
+					if((_package.resources.length === 1) &&
+					   (_package.resources[0].metadata) &&
 					   (!!_package.resources[0].metadata.extras.layer)) {
 						title = _package.title
 					} else if(!!_resource.metadata.extras.layer) {
 						title = _resource.name;
 					}
-							   
-					_LayerSelectionAddItem.call(self, id, title, legend);				
+
+					_LayerSelectionAddItem.call(self, id, title, legend);
+
+                    return true;
 				});
-				
+
 				return true;
 			} else if(metadata) {
 				for(var i=0, count=metadata.layers.length; i<count; i++) {
 					if(metadata.layers[i].key == layer) {
 						_LayerSelectionAddItem.call(self, id, metadata.layers[i].title, metadata.layers[i].legend);
-						
+
 						return true;
 					}
 				}
 			}
-			
+
 			return false;
 		},
 		remove: function(id) {
 			$('#' + this.values.element).find('[data-id="' + id  +'"]').remove();
 
 			this.values.updateActions();
-			
+
 			this.trigger('layer:removed', { id: id });
 		}
 	});
@@ -1158,7 +1172,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     PublicaMundi.Maps.Tool = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
                 name: null,
 				active: false,
@@ -1169,15 +1183,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 title: null
 			});
-			
+
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.actions = [];
-            
+
             this.event('tool:toggle');
-            
+
             this.render();
         },
         getName: function() {
@@ -1192,7 +1206,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 $('#' + this.values.element).
                     find('a').addClass('tool-toggle-selected').removeClass('btn-default').addClass('btn-primary').
                     find('img').attr('src', this.values.images.enabled);
-                
+
                 for(var i=0; i< this.values.actions.length; i++) {
                     this.values.actions[i].show();
                 }
@@ -1200,7 +1214,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 $('#' + this.values.element).
                     find('a').removeClass('tool-toggle-selected').removeClass('btn-primary').addClass('btn-default').
                     find('img').attr('src', this.values.images.disabled);
-                
+
                 for(var i=0; i< this.values.actions.length; i++) {
                     this.values.actions[i].hide();
                 }
@@ -1208,7 +1222,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         getEnabled: function() {
             return this.values.enabled;
-        }, 
+        },
         setEnabled: function(enabled) {
             this.values.enabled = enabled;
             if(!this.values.enabled) {
@@ -1217,32 +1231,32 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         render: function() {
             var self = this;
-            
+
             var content = [];
             content.push('<a data-action="' + this.values.name + '" class="tool-toggle btn btn-default" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + (this.values.active ? this.values.images.enabled : this.values.images.disabled ) + '">');
             content.push('</a>');
-            
+
             $('#' + this.values.element).html(content.join(''));
-            
+
             $('#' + this.values.element).find('a').tooltip();
-            
+
             $('#' + this.values.element).find('a').click(function() {
                 self.setActive(!self.values.active);
                 self.trigger('tool:toggle', { name : self.values.name, active : self.getActive() });
             });
-            
+
             if(!this.values.visible) {
                 $('#' + this.values.element).hide();
             }
         }
     });
-    
+
     PublicaMundi.Maps.MeasureToolType = {
         Length: 1,
         Area: 2
     };
-    
+
     PublicaMundi.Maps.MeasureTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
         initialize: function (options) {
 			var self = this;
@@ -1250,20 +1264,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.map = null;
             this.values.overlay = null;
             this.values.interaction = null;
-            
+
             this.values.type = PublicaMundi.Maps.MeasureToolType.Length
-            
+
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
             this.values.feature = null;
-            
+
             this.event('measure:end');
 
             // Tooltip
             var tooltip;
             var tooltipElement;
-            
+
             var formatMeasurement = function() {
                 if(!self.values.feature) {
                     return null;
@@ -1273,17 +1287,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 var wgs84Sphere = new ol.Sphere(6378137);
 
                 var geom = self.values.feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326');
-                
+
                 if(self.values.type === PublicaMundi.Maps.MeasureToolType.Length) {
                     var coordinates = geom.getCoordinates();
-                    
+
                     var length = 0;
                     for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
                       var c1 = coordinates[i];
                       var c2 = coordinates[i + 1];
                       length += wgs84Sphere.haversineDistance(c1, c2);
                     }
-    
+
                     var length = Math.round(length * 100) / 100;
                     var output;
                     if (length > 100) {
@@ -1295,7 +1309,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     var coordinates = geom.getLinearRing(0).getCoordinates();
                     var area = Math.abs(wgs84Sphere.geodesicArea(coordinates));
-                    
+
                     var output;
                     if (area > 10000) {
                         output = (Math.round(area / 1000000 * 100) / 100) + ' ' + 'km<sup>2</sup>';
@@ -1305,10 +1319,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     return output;
                 }
             };
-            
+
             this.values.reset = function() {
                 self.values.overlay.getFeatures().clear();
-                
+
                 if (tooltipElement) {
                     tooltipElement.parentNode.removeChild(tooltipElement);
                 }
@@ -1319,19 +1333,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             var createTooltip = function() {
                 self.values.reset();
-                
+
                 tooltipElement = document.createElement('div');
                 tooltipElement.className = 'mt-tooltip mt-tooltip-measure';
-                
+
                 tooltip = new ol.Overlay({
                     element: tooltipElement,
                     offset: [0, -15],
                     positioning: 'bottom-center'
                 });
-                
+
                 self.values.map.addOverlay(tooltip);
             };
-            
+
             this.values.handler = function(e) {
                 if (e.dragging) {
                     return;
@@ -1341,7 +1355,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if (self.values.feature) {
                     var geom = (self.values.feature.getGeometry());
                     var output = formatMeasurement(geom);
-                    
+
                     if(self.values.type === PublicaMundi.Maps.MeasureToolType.Area) {
                         tooltipCoord = geom.getInteriorPoint().getCoordinates();
                     } else {
@@ -1351,7 +1365,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     tooltip.setPosition(tooltipCoord);
                 }
             };
-            
+
             // Feature overlay
             this.values.overlay = new ol.FeatureOverlay({
                 style: [
@@ -1368,9 +1382,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
             this.values.overlay.setMap(this.values.map);
 
-            // Draw polygon 
+            // Draw polygon
             var type = (this.values.type === PublicaMundi.Maps.MeasureToolType.Length ? 'LineString' : 'Polygon');
-            
+
             this.values.interaction = new ol.interaction.Draw({
                 features: this.values.overlay.getFeatures(),
                 type: type,
@@ -1408,11 +1422,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     self.values.overlay.setMap(null);
                 }
             });
-            
+
             this.values.interaction.on('drawstart', function (e) {
                 createTooltip();
                 self.values.feature = e.feature;
-                
+
                 self.values.overlay.getFeatures().clear();
             });
 
@@ -1422,7 +1436,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     self.values.feature = null;
                 }
-                
+
                 tooltipElement.className = 'mt-tooltip mt-tooltip-static';
                 self.values.feature = null;
                 tooltipElement = null;
@@ -1432,13 +1446,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.map.addInteraction(this.values.interaction);
             this.values.interaction.setActive(false);
-            
+
             this.render();
         },
         setActive: function(active) {
             PublicaMundi.Maps.Tool.prototype.setActive.apply(this, [active]);
-            
-            if(this.values.active) {                
+
+            if(this.values.active) {
                 if(this.values.interaction) {
                     this.values.interaction.setActive(true);
                     this.values.map.on('pointermove', this.values.handler);
@@ -1447,7 +1461,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if(this.values.interaction) {
                     this.values.interaction.setActive(false);
                     this.values.map.un('pointermove', this.values.handler);
-                    
+
                     this.values.reset();
                 }
             }
@@ -1470,10 +1484,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         this.values.dialog.show();
         this.values.dialog.moveToCenter();
     };
-    
+
     var _ExportDialogActionExportHandler = function(e) {
         this.values.dialog.hide();
-        
+
         if(this.values.action.isBusy()) {
             return;
         };
@@ -1502,21 +1516,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             if(quyarable.length > 0) {
                 this.values.action.suspendUI();
-                                        
+
                 var query = this.values.query;
                 query.
                     reset().
                     crs($('#' + this.values.element + '-crs').val()).
                     format($('#' + this.values.element + '-format').val());
-                
+
                 var files= [];
                 for(var i=0; i<quyarable.length; i++) {
                     files.push(quyarable[i].title);
-                    
+
                     query.resource(quyarable[i].table).
                           contains(
                             polygon, {
-                                resource: quyarable[i].table, 
+                                resource: quyarable[i].table,
                                 name : 'the_geom'
                             });
                     if(i < (quyarable.length-1)) {
@@ -1525,29 +1539,29 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 query.export({
                     context: this,
-                    success: _DownloadExportFile, 
+                    success: _DownloadExportFile,
                     files: files
                 });
             }
         }
     };
-    
+
     var _DownloadExportFile = function(data, execution) {
         this.values.action.resumeUI();
 
         if(data.success) {
             jQuery('#export-download-frame').remove();
-            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + this.values.endpoint + 'api/download?code=' + data.code + '"></iframe></div>');
+            jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + this.values.endpoint + 'api/download/' + data.code + '"></iframe></div>');
         }
     }
-    
+
     PublicaMundi.Maps.ExportTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
         initialize: function (options) {
 			var self = this;
 
             this.values.map = null;
             this.values.disabledFormats = [];
-                        
+
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
@@ -1555,11 +1569,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('feature:change');
 
             this.values.overlay = null;
-            this.values.interaction = null;            
+            this.values.interaction = null;
             this.values.feature = null;
-            
+
             this.values.crs = PublicaMundi.Maps.CRS.Mercator;
-            
+
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
 
             this.values.formats = [{
@@ -1592,10 +1606,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             // Actions
             if(this.values.action) {
                 this.values.actions.push(this.values.action);
-                
+
                 this.values.action.on('action:execute', _ExportActionHandler, this);
             }
-            
+
             // Dialogs
             this.values.dialog = new PublicaMundi.Maps.Dialog({
                 title: 'control.export.dialog.title',
@@ -1616,9 +1630,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 renderContent: function() {
                     var content = [];
-                    
+
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' + 
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' +
                                  PublicaMundi.getResource('control.export.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
@@ -1629,7 +1643,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('<div class="clearfix">');
-                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.format">' + 
+                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.format">' +
                                  PublicaMundi.getResource('control.export.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" class="selectpicker" data-width="250px">');
 
@@ -1649,7 +1663,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     return content;
                 }
             });
-            
+
             $('#' + this.values.element + '-crs').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-crs"]').blur();
             });
@@ -1657,9 +1671,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element + '-format').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-format"]').blur();
             });
-                                
+
             this.values.dialog.on('dialog:action', function(args){
-                    switch(args.action){ 
+                    switch(args.action){
                         case 'close':
                             this.hide();
                             break;
@@ -1669,7 +1683,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             break;
                     }
             });
-            
+
             // Feature overlay
             this.values.overlay = new ol.FeatureOverlay({
                 style: [
@@ -1685,8 +1699,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 ]
             });
             this.values.overlay.setMap(this.values.map);
-        
-            // Draw polygon   
+
+            // Draw polygon
             this.values.interaction = new ol.interaction.Draw({
                 features: this.values.overlay.getFeatures(),
                 type: 'Polygon',
@@ -1723,7 +1737,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     self.values.overlay.setMap(null);
                 }
             });
-            
+
             this.values.interaction.on('drawstart', function (e) {
                 self.values.overlay.getFeatures().clear();
                 self.values.feature = null;
@@ -1735,19 +1749,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     self.values.feature = null;
                 }
-                
+
                 self.trigger('feature:change', { feature: e.feature });
             });
-            
+
             this.values.map.addInteraction(this.values.interaction);
             this.values.interaction.setActive(false);
-        
+
             this.render();
         },
         setActive: function(active) {
             PublicaMundi.Maps.Tool.prototype.setActive.apply(this, [active]);
-            
-            if(this.values.active) {                
+
+            if(this.values.active) {
                 if(this.values.interaction) {
                     this.values.interaction.setActive(true);
                 }
@@ -1766,17 +1780,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if((this.isBusy()) || (!this.getActive())) {
             return;
         }
-        
+
         var id = 1;
 
         // Clear selection
         this.clearFeatureFocus();
         this.values.overlay.getFeatures().clear();
         this.values.features = new ol.Collection();
-                
+
         // Get external features
         var externalFeatures = [];
-        
+
         this.values.map.forEachFeatureAtPixel(e.pixel,
             function(feature, layer) {
                 if((layer) && (layer instanceof ol.layer.Vector)) {
@@ -1788,7 +1802,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             },
             this
         );
-        
+
         // Get queryable resources
         var layers = this.values.resources.getSelectedLayers();
         var resources = this.values.resources.getQueryableResources();
@@ -1808,22 +1822,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
         // Search remote resources
         var point = {
-            type: 'Point', 
+            type: 'Point',
             coordinates: e.coordinate
         };
-        
+
         if(quyarable.length > 0) {
             this.suspendUI();
-        
-            var query = this.values.query;        
+
+            var query = this.values.query;
             query.reset().format(PublicaMundi.Data.Format.GeoJSON)
-                
+
             for(var i=0; i<quyarable.length; i++) {
                 query.resource(quyarable[i].table).
                       distanceLessOrEqual(
-                        point, 
+                        point,
                         {
-                            resource: quyarable[i].table, 
+                            resource: quyarable[i].table,
                             name : 'the_geom'
                         },
                         this.values.map.getView().getResolution() * this.values.buffer);
@@ -1836,7 +1850,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 success: function(response) {
                     if(response.success) {
                         var format = new ol.format.GeoJSON();
-                        
+
                         for(var i=0; i< response.data.length; i++) {
                             if(response.data[i].features.length > 0) {
                                 // Make feature id unique
@@ -1852,20 +1866,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 this.values.features.extend(features);
                             }
                         }
-                        
+
                         // Append external features
                         if(externalFeatures.length > 0) {
                             this.values.features.extend(externalFeatures);
                         }
-                        
+
                         this.values.overlay.setFeatures(this.values.features);
-                        
+
                         this.setFeatureFocus(0);
-                        
+
                         this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
                     }
                     this.resumeUI();
-                }, 
+                },
                 context : this
             });
         } else if(externalFeatures.length > 0) {
@@ -1873,11 +1887,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.overlay.setFeatures(this.values.features);
 
             this.setFeatureFocus(0);
-            
+
             this.trigger('selection:changed', { sender : this, features : this.getFeatures() });
         }
     };
-    
+
     PublicaMundi.Maps.SelectTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
         initialize: function (options) {
 			var self = this;
@@ -1888,13 +1902,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 endpoint: null,
                 buffer: 3
 			});
-            
+
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
 
             this.event('selection:changed');
-            
+
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
             this.values.features = new ol.Collection;
             this.values.focus = null;
@@ -1903,7 +1917,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.buffer = 2;
             }
             this.values.tooltip = null;
-            
+
             // Styles
             this.values.styles = {
                 select : [
@@ -1955,7 +1969,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     })
                 ]
             };
-            
+
             // Feature overlay
             this.values.overlay = new ol.FeatureOverlay({
                 style: this.values.styles.select
@@ -1965,8 +1979,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         setActive: function(active) {
             PublicaMundi.Maps.Tool.prototype.setActive.apply(this, [active]);
-            
-            if(this.values.active) {    
+
+            if(this.values.active) {
                 this.values.map.on('click', _SelectToolClickHandler, this);
                 this.values.overlay.setMap(this.values.map);
             } else {
@@ -2012,29 +2026,29 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     this.clearFeatureFocus();
                 }
             }
-           
+
             var features = this.getFeatures();
             if(features.length == 0) {
                 return false;
             }
-            
+
             if(index < 0 ) {
                 index = 0;
             }
             if(index >= features.length) {
                 index = features.length - 1;
-            }                           
-                    
+            }
+
             var feature = features[index];
             var geom = feature.getGeometry();
-            
+
             this.values.focus = {
                 feature : feature,
                 index : index
             };
-            
+
             feature.setStyle(this.values.styles.focus);
-            
+
             var content = [];
 
             content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
@@ -2048,51 +2062,60 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
             content.push('</div>');
             content.push('<div class="popover-content">');
-            
+
             content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table"><table style="width: 100%;">');
             var keys = feature.getKeys();
             for (var i = 0; i < keys.length; i++) {
                 if (keys[i] != feature.getGeometryName()) {
-                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' + 
+                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' +
                     (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
                 }
             }
             content.push('</div></table></div>')
-            
+
             content.push('</div>');
             content.push('</div>');
-            
+
             $('body').append(content.join(''));
-            
+
             if(features.length > 1) {
                 $('#' + this.values.element + '-prev').click(function() {
                     return self.setFeatureFocusPrevious();
                 });
-                
+
                 $('#' + this.values.element + '-next').click(function() {
                     return self.setFeatureFocusNext();
                 });
             }
-            
+
             var element = $('#' + this.values.element + '-popup');
             this.values.tooltip = new ol.Overlay({
                 element: element[0],
                 offset: [-element.outerWidth() / 2, -element.outerHeight()],
                 positioning: 'bottom-center'
             });
-            
+
             this.values.map.addOverlay(this.values.tooltip);
-            
+
             var c1, c2, center;
             if (geom instanceof ol.geom.Polygon) {
                 center = geom.getInteriorPoint().getCoordinates();
+            } else if (geom instanceof ol.geom.MultiPolygon) {
+                center = geom.getInteriorPoints().getFirstCoordinate();
             } else if (geom instanceof ol.geom.Point) {
                 center = geom.getCoordinates();
             } else {
-                var coords = geom.getCoordinates();
+                var singleGeom = geom;
+                if(geom instanceof ol.geom.MultiLineString) {
+                    var middle= Math.floor(geom.getLineStrings().length / 2);
+                    singleGeom = geom.getLineString(middle);
+
+                }
+
+                var coords = singleGeom.getCoordinates();
                 var middle= Math.floor(coords.length / 2);
 
-                center = [0, 0];                    
+                center = [0, 0];
                 c1 = coords[middle-1];
                 c2 = coords[middle];
 
@@ -2119,7 +2142,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             if(features.length == 0) {
                 return false;
             }
-            
+
             if((this.values.focus) && (this.values.focus.index < (features.length -2))) {
                 return this.setFeatureFocus(this.values.focus.index + 1);
             } else {
@@ -2136,17 +2159,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 map: null,
                 endpoint: null
 			});
-            
+
 			if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
 				PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
 			}
 
             this.event('selection:changed');
 
-            this.values.selection = null;            
+            this.values.selection = null;
             this.values.feature = null;
             this.values.tooltip = null;
-            
+
             this.values.overlay = new ol.FeatureOverlay({
                 style: [
                     new ol.style.Style({
@@ -2174,7 +2197,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 ]
             });
             this.values.overlay.setMap(this.values.map);
-            
+
 			var nominatim = new Bloodhound({
 				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('display_name'),
 				queryTokenizer: Bloodhound.tokenizers.whitespace,
@@ -2186,10 +2209,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var addTooltip = function(selection) {
 				self.removeTooltip();
-			   
+
 			   if((selection) && (selection.geojson)) {
 					self.values.selection = selection;
-					
+
 				    var drawFeature = false;
 				    var extent = null;
 
@@ -2199,7 +2222,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						featureProjection: PublicaMundi.Maps.CRS.Mercator
 					});
 					self.values.feature = new ol.Feature({ name: 'selection', geometry: geom });
-					
+
 					var c1, c2, center, zoom;
 					if (geom instanceof ol.geom.Polygon) {
 						drawFeature = true;
@@ -2208,7 +2231,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						extent = geom.getExtent();
 					} else if (geom instanceof ol.geom.MultiPolygon) {
 						drawFeature = true;
-												
+
 						center = geom.getInteriorPoints().getFirstCoordinate();
 						extent = geom.getExtent();
 					} else if (geom instanceof ol.geom.Point) {
@@ -2217,19 +2240,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						var singleGeom = geom;
 						if(geom instanceof ol.geom.MultiLineString) {
 							drawFeature = true;
-							
+
 							var middle= Math.floor(geom.getLineStrings().length / 2);
 							singleGeom = geom.getLineString(middle);
-							
+
 							extent = geom.getExtent();
 						}
-						
+
 						drawFeature = true;
-						
+
 						var coords = singleGeom.getCoordinates();
 						var middle= Math.floor(coords.length / 2);
 
-						center = [0, 0];                    
+						center = [0, 0];
 						c1 = coords[middle-1];
 						c2 = coords[middle];
 
@@ -2245,30 +2268,36 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 					content.push('<div id="' + self.values.element + '-popup" class="popover top text-search ' + (drawFeature ? 'tooltip-popup-inactive' : 'tooltip-popup') +
 								 '" tabIndex="1">');
-					
+
 					content.push('<div class="arrow"></div>');
-										
+
 					content.push('<div class="popover-content">');
-					
+
 					content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table">');
-					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.display_name + '</td></tr></table>');
+					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.display_name + '</td>');
+                    content.push('<td id="' + self.values.element + '-popup-close" style="width: 18px; vertical-align: top; padding-left: 6px;">');
+                    content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span></td>');
+                    content.push('</tr></table>');
 					content.push('</div></div>');
 
 					content.push('</div>');
-					
+
 					content.push('</div>');
-					
+
 					$('body').append(content.join(''));
-								
+                    $('#' + self.values.element + '-popup-close').click(function() {
+                        self.removeTooltip();
+                    });
+
 					var element = $('#' + self.values.element + '-popup');
 					self.values.tooltip = new ol.Overlay({
 						element: element[0],
 						offset: [-element.outerWidth() / 2, -element.outerHeight()],
 						positioning: 'bottom-center'
 					});
-					
+
 					self.values.map.addOverlay(self.values.tooltip);
-				
+
 					self.values.tooltip.setPosition(center);
 
 					if(extent) {
@@ -2279,12 +2308,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						self.values.map.getView().setCenter(center);
 						self.values.map.getView().setZoom(17);
 					}
-					
+
 
 					$('#' + self.values.element + '-popup').focus();
 				}
 			};
-			
+
 			var selectLocationSearchResult = function(e, selection) {
 				self.removeTooltip();
 
@@ -2294,7 +2323,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					self.trigger('selection:changed', { selection : selection });
 				}
 			};
-			
+
 			$('#' + this.values.element).typeahead({
 				hint: true,
 				highlight: true,
@@ -2314,11 +2343,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			if(this.values.overlay) {
 				this.values.overlay.getFeatures().clear();
 			}
-			
+
 			if(this.values.tooltip) {
 				this.values.map.removeOverlay(this.values.tooltip);
 			}
-			
+
 			this.values.selection = null;
 			this.values.feature = null;
 			this.values.tooltip = null;
@@ -2328,35 +2357,35 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     PublicaMundi.Maps.Action = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
                 name: null,
                 image: '',
                 title: null,
                 visible: false
 			});
-			
+
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.event('action:execute');
-            
+
             this.render();
         },
         render: function() {
             var self = this;
-            
+
             var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title + 
+            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title +
 					     '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + this.values.image + '">');
             content.push('</a>');
-            
+
             $('#' + this.values.element).addClass('tool-wapper-action').html(content.join(''));
-            
+
             $('#' + this.values.element).find('a').tooltip();
-            
+
             $('#' + this.values.element).find('a').click(function() {
                 if(typeof self.execute === 'function') {
                     self.execute();
@@ -2364,7 +2393,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     self.trigger('action:execute', { name : self.values.name });
                 }
             });
-            
+
             if(!this.values.visible) {
                 $('#' + this.values.element).hide();
             }
@@ -2384,11 +2413,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     });
 
 	var _zIndex = 2000;
-	
+
     PublicaMundi.Maps.Dialog = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
                 image: '',
                 title: null,
@@ -2400,89 +2429,89 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 closeOnEscape: true,
                 autofit: false
 			});
-			
+
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.positionInitialized = false;
-            
+
             this.event('dialog:close');
             this.event('dialog:action');
-            
+
             this.render();
         },
         render: function() {
             var self = this;
-            
+
             $('#' + this.values.element).remove();
-            
+
             var content = [];
             _zIndex++;
-            
+
             content.push('<div id="' + this.values.element + '" class="modal-dialog" style="z-index: ' + _zIndex+ '; width: ' + (this.values.width || 600 ) + 'px; outline: none; position: absolute;" tabIndex="1">');
             content.push('<div class="modal-content">');
-            
+
             content.push('<div class="modal-header">');
             content.push('<button id="' + this.values.element + '-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>');
             content.push('<h4 class="modal-title" data-i18n-id="' + this.values.title + '">' + PublicaMundi.getResource(this.values.title) + '</h4>');
             content.push('</div>');
-            
-            content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) + 
+
+            content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) +
                          'px; overflow: ' + (this.values.autofit ? 'unset': 'auto') + '" >');
             if(typeof this.values.renderContent === 'function'){
                 content = content.concat(this.values.renderContent());
             }
             content.push('</div>');
-            
+
             content.push('<div class="modal-footer">');
-            
+
             if(typeof this.values.renderFooter === 'function'){
                 content = content.concat(this.values.renderFooter());
             }
             if(this.values.buttons) {
                 for(var action in this.values.buttons) {
                     this.values.buttons[action].style = this.values.buttons[action].style || 'default';
-                    
-                    content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-i18n-id="' + this.values.buttons[action].text + 
-                                 '" data-action="' + action + 
+
+                    content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-i18n-id="' + this.values.buttons[action].text +
+                                 '" data-action="' + action +
                                  '">' + PublicaMundi.getResource(this.values.buttons[action].text) + '</button>');
                 }
             }
             content.push('</div>');
-            
+
             content.push('</div>');
             content.push('</div>');
             content.push('</div>');
-            
+
             var target = $('.dialog-container').first();
             if(target.length === 0) {
                 throw 'Dialog container does not exist.';
             } else {
                 target.append(content.join(''));
             }
-            
+
             $('#' + this.values.element).draggable({
                 handle : '.modal-header',
                 containment: 'parent'
             });
-            
+
             $('#' + this.values.element).on('click.' + this.values.element, 'button', function() {
                 self.trigger('dialog:action', { sender : self, action : $(this).data('action') });
             });
-            
+
             $('#' +  this.values.element + '-close').click(function(e) {
                 self.hide();
                 self.trigger('dialog:close', { sender : self });
             });
-            
+
             if(this.values.visible) {
                 this.show();
             } else {
                 this.hide();
             }
-            
-            $('#' +  this.values.element).on('keydown', function(e){ 
+
+            $('#' +  this.values.element).on('keydown', function(e){
                 if((self.values.closeOnEscape) && (e.keyCode == 27)) {
                     self.hide();
                     self.trigger('dialog:close', { sender : self });
@@ -2491,7 +2520,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         show: function() {
             PublicaMundi.Maps.Component.prototype.show.apply(this, arguments);
-            
+
             if(!this.values.positionInitialized) {
                 this.values.positionInitialized = true;
                 this.moveToCenter();
@@ -2502,9 +2531,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element).offset({ top : top, left : left });
         },
         moveToCenter: function() {
-            $('#' + this.values.element).offset({ 
+            $('#' + this.values.element).offset({
                 top : ($(window).height() - $('#' + this.values.element).height()) / 2,
-                left : ($(window).width() - $('#' + this.values.element).width()) / 2 
+                left : ($(window).width() - $('#' + this.values.element).width()) / 2
             });
         },
         setTitle: function(text) {
@@ -2518,11 +2547,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     var _DialogTableBrowserRenderTable = function(response) {
         if(response.success) {
             this.values.page.data = response.data[0].records;
-            
+
             var records = this.values.page.data, content = [];
-            
+
             content.push('<div class="clearfix" style="overflow: scroll; max-height: ' + (this.values.height - 100) + 'px;"><table class="table table-striped data-table">');
-            
+
             if(records.length > 0) {
                 content.push('<thead>');
                 content.push('<tr>');
@@ -2533,9 +2562,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
                 content.push('</tr>');
                 content.push('</thead>');
-                
+
                 content.push('<tbody>');
-                
+
                 var maxPageSize = this.values.page.size;
                 if (maxPageSize > records.length) {
                     maxPageSize = records.length;
@@ -2547,42 +2576,42 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             content.push('<td>' + (records[i][field] ? records[i][field] : '' ) + '</td>');
                         }
                     }
-                    content.push('</tr>');                        
+                    content.push('</tr>');
                 }
                 content.push('</tbody>');
             }
             content.push('</table><div>');
-            
+
             this.setContent(content.join(''));
             this.show();
         }
     };
-    
+
     var _DialogTableBrowserBuildQuery = function() {
         var query = this.values.query;
-        
+
         query.reset();
         query.resource(this.values.table).
             format(PublicaMundi.Data.Format.JSON).
             skip(this.values.page.index * this.values.page.size).
             take(this.values.page.size + 1).
             execute(_DialogTableBrowserRenderTable, this);
-        
+
     };
-    
+
     PublicaMundi.Maps.DialogTableBrowser = PublicaMundi.Class(PublicaMundi.Maps.Dialog, {
         initialize: function (options) {
 			var self = this;
-			
+
 			PublicaMundi.extend(this.values, {
                 table: null,
                 endpoint: null
 			});
-			
+
             if (typeof PublicaMundi.Maps.Dialog.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Dialog.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
             this.values.page = {
                 index : 0,
@@ -2590,17 +2619,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 data: null,
             };
             this.values.geometryName = 'the_geom';
-            
+
             this.event('page:next');
             this.event('page:previous');
             this.event('page:refresh');
             this.event('row:changed');
-            
+
             this.render();
         },
         render: function() {
             var self = this;
-            
+
             PublicaMundi.Maps.Dialog.prototype.render.apply(this);
         },
         getNextPage: function() {
@@ -2632,7 +2661,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             return this.values.page.index;
         }
     });
-      
+
     PublicaMundi.Maps.ImportWmsTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
         initialize: function (options) {
 			var self = this;
@@ -2642,9 +2671,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
 
             this.event('metadata:loaded');
-            
+
             this.event('layer:added');
-           
+
             this.values.dialog = new PublicaMundi.Maps.Dialog({
                 title: 'action.import-wms.title',
                 element: this.values.element + '-dialog',
@@ -2660,9 +2689,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 renderContent: function() {
                     var content = [];
-                    
+
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    
+
                     content.push('<div class="input-group">');
                     content.push('<span class="input-group-addon">');
                     content.push('<span class="glyphicon glyphicon-link"></span>');
@@ -2674,7 +2703,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</button>');
                     content.push('</span>');
                     content.push('</div>');
-                    
+
                     content.push('</div>');
 
                     content.push('<div class="clearfix" style="max-height: 200px; overflow: auto;">');
@@ -2685,22 +2714,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
             });
 
-					
+
 			$('#' + this.values.element + '-layers').on('click.' + this.values.element, '.list-group-item-button', function() {
 				var index = $(this).data('index');
 				var id = self.values.metadata.key + '_' + self.values.metadata.layers[index].key;
 
 				self.trigger('layer:added', { metadata : self.values.metadata, id : id});
 			});
-					
+
             $('#' + this.values.element + '-btn-metadata').click(function () {
 				self.values.metadata = null;
 
 				$('#' + self.values.element + '-layers').html('');
 				$('#' + self.values.element + '-error').html('');
-									
+
                 self.values.resources.getResourceMetadata(
-					PublicaMundi.Maps.Resources.Types.WMS, 
+					PublicaMundi.Maps.Resources.Types.WMS,
 					{ url : $('#' + self.values.element + '-endpoint').val() }
 				).then(function(metadata) {
 					self.values.metadata = metadata;
@@ -2713,17 +2742,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 						content.push('</ul>');
 					}
-					
+
 					$('#' + self.values.element + '-layers').html(content.join(''));
-					
+
 					self.trigger('metadata:loaded', { metadata : metadata});
 				}, function(error) {
 					$('#' + self.values.element + '-error').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.import-wms.error.metadata">' + PublicaMundi.getResource('action.import-wms.error.metadata') + '</div>');
 				});
             });
-                                
+
             this.values.dialog.on('dialog:action', function(args){
-                    switch(args.action){ 
+                    switch(args.action){
                         case 'close':
                             this.hide();
                             break;
@@ -2736,7 +2765,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			this.values.dialog.show();
 		}
     });
-      
+
     PublicaMundi.Maps.UploadFileTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
         initialize: function (options) {
 			var self = this;
@@ -2744,9 +2773,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
             }
-           
+
             this.event('resource:loaded');
-           
+
             this.values.dialog = new PublicaMundi.Maps.Dialog({
                 title: 'action.upload-resource.title',
                 element: this.values.element + '-dialog',
@@ -2762,15 +2791,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 renderContent: function() {
                     var content = [];
-                    
+
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.title">' + 
+                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.title">' +
                                  PublicaMundi.getResource('control.upload.dialog.label.title') + '</label>');
                     content.push('<input id="' + self.values.element + '-title" class="form-control input-md" type="text" style="width: 250px;">');
                     content.push('</div>');
-                    
+
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.format">' + 
+                    content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.format">' +
                                  PublicaMundi.getResource('control.upload.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" autocomplete="off" class="selectpicker" data-width="250px">');
                     content.push('<option value="gml">GML</option>');
@@ -2781,7 +2810,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.crs">' + 
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.crs">' +
                                  PublicaMundi.getResource('control.upload.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px" disabled>');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
@@ -2790,13 +2819,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<option value="EPSG:4258">ETRS89</option>');
                     content.push('</select>');
                     content.push('</div>');
-                    
+
                     content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
                     return content;
                 },
                 renderFooter: function() {
                     var content = [];
-                    
+
                     content.push('<span class="btn btn-success fileinput-button">');
                     content.push('<i class="glyphicon glyphicon-upload"></i>');
                     content.push('<span data-i18n-id="action.upload-resource.select-file" style="padding-left: 10px;">' + PublicaMundi.getResource('action.upload-resource.select-file') + '</span>');
@@ -2810,7 +2839,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             $('#' + this.values.element + '-format').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-format"]').blur();
-                
+
                 if($('#' + self.values.element + '-format').val() == 'kml') {
                     $('#' + self.values.element + '-crs').val('EPSG:4326').prop('disabled',true).selectpicker('refresh');
                 } else {
@@ -2825,7 +2854,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + self.values.element + '-crs').val('EPSG:4326').selectpicker('refresh');
                 }
             });
-            
+
             $('#' + this.values.element + '-fileupload').fileupload({
                 url: this.values.endpoint + 'upload/upload_resource',
                 dataType: 'json',
@@ -2835,11 +2864,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             switch(file.error) {
                                 case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes': case 'invalidContent': case 'conversionFailed':
                                 case 'crsNotSupported':
-                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' + 
+                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' +
                                                                                             PublicaMundi.getResource('action.upload-resource.error.' + file.error) + '</div>');
                                     break;
                                 default:
-                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' + 
+                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' +
                                                                                             PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
                                     break;
                             };
@@ -2848,7 +2877,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             if(format == 'zip') {
                                 format = 'geojson';
                             }
-                    
+
                             self.trigger('resource:loaded', {
                                 id: 'remote_' + file.url,
                                 title: $('#' + self.values.element + '-title').val() || file.name,
@@ -2870,21 +2899,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     var allowed = /(\.|\/)(gml|kml|geojson|zip)$/i
                     var supportedLocally = /(\.|\/)(gml|kml|geojson)$/i
-                    
+
                     var submit = true;
 
                     var format = $('#' + self.values.element + '-format').val();
                     if(format == 'zip') {
                         format = 'geojson';
                     }
-                    
+
                     $.each(data.files, function (index, file) {
                         var ext = file.name.split('.').pop();
-                                               
+
                         if((!allowed.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
-                            $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' + 
+                            $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' +
                                                                                     PublicaMundi.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
-                                                                                    
+
                             submit = false;
                         } else if((window.File) && (window.FileReader) && (supportedLocally.test(file.name))) {
                             var reader = new FileReader();
@@ -2903,7 +2932,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             };
 
                             reader.readAsText(file);
-                            
+
                             submit = false;
                         }
                     });
@@ -2913,13 +2942,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     }
                 },
                 fail : function(e, data) {
-                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' + 
+                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' +
                                                                             PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
                 }
             });
-                                
+
             this.values.dialog.on('dialog:action', function(args){
-                    switch(args.action){ 
+                    switch(args.action){
                         case 'close':
                             this.hide();
                             break;

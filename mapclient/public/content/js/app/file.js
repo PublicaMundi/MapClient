@@ -3,22 +3,22 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
     PublicaMundi.Maps.Resources.Types.KML = PublicaMundi.Maps.Resources.Types.KML || 'KML';
     PublicaMundi.Maps.Resources.Types.GML = PublicaMundi.Maps.Resources.Types.GML || 'GML';
     PublicaMundi.Maps.Resources.Types.GEOJSON = PublicaMundi.Maps.Resources.Types.GEOJSON || 'GEOJSON';
-    
+
     PublicaMundi.Maps.Resources.FileMetadataReader = PublicaMundi.Class(PublicaMundi.Maps.Resources.ResourceMetadataReader, {
         initialize: function (options) {
             if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.type = options.type;
         },
         getMetadata: function (options) {
 			var self = this;
 
             options = options || { url: null, text: null, filename : null, title: null, projection : null };
-			
+
             options.projection = options.projection || PublicaMundi.Maps.CRS.WGS84;
-            
+
             if(this.values.type == PublicaMundi.Maps.Resources.Types.KML) {
                 options.projection = PublicaMundi.Maps.CRS.WGS84;
             }
@@ -30,7 +30,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             return new Promise(function(resolve, reject) {
                 var metadata = {
                     type: self.values.type,
-                    key: options.url || options.filename, 
+                    key: options.url || options.filename,
                     title: options.title || options.filename || options.url.replace(/^.*[\\\/]/, ''),
                     url: options.url,
                     text: options.text,
@@ -41,7 +41,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                         legend : null
                     }]
                 };
-                
+
                 resolve(metadata);
             });
         }
@@ -52,7 +52,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.type = PublicaMundi.Maps.Resources.Types.KML;
         }
     });
@@ -62,7 +62,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.type = PublicaMundi.Maps.Resources.Types.GML;
         }
     });
@@ -72,7 +72,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.type = PublicaMundi.Maps.Resources.Types.GEOJSON;
         }
     });
@@ -83,7 +83,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
         },
         setOptions: function (resource) {
             resource.metadata = null;
-            
+
             if (resource.format) {
                 resource.metadata = {
                     type: null,
@@ -104,7 +104,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                         break;
                 }
             }
-            
+
             return resource;
         }
     });
@@ -132,28 +132,54 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                     });
                     break;
             }
-            
+
             if(metadata.url) {
                 __object = new ol.layer.Vector({
                     source: new ol.source.Vector({
                         projection: PublicaMundi.Maps.CRS.Mercator,
                         url: metadata.url,
-                        format: format
-                    })
+                        format: format,
+                    }),
+                    style: [
+                        new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: [255, 0, 0, 0.4]
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#ff0000',
+                                lineDash: [10, 10],
+                                width: 2
+                            })
+                        }),
+                        new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: 6,
+                                fill: new ol.style.Fill({
+                                    color: [255, 0, 0, 0.4]
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#ff0000',
+                                    width: 2
+                                })
+                            }),
+                            zIndex: Infinity
+                        })
+                    ]
+
                 });
             } else if (metadata.text) {
                 var source = new ol.source.Vector({
                     projection: PublicaMundi.Maps.CRS.Mercator,
                     format : format
                 });
-                
+
                 var features = format.readFeatures(metadata.text, {
                     dataProjection: metadata.projection,
                     featureProjection: PublicaMundi.Maps.CRS.Mercator
                 });
-                
+
                 if((metadata.type.toUpperCase() == PublicaMundi.Maps.Resources.Types.GML) &&
-                   (features.length > 0) && 
+                   (features.length > 0) &&
                    (features[0].getGeometry().getCoordinates().length == 0)) {
                     format = new ol.format.GML2();
 
@@ -162,46 +188,46 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                         featureProjection: PublicaMundi.Maps.CRS.Mercator
                     });
                 }
-                
+
                 source.addFeatures(features);
 
                 __object = new ol.layer.Vector({
                     source : source
                 });
             }
-            
+
             if(__object) {
                 map.addLayer(__object);
             }
-			
+
             return __object;
         }
     });
 
 
-    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.KML, 
+    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.KML,
                                                      'KML',
                                                      PublicaMundi.Maps.Resources.KmlMetadataReader,
                                                      PublicaMundi.Maps.Resources.FileLayerFactory);
 
-    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.GML, 
+    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.GML,
                                                      'GML',
                                                      PublicaMundi.Maps.Resources.GmlMetadataReader,
                                                      PublicaMundi.Maps.Resources.FileLayerFactory);
 
-    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.GEOJSON, 
+    PublicaMundi.Maps.Resources.registerResourceType(PublicaMundi.Maps.Resources.Types.GEOJSON,
                                                      'GEOJSON',
                                                      PublicaMundi.Maps.Resources.GeoJSONMetadataReader,
                                                      PublicaMundi.Maps.Resources.FileLayerFactory);
-                                                                                                          
+
     PublicaMundi.Maps.Resources.registerResourceTypeAdapter('KML',
                                                             PublicaMundi.Maps.Resources.Types.KML,
                                                             PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
-                                                            
+
     PublicaMundi.Maps.Resources.registerResourceTypeAdapter('GML',
                                                             PublicaMundi.Maps.Resources.Types.GML,
                                                             PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
-                                                            
+
     PublicaMundi.Maps.Resources.registerResourceTypeAdapter('GEOJSON',
                                                             PublicaMundi.Maps.Resources.Types.GEOJSON,
                                                             PublicaMundi.Maps.Resources.FileCkanResourceMetadataReaderAdapter);
