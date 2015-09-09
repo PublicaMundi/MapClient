@@ -65,5 +65,11 @@
     "tool.select.title" : "Select object",
     "tool.select.dialog.title" : "Object properties",
     
+    "action.set-position.title" : "Set position",
+    "control.set-position.dialog.label.title" : "Set position",
+    "control.set-position.dialog.label.x" : "X",
+    "control.set-position.dialog.label.y" : "Y",
+    "control.set-position.dialog.button.move" : "Move",
+
     "button.close" : "Close"
 }
