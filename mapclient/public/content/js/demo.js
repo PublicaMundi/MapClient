@@ -54,7 +54,7 @@
         app: {
             deps: [
                 'jquery',
-                'jqueryui',                
+                'jqueryui',
                 'proj4',
                 'ol',
                 'URIjs/URI',

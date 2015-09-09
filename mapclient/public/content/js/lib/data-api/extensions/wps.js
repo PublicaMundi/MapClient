@@ -7,20 +7,20 @@
                 __namespace: 'PublicaMundi.Data.WPS'
             };
         }
-        
+
         var processMappings = { };
-        
+
         var getResultFromWPS = function(data) {
             return (data.ExecuteResponse.ProcessOutputs ? data.ExecuteResponse.ProcessOutputs.Output.Reference._href : null);
         };
-        
+
         var getErrorFromWPS = function(data) {
             if((data.ExecuteResponse) && (data.ExecuteResponse.Status) && (data.ExecuteResponse.Status.ProcessFailed)) {
                 return data.ExecuteResponse.Status.ProcessFailed.ExceptionReport.Exception.ExceptionText.__text;
             }
-            return null;            
+            return null;
         };
-        
+
         PublicaMundi.Data.WPS.configure = function(options) {
             var mappings = options.mappings || {};
 
@@ -31,56 +31,54 @@
             }
 
             processMappings = mappings;
-            
+
             for(var prop in processMappings) {
                 (function(op, name, process) {
                     PublicaMundi.Data.Query.prototype[name] = function() {
                         if(this.request.queue.length > 1) {
                             throw new PublicaMundi.Data.SyntaxException('WPS operations can be applied only to requests with a single query.');
                         }
-                        
+
                         if(!this.request.processes) {
                             this.request.processes = [];
                         }
                         if ((process.params) && ((process.params.length-1) != arguments.length)) {
-                            throw new PublicaMundi.Data.SyntaxException('Function '  + 
-                                                                        name + 
-                                                                        ' expects '  + 
-                                                                        (process.params.length - 1) + 
-                                                                        ' parameter(s). Only ' + 
-                                                                        arguments.length + 
+                            throw new PublicaMundi.Data.SyntaxException('Function '  +
+                                                                        name +
+                                                                        ' expects '  +
+                                                                        (process.params.length - 1) +
+                                                                        ' parameter(s). Only ' +
+                                                                        arguments.length +
                                                                         ' specified.');
                         }
-                        
+
                         this.request.processes.push({
                             name: op,
                             id: process.id,
                             args: arguments
                         });
-                        
+
                         return this;
                     }
                 })(prop, 'process' + prop, processMappings[prop]);
             }
         };
-       
+
         var fn_queue = PublicaMundi.Data.Query.prototype.queue;
-        
-        PublicaMundi.Data.Query.prototype.queue = function () {           
+
+        PublicaMundi.Data.Query.prototype.queue = function () {
             if((this.request.processes) && (this.request.processes.length > 0) && (this.request.queue.length > 0)) {
                 throw new PublicaMundi.Data.SyntaxException('WPS operations can be applied only to requests with a single query.');
             }
             return fn_queue.call(this);
         };
-        
-        var fn_execute = PublicaMundi.Data.Query.prototype.execute;
 
-        PublicaMundi.Data.Query.prototype.execute = function (options) {
+        PublicaMundi.Data.Query.prototype.wps = function (options) {
             if((!this.request.processes) || (this.request.processes.length == 0)) {
-                return fn_execute.call(this, options);
+                return this.execute(options);
             }
 
-            var configuration = PublicaMundi.Data.getConfiguration();            
+            var configuration = PublicaMundi.Data.getConfiguration();
             var debug = configuration.debug;
 
             options = options || {};
@@ -97,7 +95,7 @@
 
             var processes = [].concat(this.request.processes).reverse();
             var processIndex = 0;
-            
+
             var endpoint = (configuration.wps.corsEnabled ? configuration.wps.endpoint : configuration.proxy + configuration.wps.endpoint);
 
             var myZooObject = new ZooProcess({
@@ -107,15 +105,15 @@
 
             var queryCallback = function(data, execution) {
                 if(data.success) {
-                    var url = this.endpoint + 'api/download?code=' + data.code + '&raw';
-                    // When debugging fetch data to the client 
+                    var url = this.endpoint + 'api/download/' + data.code;
+                    // When debugging fetch data to the client
                     if(debug) {
                         $.ajax({
                             method: 'GET',
                             url: url
                         }).done(initProcessingCallback).fail(function() {
                             execution.end = (new Date()).getTime();
-                            
+
                             if (typeof options.failure === 'function') {
                                 options.failure.call( options.context || this, 'Failed to download file from [' + url + '].', execution);
                             }
@@ -130,28 +128,30 @@
                     }
                 } else {
                     execution.end = (new Date()).getTime();
-                    
+
                     if (typeof options.success === 'function') {
                         options.success.call( options.context || this, data, execution);
                     }
-                    
+
                     if (typeof options.complete === 'function') {
                         options.complete.call( options.context || this);
                     }
-                } 
+                }
             };
-            
+
             var initProcessingCallback = function(data) {
                 var process = processes.pop();
                 processIndex++;
 
                 var dataInputs = [];
                 var dataOutputs = [];
-                
+
                 var metadata = processMappings[process.name];
-                
-                if((debug) && ($.isXMLDoc(data))) {
+
+                if($.isXMLDoc(data)) {
                     data = (new XMLSerializer()).serializeToString(data);
+                }
+                if(debug) {
                     var doctype = '<?xml version="1.0" encoding="utf-8" ?>';
                     data = data.substr(doctype.length);
                 }
@@ -182,7 +182,7 @@
 
                     dataInputs.push(input);
                 }
-                
+
                 if(processes.length == 0) {
                     dataOutputs.push({'identifier': metadata.result,'mimeType':'application/json','type':'raw'});
                 } else {
@@ -202,51 +202,51 @@
                     success: (processes.length == 0 ? resultCallback : processCallback),
                     error: function(data){
                         var message = getErrorFromWPS(data) || 'Unhandled exception has occured. Execution of process [' + process.id + '] has failed. Process index is [' + processIndex + ']';
-                        
+
                         execution.end = (new Date()).getTime();
-                        
+
                         if (typeof options.failure === 'function') {
                             options.failure.call(
-                                options.context || this, 
+                                options.context || this,
                                 message,
                                 execution
                             );
                         } else if(debug) {
                             console.log(message);
                         }
-                        
+
                         if (typeof options.complete === 'function') {
                             options.complete.call( options.context || this);
                         }
                     }
                 });
             };
-            
+
             var processCallback = function(data) {
                 var process = processes.pop();
                 processIndex++;
 
                 var dataInputs = [];
                 var dataOutputs = [];
-                
+
                 var metadata = processMappings[process.name];
 
                 var href = getResultFromWPS(data);
                 if(!href) {
                     var message = getErrorFromWPS(data) || 'Can not execute process [' + process.id + ']. Failed to get response from previous process. Process index is [' + processIndex + ']';
-                    
+
                     execution.end = (new Date()).getTime();
-                    
+
                     if (typeof options.failure === 'function') {
                         options.failure.call(
-                            options.context || this, 
+                            options.context || this,
                             message,
                             execution
                         );
                     } else if(debug) {
                         console.log(message);
                     }
-                    
+
                     if (typeof options.complete === 'function') {
                         options.complete.call( options.context || this);
                     }
@@ -262,7 +262,7 @@
                 if(metadata.params.mimeType) {
                     input.mimeType = metadata.params.mimeType
                 }
-                    
+
                 dataInputs.push(input);
 
                 for(var i=1; i < metadata.params.length; i++) {
@@ -282,10 +282,10 @@
                     if(metadata.params[i].mimeType) {
                         input.mimeType = metadata.params[i].mimeType
                     }
-                    
+
                     dataInputs.push(input);
                 }
-                
+
                 if(processes.length == 0) {
                     dataOutputs.push({'identifier': metadata.result,'mimeType':'application/json','type':'raw'});
                 } else {
@@ -305,29 +305,29 @@
                     success: (processes.length == 0 ? resultCallback : processCallback),
                     error: function(data){
                         var message = getErrorFromWPS(data) || 'Unhandled exception has occured. Execution of process [' + process.id + '] has failed. Process index is [' + processIndex + ']';
-                        
+
                         execution.end = (new Date()).getTime();
-                        
+
                         if (typeof options.failure === 'function') {
                             options.failure.call(
-                                options.context || this, 
+                                options.context || this,
                                 message,
                                 execution
                             );
                         } else if(debug) {
                             console.log(message);
                         }
-                        
+
                         if (typeof options.complete === 'function') {
                             options.complete.call( options.context || this);
                         }
                     }
                 });
             };
-            
+
             var resultCallback = function(data) {
                 execution.end = (new Date()).getTime();
-                
+
                 if (typeof options.success === 'function') {
                     options.success.call( options.context || this, {
                         success: true,
@@ -341,13 +341,30 @@
                 }
             };
 
-            return this.format(PublicaMundi.Data.Format.GML).export.call(this, {
-                context: options.context,
-                success: queryCallback,
-                failure: options.failure
+            $.ajax({
+                type: "POST",
+                url: this.endpoint + 'api/wps',
+                context: this,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(this.request)
+            }).done(function (data, textStatus, jqXHR) {
+                execution.end = (new Date()).getTime();
+
+                queryCallback.call( options.context || this, data, execution);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                execution.end = (new Date()).getTime();
+                if (typeof options.failure === 'function') {
+                    options.failure.call( options.context || this, (errorThrown ? errorThrown : textStatus), execution);
+                }
+                if (typeof options.complete === 'function') {
+                    options.complete.call( options.context || this);
+                }
             });
+
+            return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.getProcesses = function (options) {
             var configuration = PublicaMundi.Data.getConfiguration();
 
@@ -357,17 +374,23 @@
                 url: endpoint,
                 delay: (configuration.wps.delay ? configuration.wps.delay : 2000),
             });
-            
+
             myZooObject.getCapabilities({
                type: 'POST',
                 success: function(data){
                     if (typeof options.success === 'function') {
                         options.success.call( options.context || this, data);
                     }
+                    if (typeof options.complete === 'function') {
+                        options.complete.call( options.context || this);
+                    }
                 },
                 error: function(data) {
                     if (typeof options.failure === 'function') {
                         options.failure.call( options.context || this, data);
+                    }
+                    if (typeof options.complete === 'function') {
+                        options.complete.call( options.context || this);
                     }
                 }
             });
@@ -384,7 +407,7 @@
                 url: endpoint,
                 delay: (configuration.wps.delay ? configuration.wps.delay : 2000),
             });
-            
+
             myZooObject.describeProcess({
                 type: 'POST',
                 identifier: options.id || 'all',
@@ -392,13 +415,19 @@
                     if (typeof options.success === 'function') {
                         options.success.call( options.context || this, data);
                     }
+                    if (typeof options.complete === 'function') {
+                        options.complete.call( options.context || this);
+                    }
                 },
                 error: function(data){
                     if (typeof options.failure === 'function') {
                         options.failure.call( options.context || this, data);
                     }
+                    if (typeof options.complete === 'function') {
+                        options.complete.call( options.context || this);
+                    }
                 }
-            }); 
+            });
         };
 
         return PublicaMundi;

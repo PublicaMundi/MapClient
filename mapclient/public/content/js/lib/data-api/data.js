@@ -1,7 +1,7 @@
 (function() {
     var factory = function ($, PublicaMundi) {
         "use strict";
-        
+
         if(typeof PublicaMundi.Data === 'undefined') {
                 PublicaMundi.Data = {
                 __namespace: 'PublicaMundi.Data'
@@ -21,7 +21,7 @@
 
         PublicaMundi.Data.CRS.GGRS87 = 'EPSG:2100';
         PublicaMundi.Data.CRS.ETRS89 = 'EPSG:4258';
-    
+
         PublicaMundi.Data.Format = {
             JSON : 'JSON',
             ESRI : 'ESRI Shapefile',
@@ -74,7 +74,7 @@
                         throw new PublicaMundi.Data.SyntaxException('Name of argument ' + index + ' is missing.');
                     }
                     if (arg.hasOwnProperty('resource')) {
-                        obj.resource = arg.resource;
+                        obj.resource = getResourceFromAlias(arg.resource);
                     }
                     return obj;
                 case 'string': case 'number':
@@ -90,6 +90,14 @@
             }
             return arg;
         }
+
+        function getResourceFromAlias(name) {
+            console.log(configuration);
+            if((name) && (configuration.alias) && (configuration.alias.hasOwnProperty(name))) {
+                return configuration.alias[name];
+            }
+            return name;
+        };
 
         function getArgumentGeometry(arg, index) {
             if (typeof arg === 'object') {
@@ -107,7 +115,7 @@
                     throw new PublicaMundi.Data.SyntaxException('Name of argument ' + index + ' is missing.');
                 }
                 if (arg.hasOwnProperty('resource')) {
-                    obj.resource = arg.resource;
+                    obj.resource = getResourceFromAlias(arg.resource);
                 }
                 return obj;
             }
@@ -137,7 +145,7 @@
             if(!target) {
                 return;
             }
-            
+
             if (source) {
                 for (var property in source) {
                     if (source.hasOwnProperty(property)) {
@@ -154,15 +162,15 @@
             }
             return target;
         };
-    
+
         PublicaMundi.Data.configure = function(options) {
             extend(configuration, options);
         };
-        
+
         PublicaMundi.Data.getConfiguration = function() {
             return clone(configuration);
         };
-        
+
         PublicaMundi.Data.Query = function (endpoint) {
             if (typeof endpoint === 'string') {
                 this.endpoint = endpoint;
@@ -172,7 +180,7 @@
             if(!this.endpoint) {
                 throw new PublicaMundi.Data.SyntaxException('Service endpoint is not set.');
             }
-            
+
             this.callbacks = {
                 success : null,
                 failure : null,
@@ -181,14 +189,14 @@
 
             this.reset();
         };
-               
+
         PublicaMundi.Data.Query.prototype.toString = function (formatted) {
             if(formatted) {
                 return JSON.stringify(this.request, null, ' ');
-            } 
+            }
             return JSON.stringify(this.request);
         };
-        
+
         PublicaMundi.Data.Query.prototype.toObject = function () {
             return clone(this.request);
         };
@@ -196,10 +204,10 @@
         PublicaMundi.Data.Query.prototype.parse = function(text) {
             this.reset();
             this.request = JSON.parse(text);
-            
+
             return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.resource = function (resource, alias) {
             var obj = {
                 name: '',
@@ -209,7 +217,7 @@
             switch (typeof resource) {
                 case 'object':
                     if (resource.hasOwnProperty('name')) {
-                        obj.name = resource.name;
+                        obj.name = getResourceFromAlias(resource.name);
                     } else {
                         throw new PublicaMundi.Data.SyntaxException('Resource name is not defined.');
                     }
@@ -220,7 +228,7 @@
                     }
                     break;
                 case 'string':
-                    obj.name = resource;
+                    obj.name = getResourceFromAlias(resource);
                     if (typeof alias === 'string') {
                         obj.alias = alias;
                     } else {
@@ -253,7 +261,7 @@
                         throw new PublicaMundi.Data.SyntaxException('Field name is not defined.');
                     }
                     if (resource.hasOwnProperty('resource')) {
-                        obj.resource = resource.resource;
+                        obj.resource = getResourceFromAlias(resource.resource);
                     }
                     if (resource.hasOwnProperty('alias')) {
                         obj.alias = resource.alias;
@@ -270,7 +278,7 @@
                         case 'string':
                             obj.alias = name;
                             obj.name = name;
-                            obj.resource = resource;
+                            obj.resource = getResourceFromAlias(resource);
                             break;
                         default:
                             throw new PublicaMundi.Data.SyntaxException('Field name is malformed.');
@@ -524,7 +532,7 @@
                         throw new PublicaMundi.Data.SyntaxException('Sorting field name is not defined.');
                     }
                     if (resource.hasOwnProperty('resource')) {
-                        obj.resource = resource.resource;
+                        obj.resource = getResourceFromAlias(resource.resource);
                     }
                     if ((resource.hasOwnProperty('desc')) && (typeof resource.desc === 'boolean')) {
                         obj.desc = resource.desc;
@@ -537,7 +545,7 @@
                             break;
                         case 'string':
                             obj.name = name;
-                            obj.resource = resource;
+                            obj.resource = getResourceFromAlias(resource);
                             break;
                         case 'boolean':
                             obj.name = resource;
@@ -575,14 +583,14 @@
             }
             return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.setFailure = function (callback) {
             if (typeof callback === 'function') {
                 this.callbacks.failure = callback;
             }
             return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.setComplete = function (callback) {
             if (typeof callback === 'function') {
                 this.callbacks.complete = callback;
@@ -596,12 +604,12 @@
                 files: null,
                 format: PublicaMundi.Data.Format.GeoJSON
             };
-            
+
             this.queue();
 
             return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.queue = function () {
             this.request.queue.push({
                 resources: [],
@@ -613,7 +621,7 @@
             });
 
             this.query = this.request.queue[this.request.queue.length -1];
-            
+
             return this;
         };
 
@@ -626,14 +634,14 @@
             }
 
             throw new PublicaMundi.Data.SyntaxException('Format is not supported.');
-        };  
-        
+        };
+
         PublicaMundi.Data.Query.prototype.crs = function (crs) {
             var parts = crs.split(':');
             if((parts.length != 2) || (parts[0] != 'EPSG')) {
                 throw new PublicaMundi.Data.SyntaxException('CRS is not supported.');
             }
-            
+
             for (var prop in PublicaMundi.Data.CRS) {
                 if (PublicaMundi.Data.CRS[prop] === crs) {
                     this.request.crs = crs;
@@ -642,8 +650,8 @@
             }
 
             throw new PublicaMundi.Data.SyntaxException('CRS is not supported.');
-        };  
-        
+        };
+
         PublicaMundi.Data.Query.prototype.execute = function (options) {
             options = options || {};
             options.success = options.success || this.callbacks.success;
@@ -739,7 +747,7 @@
 
             return this;
         };
-        
+
         PublicaMundi.Data.Query.prototype.take = function (value) {
             if (isNaN(value)) {
                 throw new PublicaMundi.Data.SyntaxException('Invalid number.');
@@ -776,6 +784,16 @@
                 var contentLength = jqXHR.getResponseHeader('Content-Length');
                 if(contentLength) {
                     execution.size =  contentLength / 1024.0;
+                }
+
+                if((data.success) && (data.resources) && (configuration.alias)) {
+                    for(var id in data.resources) {
+                        for(var key in configuration.alias) {
+                            if(configuration.alias[key] == id) {
+                                data.resources[id].alias = key;
+                            }
+                        }
+                    }
                 }
 
                 if (typeof options.success === 'function') {

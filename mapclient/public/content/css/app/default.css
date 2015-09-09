@@ -213,9 +213,9 @@ ul {
 
 .layer-tree-organization{
     min-height: 300px;
-    overflow-y: auto; 
-    padding: 0px 2px 0px 0px; 
-    display: none; 
+    overflow-y: auto;
+    padding: 0px 2px 0px 0px;
+    display: none;
     border-bottom: solid 1px #E7E7E7;
 }
 
@@ -252,7 +252,7 @@ ul {
     cursor: pointer;
 }
 
-.tools { 
+.tools {
     max-height: 300px;
     overflow-y: auto;
     padding: 4px 0px 4px 0px;
@@ -285,7 +285,7 @@ ul {
 .selected-layer-opacity-slider {
 	float: left;
 	padding-top: 2px;
-	width: 14.2em;	
+	width: 14.2em;
 }
 
 .selected-layer-up {
@@ -322,21 +322,29 @@ ul {
 
 .tree-text-1 {
     max-width: 15.8em;
+    white-space: pre-line;
+    cursor: pointer;
 }
 
 .tree-text-2 {
-    max-width: 14.8em;
+    max-width: 14.4em;
+    white-space: pre-line;
+    cursor: pointer;
 }
 
 .tree-text-3 {
     max-width: 12em;
+    white-space: pre-line;
+    cursor: pointer;
 }
 
 .tree-text-4 {
     max-width: 11.5em;
+    white-space: pre-line;
+    cursor: pointer;
 }
 
-.tree-node-ajax-loader { 
+.tree-node-ajax-loader {
 	margin-left: 0px;
 }
 .tree-info {
@@ -509,11 +517,11 @@ ul {
     right: -10px;
 }
 
-/* 
+/*
  * Measure Example
- * 
+ *
  * http://openlayers.org/en/v3.2.0/examples/measure.html
- * 
+ *
 */
 
 .mt-tooltip {
@@ -604,7 +612,7 @@ ul {
     width: 350px;
     max-height: 250px;
     outline: none;
-    opacity: 0.3;
+    /*opacity: 0.3;*/
 }
 
 .text-search.tooltip-popup-inactive:hover {
@@ -618,7 +626,7 @@ ul {
 }
 
 .dialog-container {
-    width: 100%; 
+    width: 100%;
     height: 100%;
     padding-left: 10px;
 }
@@ -656,7 +664,7 @@ ul {
 
 .ol-zoom {
     outline-style: none;
-    top: 75px; 
+    top: 75px;
     right: 0.2em;
     left: unset;
     border-radius: 0px;
@@ -723,7 +731,7 @@ ul {
   -webkit-background-clip: padding-box;
      -moz-background-clip: padding;
           background-clip: padding-box;
-  width:100%;      
+  width:100%;
   max-height: 150px;
   overflow-y: auto;
 }
@@ -773,6 +781,12 @@ ul {
     cursor: pointer;
 }
 
+div.legend-container {
+    float: left;
+    height: 24px;
+    width: 24px;
+}
+
 img.legend {
-    max-height: 24px; 
-    max-width: 24px;
+    height: 24px;
+    width: 24px;

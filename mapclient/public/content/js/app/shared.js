@@ -55,13 +55,13 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
     if(typeof proj4.defs['EPSG:2100'] === 'undefined') {
         proj4.defs("EPSG:2100","+proj=tmerc +lat_0=0 +lon_0=24 +k=0.9996 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=-199.87,74.79,246.62,0,0,0,0 +units=m +no_defs");
     }
-    
+
     global.proj4 = proj4;
-    
+
     // Supported resource types
     PublicaMundi.Maps.Resources.Types = {};
 
-    // Add support for simple class hierarchy 
+    // Add support for simple class hierarchy
     var __extendClass = function (derived, base) {
         for (var prop in base) if (base.hasOwnProperty(prop)) derived[prop] = base[prop];
         function Empty() {
@@ -76,7 +76,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
         target = target || {};
 		deepCopy = deepCopy || false;
-		
+
         if (source) {
             for (var property in source) {
                 if ((exclude.indexOf(property) < 0) && (source.hasOwnProperty(property))) {
@@ -111,7 +111,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             return (function (__super) {
                 var Class = function () {
                     this.values = {};
-				
+
                     if (typeof this.initialize === 'function') {
                         this.initialize.apply(this, arguments);
                     }
@@ -128,7 +128,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         return (function () {
             var Class = function () {
                 this.values = {};
-                			
+
                 if (typeof this.initialize === 'function') {
                     this.initialize.apply(this, arguments);
                 }
@@ -190,9 +190,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
     // Base class implementing simple event system
     PublicaMundi.Maps.Observable = PublicaMundi.Class({
-        initialize: function (options) {    
-			this.values.events = {};       
-			
+        initialize: function (options) {
+			this.values.events = {};
+
             PublicaMundi.extend(this.values, options);
 		},
         event: function (event) {
@@ -230,7 +230,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             }
         }
     });
-    
+
     // Resource registry
     var shared = {
 		resources : {},
@@ -332,7 +332,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             return styles;
         },
     });
-      
+
     PublicaMundi.Maps.LayerManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
         initialize: function (options) {
             if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
@@ -343,7 +343,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             this.values.layers = []
             this.values.layerCounter = 0;
             this.values.queryable = [];
-            
+
             this.event('layer:add');
         },
         setCatalogResourceMetadataOptions: function(resource) {
@@ -358,7 +358,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 			}
             var adapter = new shared.adapters[resource.format.toUpperCase()].adapter();
             adapter.setOptions(resource);
-            
+
             return resource;
 		},
         getResourceMetadata: function (type, parameters) {
@@ -371,12 +371,12 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 			if(typeof this.values.readers[type] !== 'object') {
 				this.values.readers[type] = new shared.resources[type].reader({ proxy : this.values.proxy});
 			}
-			
+
 			return this.values.readers[type].getMetadata(parameters);
         },
         addResourceFromCatalog: function (map, resource) {
             var self = this;
-            
+
             if (!resource) {
                 throw 'Resource is missing.';
             }
@@ -417,7 +417,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         },
         updateQueryableResources: function() {
             var self = this;
-            
+
             var url = this.values.path + 'api/resource_show';
 
             return new Promise(function(resolve, reject) {
@@ -426,7 +426,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     context: this
                 }).done(function(data, textStatus, jqXHR) {
                     self.values.queryable= [];
-                    
+
                     if((data) && (data.success)) {
                          for (var id in data.resources) {
                             if((data.resources[id].wms_layer) && (data.resources[id].wms_server)) {
@@ -438,7 +438,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     resolve(self.values.queryable);
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     console.log('Failed to load DATA API resource metadata: ' + url);
-                        
+
                     reject(errorThrown);
                 });
             });
@@ -448,11 +448,11 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         },
         createLayer: function (map, metadata, id) {
 			var title = '', bbox = null;
-			
+
 			var parts = id.split('_');
 			var resource = parts[0];
 			var layer = parts.splice(1).join('_');
-			
+
 			for(var i=0; i<metadata.layers.length;i++) {
 				if(metadata.layers[i].key == layer) {
 					title = metadata.layers[i].title;
@@ -460,7 +460,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 					break;
 				}
 			}
-                        
+
 			var __object = null;
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
@@ -480,27 +480,27 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 				});
 
                 if(bbox) {
-                    if((!this.values.extent) || 
+                    if((!this.values.extent) ||
                        ((bbox[0] > this.values.extent[0]) &&
-                        (bbox[1] > this.values.extent[1]) && 	
-                        (bbox[2] < this.values.extent[2]) && 	
+                        (bbox[1] > this.values.extent[1]) &&
+                        (bbox[2] < this.values.extent[2]) &&
                         (bbox[3] < this.values.extent[3]))) {
                             var view = map.getView();
                             var size = map.getSize();
                             view.fitExtent(bbox, size);
                     }
                 }
-	
+
 				this.values.layerCounter++;
-				
+
 				return true;
 			}
-			
+
 			return false;
         },
         destroyLayer: function (map, id) {
 			var index = -1, __object = null;
-			
+
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					index = i;
@@ -508,17 +508,17 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 					break;
 				}
 			}
-			
+
             if(__object) {
 				map.removeLayer(__object);
-				
+
 				this.values.layers.splice(index, 1);
-				
+
 				this.values.layerCounter--;
-				
+
 				return true;
             }
-            
+
             return false;
         },
         getLayerCount: function() {
@@ -557,62 +557,58 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 		},
 		moveLayerUp: function(map, id) {
 			var __object = null;
-			
+
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
 					break;
 				}
 			}
-			
+
 			var layers = map.getLayers().getArray();
 			var currentIndex = -1;
-			
+
             for (var i = 2; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
                 }
             }
-            
+
             if((__object) && ((currentIndex+1) < layers.length)) {
-				var replaced = map.getLayers().item(currentIndex+1);
-				map.getLayers().setAt(currentIndex+1, __object);
-				map.getLayers().setAt(currentIndex, replaced);
-				
+				var layer = map.getLayers().removeAt(currentIndex);
+                map.getLayers().insertAt(currentIndex+1, layer);
 				return true;
 			}
-			
+
 			return false;
 		},
 		moveLayerDown: function(map, id) {
 			var __object = null;
-			
+
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
 					break;
 				}
 			}
-			
+
 			var layers = map.getLayers().getArray();
 			var currentIndex = -1;
-			
+
             for (var i = 2; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
                 }
             }
-            
+
             if((__object) && ((currentIndex-1) > 1)) {
-				var replaced = map.getLayers().item(currentIndex-1);
-				map.getLayers().setAt(currentIndex-1, __object);
-				map.getLayers().setAt(currentIndex, replaced);
-				
+                var layer = map.getLayers().removeAt(currentIndex);
+                map.getLayers().insertAt(currentIndex-1, layer);
 				return true;
 			}
-			
+
 			return false;
 		}
     });

@@ -1,6 +1,7 @@
 import logging
 
 from pylons import config, request, response, session
+from pylons.controllers.util import abort
 
 from mapclient.lib.base import BaseController
 
@@ -38,54 +39,51 @@ EXPORT_FORMAT_PDF = 'PDF'
 FORMAT_SUPPORT_EXPORT = {
     EXPORT_FORMAT_ESRI: {
         'ext': 'shp',
-        'raw': False
-    }, 
+        'mimeType': 'application/octet-stream'
+    },
     EXPORT_FORMAT_GML: {
         'ext': 'gml',
-        'raw': True,
         'mimeType': 'text/xml'
-    }, 
+    },
     EXPORT_FORMAT_KML: {
         'ext': 'kml',
-        'raw': True,
         'mimeType': 'application/vnd.google-earth.kml+xml'
-    }, 
+    },
     EXPORT_FORMAT_DXF: {
         'ext': 'dxf',
-        'raw': False
-    }, 
+        'mimeType': 'application/octet-stream'
+    },
     EXPORT_FORMAT_CSV: {
         'ext': 'csv',
-        'raw': False
-    }, 
+        'mimeType': 'text/csv'
+    },
     EXPORT_FORMAT_GEOJSON: {
         'ext': 'geojson',
-        'raw': True,
         'mimeType': 'application/json'
-    }, 
+    },
     EXPORT_FORMAT_PDF: {
         'ext': 'pdf',
-        'raw': False
-    }, 
+        'mimeType': 'application/octet-stream'
+    },
     EXPORT_FORMAT_GPKG: {
         'ext': 'gpkg',
-        'raw': False
+        'mimeType': 'application/octet-stream'
     }
 }
 
 class ApiController(BaseController):
-       
+
     def resource_show(self):
         # Get configuration
         configuration = self._get_configuration()
-        
+
         # Set response headers
         self._set_headers()
-        
+
         try:
             query_executor = QueryExecutor();
             resources = query_executor.getResources(configuration)
-            
+
             result = {
                 "success" : True,
                 "message" : None,
@@ -101,13 +99,13 @@ class ApiController(BaseController):
 
         return json.dumps(result, encoding='utf-8')
 
-    def resource_describe(self, id):       
+    def resource_describe(self, id):
         # Get configuration
         configuration = self._get_configuration()
-        
+
         # Set response headers
         self._set_headers()
-        
+
         try:
             if id is None:
                 result = {
@@ -118,7 +116,7 @@ class ApiController(BaseController):
             else:
                 query_executor = QueryExecutor();
                 fields = query_executor.describeResource(configuration, None, id)
-                
+
                 result = {
                     "success" : True,
                     "message" : None,
@@ -136,7 +134,7 @@ class ApiController(BaseController):
                 "message" : u'Failed to load resource {resource} metadata.'.format(resource = resource),
                 "resource": None
             }
-            
+
         return json.dumps(result, encoding='utf-8')
 
     def query(self):
@@ -148,20 +146,20 @@ class ApiController(BaseController):
 
             # Get configuration
             configuration = self._get_configuration()
-            
+
             # Get metadata
             metadata = self._get_metadata_from_session()
 
             # Execute query
             query_executor = QueryExecutor();
             query_result = query_executor.execute(configuration, query, metadata)
-            
-            # Set metadata 
+
+            # Set metadata
             self._set_metadata_to_session(query_result['metadata'])
-            
+
             # Set response headers
             self._set_headers()
-          
+
             result = {
                 'data': query_result['data'],
                 'success': True,
@@ -174,7 +172,7 @@ class ApiController(BaseController):
 
             details = None
             if not apiEx.innerException is None and config['dataapi.error.details']:
-                details = apiEx.innerException.message 
+                details = apiEx.innerException.message
 
             return self._format_response({
                 'success' : False,
@@ -201,7 +199,7 @@ class ApiController(BaseController):
             })
 
         path = None
-        
+
         try:
             # Parse query
             query = self._parse_query()
@@ -214,13 +212,13 @@ class ApiController(BaseController):
                     raise DataException('Output format {format} is not supported for export results.'.format(format = query['format']))
 
                 export_format = query['format']
-            
+
             # Get disabled export formats and check selected value
             disabledFormats = []
 
             if 'dataapi.export.formats.disabled' in config:
                 disabledFormats = filter(None, config['dataapi.export.formats.disabled'].split(','))
-        
+
             if export_format in disabledFormats:
                 message = 'Export format [{format}] is disabled.'.format(format = export_format)
 
@@ -244,29 +242,29 @@ class ApiController(BaseController):
                 if  len(query['files'])!=len(set(query['files'])):
                     raise DataException('Filenames must be unique.')
                 files = query['files']
-                
+
             # Create temporary folder for exported files
             path = tempfile.mkdtemp()
 
             # Get configuration
             configuration = self._get_configuration()
-            
+
             # Get metadata
             metadata = self._get_metadata_from_session()
-            
+
             # Override query format
             query['format'] = QUERY_FORMAT_GEOJSON
-            
+
             # Execute query
             query_executor = QueryExecutor();
             query_result = query_executor.execute(configuration, query, metadata)
 
-            # Set metadata 
+            # Set metadata
             self._set_metadata_to_session(query_result['metadata'])
-            
+
             # Set response headers
             response.headers['Content-Type'] = 'application/json; charset=utf-8'
-            
+
             # Export layer data to files
             data = query_result['data']
             crs = query_result['crs']
@@ -301,7 +299,7 @@ class ApiController(BaseController):
             session.save()
 
             result = { 'success' : True, 'code' : token, 'message' : None }
-                   
+
             return json.dumps(result, encoding='utf-8')
         except DataException as apiEx:
             log.error(apiEx)
@@ -311,8 +309,8 @@ class ApiController(BaseController):
 
             details = None
             if not apiEx.innerException is None and config['dataapi.error.details']:
-                details = apiEx.innerException.message 
-                
+                details = apiEx.innerException.message
+
             return self._format_response({
                 'success': False,
                 'message': apiEx.message,
@@ -324,7 +322,7 @@ class ApiController(BaseController):
 
             if path != None:
                 shutil.rmtree(path)
-               
+
             return self._format_response({
                 'success': False,
                 'message': 'Unhandled exception has occured.',
@@ -332,33 +330,146 @@ class ApiController(BaseController):
                 'token': None
             }, None)
 
-    def download(self):
+    def download(self, id):
         method = request.environ["REQUEST_METHOD"]
-        
-        if method == 'GET' and 'code' in request.params and request.params['code'] in session:          
-            exportResult = session[request.params['code']]
-            
-            if 'raw' in request.params and exportResult['format'] in FORMAT_SUPPORT_EXPORT and FORMAT_SUPPORT_EXPORT[exportResult['format']]['raw'] == True and not exportResult['filename'] is None:
-                if 'mimeType' in FORMAT_SUPPORT_EXPORT[exportResult['format']]:
-                    response.headers['Content-Type'] = FORMAT_SUPPORT_EXPORT[exportResult['format']]['mimeType']
-                else:
-                    response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
 
-                response.headers['Content-Disposition'] = 'attachment; filename="export-' + time.strftime('%Y%m%d') + '.' + exportResult['extension'] +'"'
+        if method == 'GET':
+            if id in session:
+                # Web client
+                exportResult = session[id]
 
-                with open(exportResult['filename'], 'r') as f:
-                    shutil.copyfileobj(f, response)
-            else:
                 response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
                 response.headers['Content-Disposition'] = 'attachment; filename="export-' + time.strftime('%Y%m%d') + '.zip"'
 
                 with open(exportResult['compressed'], 'r') as f:
                     shutil.copyfileobj(f, response)
 
-            shutil.rmtree(exportResult['path'])
+                shutil.rmtree(exportResult['path'])
 
-            del session[request.params['code']]
+                del session[id]
+                session.save()
+
+                return
+            else:
+                # External service
+                filename = os.path.join(tempfile.gettempdir(), id)
+
+                if os.path.isfile(filename):
+                    response.headers['Content-Type'] = 'application/octet-stream; charset=utf-8'
+                    response.headers['Content-Disposition'] = 'attachment; filename="download-' + time.strftime('%Y%m%d') + '"'
+
+                    with open(filename, 'r') as f:
+                        shutil.copyfileobj(f, response)
+
+                    os.remove(filename)
+
+                    return
+
+        abort(404, 'Document not found')
+
+    def wps(self):
+        if not 'dataapi.export.enabled' in config or config['dataapi.export.enabled'] == False:
+            return self._format_response({
+                'success': False,
+                'message': 'Operation is not supported.',
+                'token': None
+            })
+
+        path = None
+
+        try:
+            # Parse query
+            query = self._parse_query()
+
+            if not 'queue' in query:
+                raise DataException('Parameter queue is required.')
+            if not 'queue' in query or not type(query['queue']) is list or len(query['queue']) != 1:
+                return self._format_response({
+                'success': False,
+                'message': 'WPS operations require exactly one query.',
+                'token': None
+            })
+
+            # Set export format
+            export_format = EXPORT_FORMAT_GML
+
+            # Get configuration
+            configuration = self._get_configuration()
+
+            # Get metadata
+            metadata = self._get_metadata_from_session()
+
+            # Override query format
+            query['format'] = EXPORT_FORMAT_GEOJSON
+
+            # Execute query
+            query_executor = QueryExecutor();
+            query_result = query_executor.execute(configuration, query, metadata)
+
+            # Set metadata
+            self._set_metadata_to_session(query_result['metadata'])
             session.save()
+
+            # Set response headers
+            response.headers['Content-Type'] = 'application/json; charset=utf-8'
+
+            # Export layer data to files
+            data = query_result['data'][0]
+            crs = query_result['crs']
+
+            if len(data['features']) == 0:
+                return self._format_response({
+                'success': False,
+                'message': 'No features found.',
+                'token': None
+            })
+
+            # Create temporary folder for exported files
+            path = tempfile.mkdtemp()
+
+            # Create temp file name
+            token = str(uuid.uuid4())
+            ext = self._getFormatExtension(export_format)
+
+            self._export_partial_result(self._format_response(data, None, QUERY_FORMAT_GEOJSON), path, token, crs, export_format)
+            shutil.move(os.path.join(path, token + '.' + ext), os.path.join(tempfile.gettempdir(), token))
+            
+            if path != None:
+                shutil.rmtree(path)
+                path = None
+
+            # Construct response body
+            result = { 'success' : True, 'code' : token, 'message' : None }
+
+            return json.dumps(result, encoding='utf-8')
+        except DataException as apiEx:
+            log.error(apiEx)
+
+            if path != None:
+                shutil.rmtree(path)
+
+            details = None
+            if not apiEx.innerException is None and config['dataapi.error.details']:
+                details = apiEx.innerException.message
+
+            return self._format_response({
+                'success': False,
+                'message': apiEx.message,
+                'details': details,
+                'token': None
+            }, None)
+        except Exception as ex:
+            log.error(ex)
+
+            if path != None:
+                shutil.rmtree(path)
+
+            return self._format_response({
+                'success': False,
+                'message': 'Unhandled exception has occured.',
+                'details': (ex.message if config['dataapi.error.details'] else ''),
+                'token': None
+            }, None)
 
     def _parse_query(self):
         if request.environ["REQUEST_METHOD"] == 'POST':
@@ -394,7 +505,7 @@ class ApiController(BaseController):
 
             os.remove(f_input)
 
-    def _zip_folder(self, path, filename):       
+    def _zip_folder(self, path, filename):
         exportedFiles = [ f for f in os.listdir(path) ]
 
         with zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED) as compressedFile:
@@ -446,12 +557,12 @@ class ApiController(BaseController):
         """Take a string and return a valid filename constructed from the string.
     Uses a whitelist approach: any characters not present in valid_chars are
     removed. Also spaces are replaced with underscores.
-     
+
     Note: this method may produce invalid filenames such as ``, `.` or `..`
     When I use this method I prepend a date string like '2009_01_15_19_46_32_'
     and append a file extension like '.txt', so I avoid the potential of using
     an invalid filename.
-     
+
     """
         valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
         filename = ''.join(c for c in filename if c in valid_chars)
