@@ -666,7 +666,7 @@ ul {
     outline-style: none;
     top: 75px;
     right: 0.2em;
-    left: unset;
+    left: auto;
     border-radius: 0px;
 }
 
