@@ -17,6 +17,10 @@
     <script type="text/javascript">
         var ﻿require = {
             config: {
+                shared: {
+                    debug: {{config['mapclient.debug']}},
+					path: '{{config['mapclient.relative.path']}}'
+                },
                 app: {
                     debug: {{config['mapclient.debug']}},
 					path: '{{config['mapclient.relative.path']}}',
@@ -43,7 +47,7 @@
                         {% else %}
                             zoom: 7
                         {% endif %},
-                        extent : null //[2539489, 4587131, 2806812, 4972628]
+                        extent : [2539489, 4507131, 2806812, 4972628]
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}',
@@ -52,9 +56,6 @@
                             version: '{{c.metadata['version']}}'
                         }
                     },
-					nominatim: {
-						endpoint : '{{config['osm.api.nominatim']}}'
-					},
                     export: {
                         disabledFormats : {{c.exportDisabledFormats}}
                     },
@@ -64,8 +65,8 @@
                             endpoint: '{{config['dataapi.wps.endpoint']}}',
                             delay: {{config['dataapi.wps.delay']}}
                         }
-                    }
-
+                    },
+                    feedback : '{{config['mapclient.feedback.url']}}'
                 }
             }
         };
@@ -93,20 +94,22 @@
     <div id="map"></div>
 	<nav class="navbar navbar-default navbar-geodata navbar-fixed-top">
 		<div class="header container" style="width: 100%;">
-				<a class="navbar-brand" href="{{config['mapclient.url.catalog']}}" target="_blank">
-					<img src="content/images/geodata-biglogo.png" alt="GeoData.gov.gr" class="logo-header">
-				</a>
+                <div style="float: left;">
+                    <a class="navbar-brand geodata-brand" href="{{config['mapclient.url.catalog']}}" target="_blank">
+                        <img src="content/images/geodata-biglogo.png" alt="GeoData.gov.gr" class="logo-header">
+                    </a>
+                </div>
 				<div style="float: right; padding: 8px 0px 0px 15px;">
 					<select name="locale_selection" id="locale_selection" data-width="100px">
 						<option value="el">Ελληνικά</option>
                         <option value="en">English</option>
 					</select>
 				</div>
-				<div class="device" style="float: right; padding-top: 17px;" >
-					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" type="range" style="width: 150px;">
+				<div class="device" style="float: right; padding-top: 15px;" >
+					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" value="100" type="range" style="width: 150px;">
 				</div>
-				<div class="device img-text" style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" data-i18n-id="index.title.opacity" data-i18n-type="title" title="Διαφάνεια">
-					<img src="content/images/opacity.png" alt="" />
+				<div class="device img-text" style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.opacity" autocomplete="off">
+					Διαφάνεια
 				</div>
 				<div class="device" style="float: right; padding-top: 8px; padding-right: 6px;">
 					<select name="base_layer" id="base_layer" data-width="250px" autocomplete="off">
@@ -118,47 +121,47 @@
 						<option data-key=""
 								data-type="mapquest"
 								data-set="osm"
-								value="mapquest">Map Quest - Open Street Maps</option>
+								value="mapquest-osm">Map Quest - Open Street Maps</option>
 						<option data-key=""
 								data-type="mapquest"
 								data-set="sat"
-								value="mapquest">Map Quest - Satellite</option>
+								value="mapquest-sat">Map Quest - Satellite</option>
 						<!--
 						<option data-key=""
 								data-type="mapquest"
 								data-set="hyb"
-								value="mapquest">Map Quest - Hybrid</option>
+								value="mapquest-hyb">Map Quest - Hybrid</option>
 						-->
 						{% if config['mapclient.base.layer.key'] != '' %}
 						<option data-key="{{config['mapclient.base.layer.key']}}"
 								data-type="bing"
 								data-set="Aerial"
-								value="bing">Bing Map - Aerial</option>
+								value="bing-Aerial">Bing Map - Aerial</option>
 						<option data-key="{{config['mapclient.base.layer.key']}}"
 								data-type="bing"
 								data-set="AerialWithLabels"
-								value="bing">Bing Map - Aerial with Labels</option>
+								value="bing-AerialWithLabels">Bing Map - Aerial with Labels</option>
 						<option data-key="{{config['mapclient.base.layer.key']}}"
 								data-type="bing"
 								data-set="Road"
-								value="bing">Bing Map - Road</option>
+								value="bing-Road">Bing Map - Road</option>
 						{% endif %}
 						<option data-key=""
 								data-type="stamen"
 								data-set="toner"
-								value="mapquest">Stamen - Toner</option>
+								value="stamen-toner">Stamen - Toner</option>
 						<option data-key=""
 								data-type="stamen"
 								data-set="watercolor"
-								value="mapquest">Stamen - Watercolor</option>
+								value="stamen-watercolor">Stamen - Watercolor</option>
 					</select>
 				</div>
-				<div class="device img-text"  style="float: right; padding-top: 13px; padding-right: 6px;" data-placement="bottom" data-i18n-id="index.title.base-layer" data-i18n-type="title" title="Υπόβαθρο">
-					<img src="content/images/map.png" alt="" />
+				<div class="device img-text"  style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.base-layer">
+                    Υπόβαθρο
 				</div>
-				<div class="device" style="float: right; padding:  9px 9px 0px 0px;">
+				<div class="device clearfix resource-data-search" style="padding:  9px 9px 0px 0px; margin: 0 650px 0 248px; max-width: 500px">
 					<input id="location-search" class="form-control input-md" type="text" data-i18n-id="index.input.search.location"
-					data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Αναζήτηση ..." style="width: 200px;" autocomplete="off"></input>
+					data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Αναζήτηση ..." autocomplete="off"></input>
 				</div>
 		</div>
 	</nav>
@@ -182,6 +185,17 @@
 				<div style="float: left;" id="search-label" style="float: left; padding-left: 7px;" class="section-label section-label-hidden" data-i18n-id="index.search">Αναζήτηση</div>
 			</div>
 
+            <div id="tree-filter" class="clearfix" style="padding: 6px 1px 6px 4px;">
+                <div class="input-group" style="float: left; width: 100%;">
+                    <input id="tree-filter-text" placeholder="Φιλτράρισμα αποτελεσμάτων ..." data-i18n-id="control.tree.filter.prompt" data-i18n-type="attribute" data-i18n-name="placeholder" class="form-control input-md" type="text">
+                    <span class="input-group-btn">
+                        <button id="tree-filter-remove" class="btn btn-default" type="button">
+                        <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                    </span>
+                </div>
+            </div>
+
             <div id="layer-tree-group" class="clearfix layer-tree-group"></div>
 			<div id="layer-tree-organization" class="clearfix layer-tree-organization"></div>
             <div id="layer-tree-search" class="clearfix layer-tree-search"></div>
@@ -191,21 +205,6 @@
 			</div>
 
 			<div id="layer-selection" class="clearfix layer-selection"></div>
-
-			<div id="tools-header" class="clearfix tools-header">
-				<img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
-			</div>
-
-            <div id="tools" class="clearfix tools">
-                <div class="tool-wrapper" id="tool-length"></div>
-                <div class="tool-wrapper" id="tool-area"></div>
-                <div class="tool-wrapper" id="tool-select"></div>
-                <div class="tool-wrapper" id="tool-export"></div>
-				<div class="tool-wrapper" id="action-export"></div>
-				<div class="tool-wrapper" id="action-wms"></div>
-                <div class="tool-wrapper" id="action-upload"></div>
-                <div class="tool-wrapper" id="action-position"></div>
-			</div>
 		</div>
 		<div class="panel-left-label">
 			<img src="content/images/layers.png" alt=""/><span style="padding-left: 7px; font-size: 1.3em; color: #485AA8" data-i18n-id="index.catalog">Κατάλογος</span>
@@ -240,5 +239,23 @@
 	</footer>
 
     <div class="dialog-container"></div>
+
+    <div class="tools-container">
+        <div id="tools-header" class="clearfix tools-header">
+            <img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
+        </div>
+        <div id="tools" class="clearfix tools">
+            <div class="tool-wrapper" id="tool-length"></div>
+            <div class="tool-wrapper" id="tool-area"></div>
+            <div class="tool-wrapper" id="tool-export"></div>
+            <div class="tool-wrapper" id="action-export"></div>
+            <div class="tool-wrapper" id="action-wms"></div>
+            <div class="tool-wrapper" id="action-upload"></div>
+            <div class="tool-wrapper" id="action-position"></div>
+            <div class="tool-wrapper" id="action-link"></div>
+            <div class="tool-wrapper" id="restore-zoom"></div>
+            <div class="tool-wrapper" id="action-feedback"></div>
+        </div>
+    </div>
 </body>
 </html>

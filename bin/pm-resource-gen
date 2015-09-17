@@ -222,8 +222,14 @@ def load_package(catalog, timeout, metadata, p):
         package = {
             'id': p['id'],
             'name': p['name'],
-            'title': p['title'],
-            'notes': p['notes'],
+            'title': {
+                'el': p['title'],
+                'en': p['title']
+            },
+            'notes': {
+                'el': p['notes'],
+                'en': p['notes']
+            },
             'organization': p['organization']['id'],
             'groups': [],
             'resources': []
@@ -243,8 +249,14 @@ def load_package(catalog, timeout, metadata, p):
                         'id': r['id'],
                         'resource_group_id': r['resource_group_id'],
                         'format': r['format'],
-                        'name': r['name'],
-                        'description': r['description'],
+                        'name': {
+                            'el': r['name'],
+                            'en': r['name']
+                        },
+                        'description': {
+                            'el': r['description'],
+                            'en': r['description']
+                        },
                         'url': r['url'],
                         'package': p['id']
                     }

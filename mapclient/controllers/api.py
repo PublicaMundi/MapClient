@@ -433,7 +433,7 @@ class ApiController(BaseController):
 
             self._export_partial_result(self._format_response(data, None, QUERY_FORMAT_GEOJSON), path, token, crs, export_format)
             shutil.move(os.path.join(path, token + '.' + ext), os.path.join(tempfile.gettempdir(), token))
-            
+
             if path != None:
                 shutil.rmtree(path)
                 path = None

@@ -19,11 +19,11 @@ log = logging.getLogger(__name__)
 
 MIN_FILE_SIZE = 1 # bytes
 MAX_FILE_SIZE = 5242880 # bytes
-ACCEPT_FILE_TYPES = ['application/gml+xml', 'application/vnd.google-earth.kml+xml', 'application/vnd.geo+json', 'application/json', 'application/octet-stream', 'application/zip']
+ACCEPT_FILE_TYPES = ['application/gml+xml', 'application/vnd.google-earth.kml+xml', 'application/vnd.geo+json', 'application/json', 'application/octet-stream', 'application/zip', 'text/plain']
 CRS_SUPPORTED = ['EPSG:900913', 'EPSG:3857', 'EPSG:4326', 'EPSG:2100', 'EPSG:4258']
 
 class UploadController(BaseController):
-    
+
     @rest.dispatch_on(HEAD='upload_HEAD', GET='upload_GET', POST='upload_POST', OPTIONS='upload_POST', DELETE='upload_DELETE')
     def upload_resource(self):
         return ''
@@ -50,7 +50,7 @@ class UploadController(BaseController):
             initialFilename = fieldStorage.filename
 
             extension = os.path.splitext(initialFilename)[1];
-            
+
             storageFilename = os.path.join(config['upload.path'], token + extension)
 
             file['name'] = os.path.basename(initialFilename)
@@ -58,16 +58,16 @@ class UploadController(BaseController):
             file['size'] = self._get_file_size(fieldStorage.file)
             file['url'] = None
             file['crs'] = in_crs
-            
+
             if self._validate(file):
                 with open(storageFilename, 'w') as f:
                     shutil.copyfileobj( fieldStorage.file , f)
 
                 if extension == '.zip':
                     convertFilename = os.path.join(config['upload.path'], token + '.geojson')
-                    
+
                     file['error'] = self._convert(in_crs, os.path.join(config['upload.path'], token), storageFilename, convertFilename)
-                    
+
                     if file['error'] is None:
                         file['name'] = os.path.splitext(os.path.basename(initialFilename))[0] + '.geojson'
                         file['type'] = 'application/json'
@@ -82,7 +82,7 @@ class UploadController(BaseController):
                         'storage' : storageFilename
                     }
                     session.save()
-            
+
             files.append(file)
         return {
             'files' : files
@@ -94,12 +94,12 @@ class UploadController(BaseController):
             file = session[id]
 
             response.headers['Content-Type'] = file['type'] + '; charset=utf-8'
-        
+
             filename = file['storage']
 
             del session[id]
             session.save()
-            
+
             if not os.path.isfile(filename):
                 abort(404, detail = 'File not found.')
             else:
@@ -112,7 +112,7 @@ class UploadController(BaseController):
 
     def upload_OPTIONS(self):
         return ''
-        
+
     def upload_HEAD(self):
         return ''
 
@@ -122,7 +122,7 @@ class UploadController(BaseController):
     def _convert(self, in_crs, unzip_folder, f_input, f_output):
         # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
         error = None
-        
+
         if not os.path.exists(unzip_folder):
             os.makedirs(unzip_folder)
 
@@ -130,13 +130,13 @@ class UploadController(BaseController):
             z.extractall(unzip_folder)
 
         os.remove(f_input)
-        
+
         f_counter = 0
         for filename in [ f for f in os.listdir(unzip_folder) ]:
             if os.path.splitext(filename)[1] == '.shp':
                 f_counter += 1
                 f_input = os.path.join(unzip_folder, filename)
-        
+
         if f_counter != 1:
             error = 'invalidContent'
 

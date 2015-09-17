@@ -1,7 +1,7 @@
 ﻿define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMundi) {
 
     PublicaMundi.Maps.Resources.Types.WMS = PublicaMundi.Maps.Resources.Types.WMS || 'WMS';
-    
+
     var _isBoundingBoxFinite = function (bbox) {
         for (var i = 0; i < bbox.length; i++) {
             if (!isFinite(bbox[i])) {
@@ -45,14 +45,14 @@
             if (typeof PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Resources.ResourceMetadataReader.prototype.initialize.apply(this, arguments);
             }
-            
+
             this.values.cache = {};
         },
         getMetadata: function (options) {
 			options = options || { url: null };
-			
+
 			var self = this;
-			
+
 			if (!options.url) {
                 throw 'Parameter url is required.';
             }
@@ -60,7 +60,7 @@
             if((!this.values.proxy) && (PublicaMundi.isProxyRequired(window.location.href, options.url))) {
 				throw 'Parameter proxy is not set.';
 			}
-			
+
             var defaults = {
                 service: 'WMS',
                 version: '1.3.0'
@@ -81,7 +81,7 @@
                     defaults[param] = params[param];
                 }
             }
-							
+
             var endpoint = URI.build({
                 protocol: (parts.protocol ? parts.protocol : 'http'),
                 hostname: parts.hostname,
@@ -97,7 +97,7 @@
                 layers: [],
                 title: null
 			};
-					
+
 			var getCapabilitiesUrl = URI.build({
 				protocol: (parts.protocol ? parts.protocol : 'http'),
 				hostname: parts.hostname,
@@ -105,7 +105,7 @@
 				path: parts.path,
 				query: URI.buildQuery({ request : 'GetCapabilities', service : 'WMS' })
 			});
-		
+
             if (PublicaMundi.isProxyRequired(window.location.href, getCapabilitiesUrl)) {
                 getCapabilitiesUrl = this.values.proxy + encodeURIComponent(getCapabilitiesUrl);
             }
@@ -181,9 +181,9 @@
         },
         setOptions: function (resource) {
 			resource.metadata = null;
-			
+
             if ((resource.format) && (resource.format.toUpperCase() === 'WMS')) {
-				var url = resource.wms_server || resource.url || '';				
+				var url = resource.wms_server || resource.url || '';
 				var layer = resource.wms_layer || '';
 
 				if(url) {
@@ -197,7 +197,7 @@
 							}
 						}
 					}
-					
+
 					resource.metadata = {
 						type: PublicaMundi.Maps.Resources.Types.WMS,
 						parameters : {
@@ -242,9 +242,9 @@
                     projection: PublicaMundi.Maps.CRS.Mercator
                 }),
             });
-            
+
 			map.addLayer(__object);
-			
+
 			return __object;
         }
     });
