@@ -131,9 +131,8 @@
         }
     };
 
-	var createBaseLayer = function(type, set, opacity) {
+	var createBaseLayer = function(type, set) {
 		var layer = null;
-        opacity = (opacity === 0 ? opacity : opacity || 100);
 
 		switch(type) {
 			case 'bing':
@@ -218,8 +217,6 @@
             'type' : type,
             'set' : set
         };
-
-        layer.setOpacity(opacity);
 
 		return layer;
 	};
@@ -791,7 +788,7 @@
 				members.components.layerTreeOrganization.hide();
                 members.components.layerTreeSearch.show();
 			}
-            
+
             resize();
 		});
 
@@ -914,15 +911,22 @@
 	};
 
     var setBaseLayer = function(type, set, opacity) {
-        var newBaseLayer = createBaseLayer(type, set, opacity);
+        opacity = (opacity === 0 ? opacity : opacity || 100);
+
+        var newBaseLayer = createBaseLayer(type, set);
 
         var oldBaseLayer = members.map.control.getLayers().item(0);
 
-        members.map.control.getLayers().insertAt(0, newBaseLayer);
+        var overlayBaseLayer = members.map.control.getLayers().item(1);
+        overlayBaseLayer.setOpacity(opacity / 100.0);
+
+        members.map.control.getLayers().insertAt(1, newBaseLayer);
+
         setTimeout(function () {
             members.map.control.getLayers().remove(oldBaseLayer);
         }, 1000);
 
+        $('#base-layer-opacity').val(opacity);
         $('#base_layer').val(type + '-' + set).selectpicker('refresh');
     };
 
