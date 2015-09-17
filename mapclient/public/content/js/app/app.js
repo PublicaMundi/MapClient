@@ -410,7 +410,7 @@
 
         $('#layer-tree-group-result-container').height(height - catalogHeight - selectionHeight - footerHeight - $('#tree-filter').outerHeight(true));
         $('#layer-tree-organization-result-container').height(height - catalogHeight - selectionHeight - footerHeight - $('#tree-filter').outerHeight(true));
-        $('#layer-tree-search').height(height - catalogHeight - selectionHeight - footerHeight - $('#tree-filter').outerHeight(true));
+        $('#layer-tree-search').height(height - catalogHeight - selectionHeight - footerHeight);
 
         $('#map').offset({top : headerHeight , left : 0}).height(height - footerHeight + 10);
 
@@ -776,18 +776,23 @@
 			members.ui.section = id;
 
 			if(id === 'organization') {
+                $('#tree-filter').show()
 				members.components.layerTreeGroup.hide();
                 members.components.layerTreeSearch.hide();
 				members.components.layerTreeOrganization.show();
 			} else if (id === 'group') {
+                $('#tree-filter').show()
 				members.components.layerTreeOrganization.hide();
                 members.components.layerTreeSearch.hide();
 				members.components.layerTreeGroup.show();
 			} if (id === 'search') {
+                $('#tree-filter').hide()
                 members.components.layerTreeGroup.hide();
 				members.components.layerTreeOrganization.hide();
                 members.components.layerTreeSearch.show();
 			}
+            
+            resize();
 		});
 
         // Layer handling events
