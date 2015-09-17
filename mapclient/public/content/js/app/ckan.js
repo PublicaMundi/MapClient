@@ -21,20 +21,20 @@
             }
         },
         isPreloadingEnabled: function() {
-            return ((this.values.metadata) && (this.values.metadata.path));
+            return (((this.values.metadata) && (this.values.metadata.path)) ? true : false);
         },
         preload: function() {
             if(!this.isPreloadingEnabled()) {
                 return;
             }
-            
+
             var self = this;
-            
+
             var uri = new URI(this.values.metadata.path);
             if(this.values.metadata.version) {
                 uri.addQuery({ 'v': this.values.metadata.version });
             }
-            
+
 			return new Promise(function(resolve, reject) {
 				$.ajax({
 					url: uri.toString(),
@@ -43,28 +43,28 @@
 					self.values.catalog.organizations = response.organizations;
                     self.values.catalog.groups = response.groups;
                     self.values.catalog.packages = response.packages;
-                    
+
                     for(var i = 0; i < self.values.catalog.organizations.length; i++) {
                         self.values.catalog.organizations[i].loaded = true;
                     }
                     for(var i = 0; i < self.values.catalog.groups.length; i++) {
                         self.values.catalog.groups[i].loaded = true;
                     }
-                    
+
 					resolve(response);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN organizations : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
         },
         loadOrganizations: function () {
-			// Example : http://labs.geodata.gov.gr/api/3/action/organization_list?all_fields=true						           
+			// Example : http://labs.geodata.gov.gr/api/3/action/organization_list?all_fields=true
 			this.values.catalog.organizations = [];
 
             var self = this;
-            
+
 			var uri = new URI(this.values.endpoint);
 			uri.segment(['api', '3', 'action', 'organization_list']);
 			uri.addQuery({ 'all_fields': true });
@@ -101,7 +101,7 @@
 					resolve(self.values.catalog.organizations);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN organizations : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -110,9 +110,9 @@
 			return this.values.catalog.organizations;
 		},
         loadGroups: function () {
-			// Example : http://labs.geodata.gov.gr/api/3/action/group_list?all_fields=true			
+			// Example : http://labs.geodata.gov.gr/api/3/action/group_list?all_fields=true
 			this.values.catalog.groups = [];
-			
+
             var self = this;
 
             var uri = new URI(this.values.endpoint);
@@ -151,28 +151,50 @@
 					resolve(self.values.catalog.groups);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN groups : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
-        },    
+        },
         getGroups: function() {
 			return this.values.catalog.groups;
 		},
+        isGroupEmpty: function(id) {
+            var packages = this.getPackages();
+
+            for(var p = 0; p < packages.length; p++) {
+                if ($.inArray(id, packages[p].groups) !== -1) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+        isOrganizationEmpty: function(id) {
+            var packages = this.getPackages();
+
+            for(var p = 0; p < packages.length; p++) {
+                if (id === packages[p].organization) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
         loadPackages: function() {
             // Example : http://labs.geodata.gov.gr/api/3/action/current_package_list_with_resources
             this.values.catalog.packages = [];
-            
+
             var self = this;
 
             var uri = new URI(this.values.endpoint);
             uri.segment(['api', '3', 'action', 'current_package_list_with_resources']);
-            
+
 			if ((this.values.xhr) && (this.values.xhr.readyState !== 4)) {
 				this.values.xhr.abort();
 				this.values.xhr = null;
 			}
-				
+
             return new Promise(function(resolve, reject) {
 				self.values.xhr = $.ajax({
 					url: uri.toString(),
@@ -199,14 +221,14 @@
 							for (g = 0; g < packages[p].groups.length; g++) {
 								_package.groups.push(packages[p].groups[g].id);
 							}
-							
+
 							for (e = 0; e < packages[p].extras.length; e++) {
 								if(packages[p].extras[e].key === 'spatial') {
 									_package.spatial = packages[p].extras[e].value;
 									break;
 								}
 							}
-							
+
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
@@ -214,7 +236,7 @@
 									_package.resources.push(_resource);
 								}
 							}
-							
+
 							if( _package.resources.length > 0) {
 								self.values.catalog.packages.push(_package);
 							}
@@ -223,7 +245,7 @@
 					resolve(self.values.catalog.packages);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load packages from CKAN catalog : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -234,7 +256,7 @@
         search: function(text, bbox) {
             // Example : http://labs.geodata.gov.gr/api/3/action/package_search?q=
 			this.values.search.packages = [];
-                        
+
             var self = this;
 
             var uri = new URI(this.values.endpoint);
@@ -245,18 +267,18 @@
                 uri.addQuery({ 'q': text });
             }
 
-			if ((this.values.xhr) && (this.values.xhr.readyState !== 4)) {				
+			if ((this.values.xhr) && (this.values.xhr.readyState !== 4)) {
 				this.values.xhr.abort();
 				this.values.xhr = null;
 			}
 
-			return new Promise(function(resolve, reject) {                
+			return new Promise(function(resolve, reject) {
 				self.values.xhr = $.ajax({
 					url: uri.toString(),
 					context: this
 				}).done(function (response) {
 					self.values.xhr = null;
-                   
+
 					var _package, p, _resource, r, g;
 
 					if ((response.success) && (response.result)) {
@@ -280,7 +302,7 @@
 							for (g = 0; g < packages[p].groups.length; g++) {
 								_package.groups.push(packages[p].groups[g].id);
 							}
-							
+
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
@@ -288,7 +310,7 @@
 									_package.resources.push(_resource);
 								}
 							}
-							
+
 							if( _package.resources.length > 0) {
 								self.values.search.packages.push(_package);
 							}
@@ -301,7 +323,7 @@
 					});
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to search CKAN catalog : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -315,16 +337,16 @@
 					return o;
 				}
 			}
-			
+
 			return -1;
 		},
-		getIndexOfGroup: function(id) {		
+		getIndexOfGroup: function(id) {
 			for(var g = 0, count = this.values.catalog.groups.length; g < count; g++) {
 				if(this.values.catalog.groups[g].id === id) {
 					return g;
 				}
 			}
-			
+
 			return -1;
 		},
         getIndexOfPackage: function(id) {
@@ -333,7 +355,7 @@
 					return p;
 				}
 			}
-			
+
 			return -1;
 		},
         loadOrganizationById: function (id) {
@@ -346,11 +368,11 @@
 
 			return new Promise(function(resolve, reject) {
 				var index = self.getIndexOfOrganization(id);
-				if((index >= 0) && (self.values.catalog.organizations[index].loaded === true)) {				
+				if((index >= 0) && (self.values.catalog.organizations[index].loaded === true)) {
 					resolve(self.values.catalog.organizations[index]);
 					return;
 				}
-							
+
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
@@ -367,7 +389,7 @@
 								image: response.result.image_display_url,
 								loaded: true
 						};
-						
+
 						var _package, p, _resource, r, g, e;
 
 						var packages = response.result.packages;
@@ -386,7 +408,7 @@
 							for (g = 0; g < packages[p].groups.length; g++) {
 								_package.groups.push(packages[p].groups[g].id);
 							}
-												
+
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
@@ -394,15 +416,15 @@
 									_package.resources.push(_resource);
 								}
 							}
-							
-							if( _package.resources.length > 0) {							
+
+							if( _package.resources.length > 0) {
 								index = self.getIndexOfPackage(_package.id);
 								if(index < 0) {
 									self.values.catalog.packages.push(_package);
 								}
 							}
 						}
-						
+
 						var index = self.getIndexOfOrganization(organization.id);
 						if(index < 0) {
 							self.values.catalog.organizations.push(organization);
@@ -413,7 +435,7 @@
 					resolve(organization);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN organization : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -436,11 +458,11 @@
 
 			return new Promise(function(resolve, reject) {
 				var index = self.getIndexOfGroup(id);
-				if((index >= 0) && (self.values.catalog.groups[index].loaded === true)) {				
+				if((index >= 0) && (self.values.catalog.groups[index].loaded === true)) {
 					resolve(self.values.catalog.groups[index]);
 					return;
 				}
-							
+
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
@@ -457,11 +479,11 @@
 								image: response.result.image_display_url,
 								loaded: true
 						};
-						
+
 						var _package, p, _resource, r, g, e;
 
 						var packages = response.result.packages;
-						for (p = 0; p < packages.length; p++) {							
+						for (p = 0; p < packages.length; p++) {
 							_package = {
 								id: packages[p].id,
 								name: packages[p].name,
@@ -476,7 +498,7 @@
 							for (g = 0; g < packages[p].groups.length; g++) {
 								_package.groups.push(packages[p].groups[g].id);
 							}
-												
+
 							for (r = 0; r < packages[p].resources.length; r++) {
 								_resource = packages[p].resources[r];
 
@@ -485,15 +507,15 @@
 									_package.resources.push(_resource);
 								}
 							}
-							
-							if( _package.resources.length > 0) {							
+
+							if( _package.resources.length > 0) {
 								index = self.getIndexOfPackage(_package.id);
 								if(index < 0) {
 									self.values.catalog.packages.push(_package);
 								}
 							}
 						}
-						
+
 						var index = self.getIndexOfGroup(group.id);
 						if(index < 0) {
 							self.values.catalog.groups.push(group);
@@ -504,7 +526,7 @@
 					resolve(group);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN organization : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -531,7 +553,7 @@
 					resolve(self.values.catalog.packages[index]);
 					return;
 				}
-							
+
 				$.ajax({
 					url: uri.toString(),
 					dataType: 'jsonp',
@@ -553,7 +575,7 @@
 						for (var g = 0; g < response.result.groups.length; g++) {
 							_package.groups.push(response.result.groups[g].id);
 						}
-											
+
 						for (var r = 0; r < response.result.resources.length; r++) {
 							_resource = response.result.resources[r];
 							if(_resource.format === 'wms') {
@@ -561,15 +583,15 @@
 								_package.resources.push(_resource);
 							}
 						}
-						
-						if( _package.resources.length > 0) {							
+
+						if( _package.resources.length > 0) {
 							self.values.catalog.packages.push(_package);
 						}
 					}
 					resolve(_package);
 				}).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to load CKAN package : ' + uri.toString());
-					
+
 					reject(errorThrown);
 				});
 			});
@@ -592,7 +614,7 @@
 					}
 				}
 			}
-			
+
             return null;
         },
         getResourceById: function (id) {

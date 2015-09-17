@@ -53,7 +53,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				ckan : null,
 				resources: null,
 				mode: PublicaMundi.Maps.LayerTreeViewMode.ByGroup,
-				maxLayerCount: 5,
                 bbox: null
 			});
 
@@ -61,7 +60,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 PublicaMundi.Maps.Component.prototype.initialize.apply(this, arguments);
             }
 
+            var preload = this.values.ckan.isPreloadingEnabled();
+
             this.values.contentElement = this.values.element + '-result';
+
+            this.values.filter = {
+                organizations : [],
+                groups : []
+            };
 
 			this.event('layer:added');
 			this.event('layer:removed');
@@ -74,34 +80,27 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('catalog:search');
             this.event('catalog:info');
 
-			var sortByTitle = function(a, b) {
-				if(a.title < b.title) {
-					return -1;
-				}
-				if(a.title > b.title) {
-					return 1;
-				}
-				return 0;
-			};
-
-			var sortByCaption = function(a, b) {
-				if(a.caption < b.caption) {
-					return -1;
-				}
-				if(a.caption > b.caption) {
-					return 1;
-				}
-				return 0;
-			};
-
-			var sortByName = function(a, b) {
-				if(a.name < b.name) {
-					return -1;
-				}
-				if(a.name > b.name) {
-					return 1;
-				}
-				return 0;
+			var sortByProperty = function(prop, locale) {
+                if(locale) {
+                    return function(a, b) {
+                        if(a[prop][locale] < b[prop][locale]) {
+                            return -1;
+                        }
+                        if(a[prop][locale] > b[prop][locale]) {
+                            return 1;
+                        }
+                        return 0;
+                    }
+                }
+                return function(a, b) {
+                    if(a[prop] < b[prop]) {
+                        return -1;
+                    }
+                    if(a[prop] > b[prop]) {
+                        return 1;
+                    }
+                    return 0;
+                }
 			};
 
 			this.values.renderGroups = function() {
@@ -126,7 +125,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     groups = all_groups;
                 }
 
-				groups.sort(sortByTitle);
+				groups.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
                 if((this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) && (groups.length === 0)) {
                     $('#' + this.values.element + '-result').hide();
@@ -135,15 +134,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
 
 				for(var i = 0; i < groups.length; i++) {
-                    var caption = PublicaMundi.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.getLocale()]);
+                    if((!preload) || (!this.values.ckan.isGroupEmpty(groups[i].id))) {
+                        var caption = PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.i18n.getLocale()]);
 
-					content.push('<li class="tree-node"><div class="clearfix">');
-					content.push('<div style="float: left;"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
-                    if((groups[i].description) && (groups[i].title[PublicaMundi.getLocale()] != groups[i].description[PublicaMundi.getLocale()])) {
-                        content.push('<div class="tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        var cssClass = ((this.values.filter.groups.length > 0) && (this.values.filter.groups.indexOf(groups[i].id) < 0) ? 'node-filtered' : '');
+
+                        content.push('<li id="node-' + this.values.element + '-' + groups[i].id +'" class="tree-node ' + cssClass+ '">');
+                        content.push('<div class="clearfix node-container">');
+                        content.push('<div class="node-left"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
+
+                        if((groups[i].description) && (groups[i].title[PublicaMundi.i18n.getLocale()] != groups[i].description[PublicaMundi.i18n.getLocale()])) {
+                            content.push('<div class="node-right tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        }
+
+                        content.push('<div class="tree-text tree-text-1" style="margin: 0px 16px 0px 16px;" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
+
+                        content.push('</div></li>');
                     }
-					content.push('</div></li>');
 				}
 				$('#' + this.values.contentElement).append(content.join(''));
 			};
@@ -154,18 +161,25 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				var content = [];
 				var organizations = this.values.ckan.getOrganizations();
 
-				organizations.sort(sortByCaption);
+				organizations.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
 				for(var i = 0; i < organizations.length; i++) {
-                    var caption = PublicaMundi.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.getLocale()]);
+                    if((!preload) || (!this.values.ckan.isOrganizationEmpty(organizations[i].id))) {
+                        var caption = PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]);
 
-					content.push('<li class="tree-node"><div class="clearfix">');
-					content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
-					content.push('<div class="tree-text tree-text-1" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
-                    if((organizations[i].description) && (organizations[i].caption[PublicaMundi.getLocale()] != organizations[i].description[PublicaMundi.getLocale()])) {
-                        content.push('<div class="tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        var cssClass = ((this.values.filter.organizations.length > 0) && (this.values.filter.organizations.indexOf(organizations[i].id) < 0) ? 'node-filtered' : '');
+
+                        content.push('<li id="node-' + this.values.element + '-' + organizations[i].id +'" class="tree-node ' + cssClass + '"><div class="clearfix">');
+                        content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
+
+                        if((organizations[i].description) && (organizations[i].caption[PublicaMundi.i18n.getLocale()] != organizations[i].description[PublicaMundi.i18n.getLocale()])) {
+                            content.push('<div class="node-right tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        }
+
+                        content.push('<div class="tree-text tree-text-1" style="margin: 0px 16px 0px 16px;" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
+
+                        content.push('</div></li>');
                     }
-					content.push('</div></li>');
 				}
 				$('#' + this.values.contentElement).append(content.join(''));
 			};
@@ -204,7 +218,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 
-				group_organizations.sort(sortByCaption);
+				group_organizations.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
 				var content = [];
 
@@ -216,15 +230,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 
 					for(var i = 0; i < group_organizations.length; i++) {
-                        var caption = PublicaMundi.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.getLocale()]);
+                        var caption = PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]);
 
-						content.push('<li class="tree-node">');
-						content.push('<div class="clearfix">');
-						content.push('<div style="float: left;"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
-                        if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.getLocale()] != group_organizations[i].description[PublicaMundi.getLocale()])) {
-                            content.push('<div class="tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        var cssClass = ((this.values.filter.organizations.length > 0) && (this.values.filter.organizations.indexOf(group_organizations[i].id) < 0) ? 'node-filtered' : '');
+
+						content.push('<li id="node-' + this.values.element + '-' + group_organizations[i].id +'" class="tree-node ' + cssClass + '">');
+						content.push('<div class="clearfix node-container">');
+						content.push('<div class="node-left"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
+
+                        if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.i18n.getLocale()] != group_organizations[i].description[PublicaMundi.i18n.getLocale()])) {
+                            content.push('<div class="node-right tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
+
+                        content.push('<div class="tree-text tree-text-2" style="margin: 0px 16px 0px 16px;" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
+
 						content.push('</div>');
 						content.push('</li>');
 					}
@@ -252,7 +271,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 
-				organization_packages.sort(sortByTitle);
+				organization_packages.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
 
 				var content = [];
 
@@ -283,39 +302,48 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  organization_packages[j].id + '_' +
                                                                                  resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
+
                             if(organization_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
+
+							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
 							content.push('</div>');
 							content.push('</li>');
 						} else if(organization_packages[j].resources.length === 1) {
 							var resourceId = organization_packages[j].resources[0].id ;
 
 							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+							content.push('<div class="clearfix node-container">');
+							content.push('<div class="node-left"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
                                                                                  organization_packages[j].id + '_' +
                                                                                  resourceId + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
-							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
+
                             if(organization_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
+
+                            content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
 							content.push('</div>');
 							content.push('</li>');
 					    } else {
 							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+							content.push('<div class="clearfix node-container">');
+							content.push('<div class="node-left"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
                                                                                  organization_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
-							content.push('<div class="tree-text tree-text-3">' + organization_packages[j].title + '</div>');
+
                             if(organization_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
+
+							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
 							content.push('</div>');
 							content.push('</li>');
 						}
@@ -360,7 +388,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 
-				organization_groups.sort(sortByTitle);
+				organization_groups.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
 
 				var content = [];
 
@@ -372,15 +400,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<ul class="tree-node" style="display: none;">');
 
 					for(var i = 0; i < organization_groups.length; i++) {
-                        var caption = PublicaMundi.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.getLocale()]);
+                        var caption = PublicaMundi.i18n.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.i18n.getLocale()]);
 
-						content.push('<li class="tree-node">');
-						content.push('<div class="clearfix">');
-						content.push('<div style="float: left;"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
-						content.push('<div class="tree-text tree-text-2" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
-                        if((organization_groups[i].description) && (organization_groups[i].title[PublicaMundi.getLocale()] != organization_groups[i].description[PublicaMundi.getLocale()])) {
-                            content.push('<div class="tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        var cssClass = ((this.values.filter.groups.length > 0) && (this.values.filter.groups.indexOf(organization_groups[i].id) < 0) ? 'node-filtered' : '');
+
+						content.push('<li id="node-' + this.values.element + '-' + organization_groups[i].id +'" class="tree-node ' + cssClass + '">');
+						content.push('<div class="clearfix node-container">');
+						content.push('<div class="node-left"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
+
+                        if((organization_groups[i].description) && (organization_groups[i].title[PublicaMundi.i18n.getLocale()] != organization_groups[i].description[PublicaMundi.i18n.getLocale()])) {
+                            content.push('<div class="node-right tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
+
+						content.push('<div class="tree-text tree-text-2" style="margin: 0px 16px 0px 16px;" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
+
 						content.push('</div>');
 						content.push('</li>');
 					}
@@ -408,7 +441,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 				}
 
-				group_packages.sort(sortByTitle);
+				group_packages.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
 
 				var content = [];
 
@@ -439,39 +472,48 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                                  group_packages[j].id + '_' +
                                                                                  resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
+
                             if(group_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
+
+							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
 							content.push('</div>');
 							content.push('</li>');
 						} else if(group_packages[j].resources.length === 1) {
 							var resourceId = group_packages[j].resources[0].id ;
 
 							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+							content.push('<div class="clearfix node-container">');
+							content.push('<div class="node-left"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
                                                                                  group_packages[j].id + '_' +
                                                                                  resourceId + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
-							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
+
                             if(group_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
-							content.push('</div>');
+
+							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
+                            content.push('</div>');
 							content.push('</li>');
 					    } else {
 							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
+							content.push('<div class="clearfix node-container">');
+							content.push('<div class="node-left"><img id="' + group_id + '_' +
                                                                                  organization_id + '_' +
                                                                                  group_packages[j].id + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
-							content.push('<div class="tree-text tree-text-3">' + group_packages[j].title + '</div>');
+
                             if(group_packages[j].notes) {
                                 content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                             }
+
+							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+
 							content.push('</div>');
 							content.push('</li>');
 						}
@@ -490,7 +532,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				var _package = this.values.ckan.getPackageById(package_id);
 
-				_package.resources.sort(sortByName);
+				_package.resources.sort(sortByProperty('name'));
 
 				var content = [];
 
@@ -505,24 +547,24 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						var selected = this.values.resources.isLayerSelected(layerId);
 
 						content.push('<li class="tree-node tree-node-checkbox">');
-						content.push('<div class="clearfix">');
+						content.push('<div class="clearfix node-container">');
 						content.push('<div style="float: left;"><img id="' + group_id + '_' +
                                                                              organization_id + '_' +
                                                                              package_id + '_' +
                                                                              resource.id + '_' +
                                                                              this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
+						content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
 						content.push('</div>');
 						content.push('</li>');
 					} else {
 						content.push('<li class="tree-node">');
-						content.push('<div class="clearfix">');
-						content.push('<div style="float: left;"><img id="' + group_id + '_' +
+						content.push('<div class="clearfix node-container">');
+						content.push('<div class="node-left"><img id="' + group_id + '_' +
                                                                              organization_id + '_' +
                                                                              package_id + '_' +
                                                                              resource.id + '_' +
                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
-						content.push('<div class="tree-text tree-text-4">' + resource.name + '</div>');
+                        content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
 						content.push('</div>');
 						content.push('</li>');
 					}
@@ -557,7 +599,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                                          resource_id + '_' +
                                                                          layers[i].key + '_' +
                                                                          this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-					content.push('<div class="tree-text tree-text-4">' + layers[i].title + '</div>');
+					content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + layers[i].title + '</div>');
 					content.push('</div>');
 					content.push('</li>');
 
@@ -813,7 +855,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				var layer = parts.splice(1).join('_');
 
-				if(this.values.resources.getLayerCount() < this.values.maxLayerCount) {
+				if(this.values.resources.getLayerCount() < this.values.resources.getMaxLayerCount()) {
 					$('[data-layer="' + id +'"]').data('loading', true)
 					$('[data-layer="' + id +'"]').attr('src', 'content/images/ajax-loader.gif');
 					$('[data-layer="' + id +'"]').addClass('tree-node-ajax-loader');
@@ -851,6 +893,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			}
 		},
         render: function() {
+            var self = this;
+
             var content = [];
 
             if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -865,7 +909,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="form-group">');
                     content.push('<div style="float: left; padding-left: 15px; width: 19em;">');
-                    content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.getResource('control.tree.search.prompt') +
+                    content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.i18n.getResource('control.tree.search.prompt') +
                                  '" data-i18n-id="control.tree.search.prompt" data-i18n-type="attribute" data-i18n-name="placeholder" class="form-control input-md" type="text">');
                     content.push('</div>');
                     content.push('</div>');
@@ -874,19 +918,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<div class="clearfix">');
                     content.push('<div style="float: left; padding-right: 10px;"  id="' + this.values.element + '-box-draw">');
                     content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.draw" ' +
-                                 'data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.draw') + '"><img src="content/images/edit-w.png" class="img-20" /></a>');
+                                 'data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.draw') + '"><img src="content/images/edit-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-remove">');
-                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.remove" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.remove') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.remove" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.remove') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-apply">');
-                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" data-i18n-id="control.tree.search.button.apply" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.apply') + '"><img src="content/images/apply-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" data-i18n-id="control.tree.search.button.apply" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.apply') + '"><img src="content/images/apply-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-cancel">');
-                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.discard" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.discard') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.discard" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.discard') + '"><img src="content/images/trash-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px;" id="' + this.values.element + '-search">');
-                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.search" data-i18n-type="title" title="' + PublicaMundi.getResource('control.tree.search.button.search') + '"><img src="content/images/search-w.png" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.search" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.search') + '"><img src="content/images/search-w.png" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('</div>');
 
@@ -903,8 +947,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             } else {
                 $('#' + this.values.element).html('');
 
-                content.push('<div class="clearfix" id="' + this.values.element + '-result">');
-                content.push('</div>');
+                content.push('<div style="overflow-y: auto;" id="' + this.values.element + '-result-container"><div class="clearfix" id="' + this.values.element + '-result" style="padding: 0px 2px 0px 0px;">');
+                content.push('</div></div>');
 
                 $('#' + this.values.element).html(content.join(''));
             }
@@ -922,11 +966,78 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                 $('#' + this.values.element + '-text').focus();
             }
+        },
+        filter: function(term) {
+            var self =  this;
+            if(this.values.timeout) {
+                clearTimeout(this.values.timeout);
+                this.values.timeout = null;
+            }
+            this.values.timeout = setTimeout(function() {
+                self.values.timeout = null;
+                if(term) {
+                    var packages = self.values.ckan.getPackages();
+                    var groups = []; var organizations = [];
+
+                    for(var p = 0; p < packages.length; p++) {
+                        if(packages[p].title[PublicaMundi.i18n.getLocale()].indexOf(term) > -1) {
+                            if(organizations.indexOf(packages[p].organization) < 0) {
+                                organizations.push(packages[p].organization);
+                            }
+                            for(var g = 0; g < packages[p].groups.length; g++) {
+                                if(groups.indexOf(packages[p].groups[g]) < 0) {
+                                    groups.push(packages[p].groups[g]);
+                                }
+                            }
+                        }
+                    }
+
+                    self.values.filter = {
+                        organizations : organizations,
+                        groups : groups
+                    };
+
+                    var allOrganizations = self.values.ckan.getOrganizations();
+                    var allGroups = self.values.ckan.getGroups();
+
+                    for(var o = 0; o < allOrganizations.length; o++) {
+                        if(organizations.indexOf(allOrganizations[o].id) < 0) {
+                            $('#node-' + self.values.element + '-' + allOrganizations[o].id).addClass('node-filtered');
+                        } else {
+                            $('#node-' + self.values.element + '-' + allOrganizations[o].id).removeClass('node-filtered');
+                        }
+                    }
+                    for(var g = 0; g < allGroups.length; g++) {
+                        if(groups.indexOf(allGroups[g].id) < 0) {
+                            $('#node-' + self.values.element + '-' + allGroups[g].id).addClass('node-filtered');
+                        } else {
+                            $('#node-' + self.values.element + '-' + allGroups[g].id).removeClass('node-filtered');
+                        }
+                    }
+                } else {
+                    $('li.tree-node').removeClass('node-filtered');
+                    self.values.filter = {
+                        organizations : [],
+                        groups : []
+                    };
+                }
+            }, 500);
         }
     });
 
     var _LayerSelectionAddItem = function(id, title, legend) {
 		var self = this;
+        var layer = this.values.resources.getLayerById(id);
+
+        if(!layer){
+            return;
+        }
+
+        if(title.hasOwnProperty([PublicaMundi.i18n.getLocale()])) {
+            title = title[PublicaMundi.i18n.getLocale()];
+        } else if(title.hasOwnProperty('el')) {
+            title = title['el'];
+        }
 
 		var content = [];
 		var safeId = id.replace(/[^\w\s]/gi, '');
@@ -950,8 +1061,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		content.push('</div>');
 
 		content.push('<div class="clearfix">');
-		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
-		content.push('<div class="selected-layer-opacity-slider"><input type="range" name="points" min="0" max="100" value="100"></div>');
+		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.png" class="img-16" /></div>');
+		content.push('<div class="selected-layer-opacity-slider"><input type="range" min="0" max="100" value="' + (layer.getOpacity()*100).toFixed(0) + '"></div>');
 		content.push('<div class="selected-layer-down"><img src="content/images/down.png" class="action img-16 action-disabled" data-action="down"  /></div>');
 		content.push('</div>');
 
@@ -986,6 +1097,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		this.trigger('layer:added', {id: id});
 	};
 
+    var resolveLayerTitleFromMetadata = function(_package, _resource, value) {
+        if((_package.resources.length === 1) &&
+           (_package.resources[0].metadata) &&
+           (!!_package.resources[0].metadata.extras.layer)) {
+            return _package.title
+        } else if(!!_resource.metadata.extras.layer) {
+            return _resource.name;
+        }
+
+        return value;
+    };
+
     PublicaMundi.Maps.LayerSelection = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
 			var self = this;
@@ -993,8 +1116,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			PublicaMundi.extend(this.values, {
 				map: null,
 				ckan : null,
-				resources: null,
-				maxLayerCount: 5
+				resources: null
 			});
 
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
@@ -1108,7 +1230,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element).html('');
 		},
 		add: function(id, metadata) {
-			if(this.values.resources.getLayerCount() > this.values.maxLayerCount) {
+			if(this.values.resources.getLayerCount() > this.values.resources.getMaxLayerCount()) {
 				return false;
 			}
 
@@ -1133,16 +1255,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							break;
 						}
 					}
-					// Override title with package / resource
-					if((_package.resources.length === 1) &&
-					   (_package.resources[0].metadata) &&
-					   (!!_package.resources[0].metadata.extras.layer)) {
-						title = _package.title
-					} else if(!!_resource.metadata.extras.layer) {
-						title = _resource.name;
-					}
 
-					_LayerSelectionAddItem.call(self, id, title, legend);
+					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(_package, _resource, title), legend);
 
                     return true;
 				});
@@ -1165,7 +1279,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			this.values.updateActions();
 
-			this.trigger('layer:removed', { id: id });
+            if(this.values.resources.getLayerById(id)) {
+                this.trigger('layer:removed', { id: id });
+            }
 		}
 	});
 
@@ -1202,21 +1318,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         setActive: function(active) {
             this.values.active = active && this.values.enabled;
-            if(this.values.active) {
-                $('#' + this.values.element).
-                    find('a').addClass('tool-toggle-selected').removeClass('btn-default').addClass('btn-primary').
-                    find('img').attr('src', this.values.images.enabled);
+            if(this.values.element) {
+                if(this.values.active) {
+                    $('#' + this.values.element).
+                        find('a').addClass('tool-toggle-selected').removeClass('btn-default').addClass('btn-primary').
+                        find('img').attr('src', this.values.images.enabled);
 
-                for(var i=0; i< this.values.actions.length; i++) {
-                    this.values.actions[i].show();
-                }
-            } else {
-                $('#' + this.values.element).
-                    find('a').removeClass('tool-toggle-selected').removeClass('btn-primary').addClass('btn-default').
-                    find('img').attr('src', this.values.images.disabled);
+                    for(var i=0; i< this.values.actions.length; i++) {
+                        this.values.actions[i].show();
+                    }
+                } else {
+                    $('#' + this.values.element).
+                        find('a').removeClass('tool-toggle-selected').removeClass('btn-primary').addClass('btn-default').
+                        find('img').attr('src', this.values.images.disabled);
 
-                for(var i=0; i< this.values.actions.length; i++) {
-                    this.values.actions[i].hide();
+                    for(var i=0; i< this.values.actions.length; i++) {
+                        this.values.actions[i].hide();
+                    }
                 }
             }
         },
@@ -1232,22 +1350,24 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         render: function() {
             var self = this;
 
-            var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-toggle btn btn-default" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
-            content.push('<img class="img-20" src="' + (this.values.active ? this.values.images.enabled : this.values.images.disabled ) + '">');
-            content.push('</a>');
+            if(this.values.element) {
+                var content = [];
+                content.push('<a data-action="' + this.values.name + '" class="tool-toggle btn btn-default" data-i18n-id="' + this.values.title + '" data-i18n-type="title" title="' + ( PublicaMundi.i18n.getResource(this.values.title) || '') + '">');
+                content.push('<img class="img-20" src="' + (this.values.active ? this.values.images.enabled : this.values.images.disabled ) + '">');
+                content.push('</a>');
 
-            $('#' + this.values.element).html(content.join(''));
+                $('#' + this.values.element).html(content.join(''));
 
-            $('#' + this.values.element).find('a').tooltip();
+                $('#' + this.values.element).find('a').tooltip();
 
-            $('#' + this.values.element).find('a').click(function() {
-                self.setActive(!self.values.active);
-                self.trigger('tool:toggle', { name : self.values.name, active : self.getActive() });
-            });
+                $('#' + this.values.element).find('a').click(function() {
+                    self.setActive(!self.values.active);
+                    self.trigger('tool:toggle', { name : self.values.name, active : self.getActive() });
+                });
 
-            if(!this.values.visible) {
-                $('#' + this.values.element).hide();
+                if(!this.values.visible) {
+                    $('#' + this.values.element).hide();
+                }
             }
         }
     });
@@ -1633,7 +1753,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' +
-                                 PublicaMundi.getResource('control.export.dialog.label.crs')  + '</label>');
+                                 PublicaMundi.i18n.getResource('control.export.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326">WGS84</option>');
@@ -1644,7 +1764,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="clearfix">');
                     content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.format">' +
-                                 PublicaMundi.getResource('control.export.dialog.label.format') + '</label>');
+                                 PublicaMundi.i18n.getResource('control.export.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" class="selectpicker" data-width="250px">');
 
                     for(var i=0, countFormat = self.values.formats.length; i<countFormat; i++) {
@@ -1900,7 +2020,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 map: null,
                 resources: null,
                 endpoint: null,
-                buffer: 3
+                buffer: 3,
+                centerOnSelection: false
 			});
 
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
@@ -2054,7 +2175,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
             content.push('<div class="arrow"></div>');
             content.push('<div class="clearfix popover-title" id="popover-top">');
-            content.push('<div style="float: left;" data-i18n-id="tool.select.dialog.title">' + PublicaMundi.getResource('tool.select.dialog.title') + '</div>');
+            content.push('<div style="float: left;" data-i18n-id="tool.select.dialog.title">' + PublicaMundi.i18n.getResource('tool.select.dialog.title') + '</div>');
             if(features.length > 1) {
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-12" src="content/images/right.png"></div>');
                 content.push('<div style="float: right; font-size: 0.9em; padding-top: 2px;">' + (index + 1 ) + '</div>');
@@ -2097,34 +2218,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.map.addOverlay(this.values.tooltip);
 
-            var c1, c2, center;
-            if (geom instanceof ol.geom.Polygon) {
-                center = geom.getInteriorPoint().getCoordinates();
-            } else if (geom instanceof ol.geom.MultiPolygon) {
-                center = geom.getInteriorPoints().getFirstCoordinate();
-            } else if (geom instanceof ol.geom.Point) {
-                center = geom.getCoordinates();
-            } else {
-                var singleGeom = geom;
-                if(geom instanceof ol.geom.MultiLineString) {
-                    var middle= Math.floor(geom.getLineStrings().length / 2);
-                    singleGeom = geom.getLineString(middle);
+            var center = getGeometryCenter(geom);
+            if(center) {
+                this.values.tooltip.setPosition(center);
 
+                if(this.values.centerOnSelection) {
+                    this.values.map.getView().setCenter(center);
                 }
-
-                var coords = singleGeom.getCoordinates();
-                var middle= Math.floor(coords.length / 2);
-
-                center = [0, 0];
-                c1 = coords[middle-1];
-                c2 = coords[middle];
-
-                center[0] = (c2[0] + c1[0]) / 2.0;
-                center[1] = (c2[1] + c1[1]) / 2.0;
             }
-
-            this.values.tooltip.setPosition(center);
-            this.values.map.getView().setCenter(center);
 
             $('#' + this.values.element + '-popup').focus();
 
@@ -2150,6 +2251,45 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
         }
     });
+
+    var getGeometryCenter = function(geom) {
+        var c1, c2, center;
+        if (geom instanceof ol.geom.Polygon) {
+            center = geom.getInteriorPoint().getCoordinates();
+        } else if (geom instanceof ol.geom.MultiPolygon) {
+            var polygons = geom.getPolygons();
+            var largest = polygons[0];
+            for(var p=1;p<polygons.length;p++) {
+                if(largest.getArea() < polygons[p].getArea()) {
+                    largest = polygons[p];
+                }
+            }
+
+            center = largest.getInteriorPoint().getCoordinates();
+        } else if (geom instanceof ol.geom.Point) {
+            center = geom.getCoordinates();
+        } else {
+            var singleGeom = geom;
+            if(geom instanceof ol.geom.MultiLineString) {
+                var middle= Math.floor(geom.getLineStrings().length / 2);
+                singleGeom = geom.getLineString(middle);
+
+                extent = geom.getExtent();
+            }
+
+            var coords = singleGeom.getCoordinates();
+            var middle = Math.floor(coords.length / 2);
+
+            center = [0, 0];
+            c1 = coords[middle-1];
+            c2 = coords[middle];
+
+            center[0] = (c2[0] + c1[0]) / 2.0;
+            center[1] = (c2[1] + c1[1]) / 2.0;
+        }
+
+        return center;
+    };
 
     PublicaMundi.Maps.TextSearch = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
@@ -2198,11 +2338,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
             this.values.overlay.setMap(this.values.map);
 
-			var nominatim = new Bloodhound({
-				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('display_name'),
+			var searcher = new Bloodhound({
+				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
 				queryTokenizer: Bloodhound.tokenizers.whitespace,
 				remote: {
-					url: this.values.endpoint + '?q=%QUERY&format=jsonv2&polygon_geojson=1&addressdetails=1&accept-language=' + members.i18n.locale + '&countrycodes=gr&limit=10',
+					url: this.values.endpoint + 'search/query?term=%QUERY&limit=10',
 					wildcard: '%QUERY'
 				}
 			});
@@ -2210,54 +2350,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var addTooltip = function(selection) {
 				self.removeTooltip();
 
-			   if((selection) && (selection.geojson)) {
+			   if((selection) && (selection.geometry)) {
 					self.values.selection = selection;
 
-				    var drawFeature = false;
-				    var extent = null;
-
 					var format = new ol.format.GeoJSON();
-					var geom = format.readGeometry(selection.geojson, {
-						dataProjection: PublicaMundi.Maps.CRS.WGS84,
+					var geom = format.readGeometry(selection.geometry, {
+						dataProjection: PublicaMundi.Maps.CRS.Mercator,
 						featureProjection: PublicaMundi.Maps.CRS.Mercator
 					});
 					self.values.feature = new ol.Feature({ name: 'selection', geometry: geom });
 
-					var c1, c2, center, zoom;
-					if (geom instanceof ol.geom.Polygon) {
-						drawFeature = true;
+                    var center = getGeometryCenter(geom);
+				    var drawFeature = false;
+				    var extent = null;
 
-						center = geom.getInteriorPoint().getCoordinates();
+					if (!(geom instanceof ol.geom.Point)) {
+						drawFeature = true;
 						extent = geom.getExtent();
-					} else if (geom instanceof ol.geom.MultiPolygon) {
-						drawFeature = true;
-
-						center = geom.getInteriorPoints().getFirstCoordinate();
-						extent = geom.getExtent();
-					} else if (geom instanceof ol.geom.Point) {
-						center = geom.getCoordinates();
-					} else {
-						var singleGeom = geom;
-						if(geom instanceof ol.geom.MultiLineString) {
-							drawFeature = true;
-
-							var middle= Math.floor(geom.getLineStrings().length / 2);
-							singleGeom = geom.getLineString(middle);
-
-							extent = geom.getExtent();
-						}
-
-						drawFeature = true;
-
-						var coords = singleGeom.getCoordinates();
-						var middle= Math.floor(coords.length / 2);
-
-						center = [0, 0];
-						c1 = coords[middle-1];
-						c2 = coords[middle];
-
-						center[0] = (c2[0] + c1[0]) / 2.0;
-						center[1] = (c2[1] + c1[1]) / 2.0;
 					}
 
 					if(drawFeature) {
@@ -2274,7 +2383,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<div class="popover-content">');
 
 					content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table">');
-					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.display_name + '</td>');
+					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.name + '</td>');
                     content.push('<td id="' + self.values.element + '-popup-close" style="width: 18px; vertical-align: top; padding-left: 6px;">');
                     content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span></td>');
                     content.push('</tr></table>');
@@ -2329,9 +2438,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				highlight: true,
 				minLength: 3
 			}, {
-				name: 'nominatim-search',
-				display: 'display_name',
-				source: nominatim
+				name: 'location-search',
+				display: 'name',
+				source: searcher
 			}).bind('typeahead:select', selectLocationSearchResult);
 
             this.render();
@@ -2378,7 +2487,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             var content = [];
             content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title +
-					     '" data-i18n-type="title" title="' + ( PublicaMundi.getResource(this.values.title) || '') + '">');
+					     '" data-i18n-type="title" title="' + ( PublicaMundi.i18n.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + this.values.image + '">');
             content.push('</a>');
 
@@ -2455,7 +2564,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             content.push('<div class="modal-header">');
             content.push('<button id="' + this.values.element + '-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>');
-            content.push('<h4 class="modal-title" data-i18n-id="' + this.values.title + '">' + PublicaMundi.getResource(this.values.title) + '</h4>');
+            content.push('<h4 class="modal-title" data-i18n-id="' + this.values.title + '">' + PublicaMundi.i18n.getResource(this.values.title) + '</h4>');
             content.push('</div>');
 
             content.push('<div class="modal-body" style="text-align: justify; max-height: ' + (this.values.height || 400) +
@@ -2476,7 +2585,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<button type="button" class="btn btn-' + this.values.buttons[action].style + '" data-i18n-id="' + this.values.buttons[action].text +
                                  '" data-action="' + action +
-                                 '">' + PublicaMundi.getResource(this.values.buttons[action].text) + '</button>');
+                                 '">' + PublicaMundi.i18n.getResource(this.values.buttons[action].text) + '</button>');
                 }
             }
             content.push('</div>');
@@ -2526,7 +2635,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.positionInitialized = true;
                 this.moveToCenter();
             }
-            
+
             this.trigger('dialog:show', {sender : this });
 
             $('#' +  this.values.element).focus();
@@ -2751,7 +2860,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 					self.trigger('metadata:loaded', { metadata : metadata});
 				}, function(error) {
-					$('#' + self.values.element + '-error').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.import-wms.error.metadata">' + PublicaMundi.getResource('action.import-wms.error.metadata') + '</div>');
+					$('#' + self.values.element + '-error').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.import-wms.error.metadata">' + PublicaMundi.i18n.getResource('action.import-wms.error.metadata') + '</div>');
 				});
             });
 
@@ -2798,13 +2907,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.title">' +
-                                 PublicaMundi.getResource('control.upload.dialog.label.title') + '</label>');
-                    content.push('<input id="' + self.values.element + '-title" class="form-control input-md" type="text" style="width: 250px;">');
+                                 PublicaMundi.i18n.getResource('control.upload.dialog.label.title') + '</label>');
+                    content.push('<input id="' + self.values.element + '-title" class="form-control input-md" type="text" style="width: 250px;" value="' + PublicaMundi.i18n.getResource('control.upload.dialog.default.title') + '">');
                     content.push('</div>');
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.format">' +
-                                 PublicaMundi.getResource('control.upload.dialog.label.format') + '</label>');
+                                 PublicaMundi.i18n.getResource('control.upload.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" autocomplete="off" class="selectpicker" data-width="250px">');
                     content.push('<option value="gml">GML</option>');
                     content.push('<option value="kml" selected>KML</option>');
@@ -2815,7 +2924,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.crs">' +
-                                 PublicaMundi.getResource('control.upload.dialog.label.crs')  + '</label>');
+                                 PublicaMundi.i18n.getResource('control.upload.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px" disabled>');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326" selected>WGS84</option>');
@@ -2832,7 +2941,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<span class="btn btn-success fileinput-button">');
                     content.push('<i class="glyphicon glyphicon-upload"></i>');
-                    content.push('<span data-i18n-id="action.upload-resource.select-file" style="padding-left: 10px;">' + PublicaMundi.getResource('action.upload-resource.select-file') + '</span>');
+                    content.push('<span data-i18n-id="action.upload-resource.select-file" style="padding-left: 10px;">' + PublicaMundi.i18n.getResource('action.upload-resource.select-file') + '</span>');
                     content.push('<input id="' + self.values.element + '-fileupload" type="file" name="files[]" multiple>');
                     content.push('</span>');
 
@@ -2869,11 +2978,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes': case 'invalidContent': case 'conversionFailed':
                                 case 'crsNotSupported':
                                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' +
-                                                                                            PublicaMundi.getResource('action.upload-resource.error.' + file.error) + '</div>');
+                                                                                            PublicaMundi.i18n.getResource('action.upload-resource.error.' + file.error) + '</div>');
                                     break;
                                 default:
                                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' +
-                                                                                            PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
+                                                                                            PublicaMundi.i18n.getResource('action.upload-resource.error.unknown') + '</div>');
                                     break;
                             };
                         } else {
@@ -2896,7 +3005,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     });
                 },
                 submit: function(e, data) {
-                    data.formData = { crs : $('#' + self.values.element + '-crs').val() };
+                    data.formData = {
+                        format: $('#' + self.values.element + '-format').val(),
+                        crs : $('#' + self.values.element + '-crs').val()
+                    };
                 },
                 add : function (e, data) {
                     $('#' + self.values.element + '-error').html('');
@@ -2916,7 +3028,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         if((!allowed.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
                             $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' +
-                                                                                    PublicaMundi.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
+                                                                                    PublicaMundi.i18n.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
 
                             submit = false;
                         } else if((window.File) && (window.FileReader) && (supportedLocally.test(file.name))) {
@@ -2947,7 +3059,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 },
                 fail : function(e, data) {
                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' +
-                                                                            PublicaMundi.getResource('action.upload-resource.error.unknown') + '</div>');
+                                                                            PublicaMundi.i18n.getResource('action.upload-resource.error.unknown') + '</div>');
                 }
             });
 
@@ -2963,6 +3075,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         execute: function() {
 			this.values.dialog.show();
+            $('#' + this.values.element + '-title').focus().select();
 		}
     });
 
@@ -2980,7 +3093,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 title: 'action.set-position.title',
                 element: this.values.element + '-dialog',
                 visible: false,
-                width: 320,
+                width: 220,
                 height: 280,
                 autofit: true,
                 buttons: {
@@ -2998,14 +3111,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.x">' +
-                                 PublicaMundi.getResource('control.set-position.dialog.label.x') + '</label>');
-                    content.push('<input id="' + self.values.element + '-x" class="form-control input-md" type="number" style="width: 250px;">');
+                                 PublicaMundi.i18n.getResource('control.set-position.dialog.label.x') + '</label>');
+                    content.push('<input id="' + self.values.element + '-x" class="form-control input-md" type="text" style="width: 150px;">');
                     content.push('</div>');
-                    
+
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.y">' +
-                                 PublicaMundi.getResource('control.set-position.dialog.label.y') + '</label>');
-                    content.push('<input id="' + self.values.element + '-y" class="form-control input-md" type="number" style="width: 250px;">');
+                                 PublicaMundi.i18n.getResource('control.set-position.dialog.label.y') + '</label>');
+                    content.push('<input id="' + self.values.element + '-y" class="form-control input-md" type="text" style="width: 150px;">');
                     content.push('</div>');
 
                     content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
@@ -3014,7 +3127,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
 
             // http://stackoverflow.com/questions/891696/jquery-what-is-the-best-way-to-restrict-number-only-input-for-textboxes-all
-            
+
             $('#' + this.values.element + '-x, #' + this.values.element + '-y').keydown(function(e) {
                 var controlKeys = [8, 9, 13, 35, 36, 37, 39];
                 if(controlKeys.indexOf(e.which) >= 0) {
@@ -3035,11 +3148,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 var center = self.values.map.getView().getCenter();
 
                 center = ol.proj.transform(center, 'EPSG:3857' , self.values.projection);
-                
+
                 $('#' + self.values.element + '-x').val(center[0].toFixed(4));
                 $('#' + self.values.element + '-y').val(center[1].toFixed(4));
             });
-            
+
             this.values.dialog.on('dialog:action', function(args){
                     switch(args.action){
                         case 'update':
@@ -3079,13 +3192,169 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         setProjection: function(projection) {
             var position = this.getPosition();
-            
+
             if(position) {
                 position = ol.proj.transform(position,this.values.projection , projection);
                 this.values.projection = projection;
-                
+
                 this.setPosition(position);
             }
+        }
+    });
+
+    PublicaMundi.Maps.PermalinkTool = PublicaMundi.Class(PublicaMundi.Maps.Action, {
+        initialize: function (options) {
+			var self = this;
+
+            if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
+            }
+
+            this.event('position:changed');
+
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'action.create-link.title',
+                element: this.values.element + '-dialog',
+                visible: false,
+                width: 430,
+                height: 280,
+                autofit: false,
+                buttons: {
+                    close : {
+                        text: 'button.close',
+                        style: 'primary'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+
+                    content.push('<div class="input-group">');
+                    content.push('<input readonly id="' + self.values.element + '-link" value="" type="text" class="form-control" data-i18n-id="action.create-link.link.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="" style="background: white;">');
+                    content.push('<span class="input-group-btn">');
+                    content.push('<button id="' + self.values.element + '-btn-copy" class="btn btn-default" type="button">');
+                    content.push('<span class="glyphicon glyphicon-copy"></span>');
+                    content.push('</button>');
+                    content.push('</span>');
+                    content.push('</div>');
+
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix" style="max-height: 200px; overflow: auto;">');
+                    content.push('<div id="' + self.values.element + '-layers" class="clearfix" style="padding: 0 4px 0 0;"></div>');
+                    content.push('</div>');
+                    content.push('<div class="clearfix" style="background: #fff5c1; border-radius: 4px; padding: 4px;" id="' + self.values.element + '-error"></div>');
+                    return content;
+                }
+            });
+
+            $('#' + this.values.element + '-btn-copy').click(function() {
+                 $(this).blur();
+            });
+
+            this.values.dialog.on('dialog:show', function(args) {
+
+            });
+
+            this.values.dialog.on('dialog:action', function(args){
+                    switch(args.action){
+                        case 'close':
+                            this.hide();
+                            break;
+                    }
+            });
+
+            this.render();
+        },
+        exportToJSON: function() {
+            var base = this.values.map.getLayers().getArray()[0];
+            var overlay = this.values.map.getLayers().getArray()[1];
+
+            var config = {
+                zoom: this.values.map.getView().getZoom(),
+                center: this.values.map.getView().getCenter(),
+                base : {
+                    type : (base ? base.publicamundi.type : null),
+                    set : (base ? base.publicamundi.set : null),
+                    opacity : (overlay.getOpacity() * 100)
+                },
+                layers: []
+            };
+
+            var layers = this.values.resources.getSelectedLayers();
+            for(var l=0;l<layers.length; l++) {
+                var layer = layers[l];
+
+                var resource = this.values.ckan.getResourceById(layer.resource_id);
+
+                config.layers.push({
+                    title: layer.title,
+                    package : resource.package,
+                    resource : resource.id,
+                    layer: layer.layer_id,
+                    opacity: layer.opacity
+                });
+            }
+            return config;
+        },
+        execute: function() {
+            var self = this;
+
+            var config = this.exportToJSON();
+
+            return new Promise(function(resolve, reject) {
+                var uri = new URI(self.values.endpoint);
+                uri.segment(['config', 'save']);
+
+				$.ajax({
+                    type: "POST",
+					url: uri.toString(),
+					context: self,
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify(config)
+				}).done(function (response) {
+                    console.log(response);
+                    if(response.success) {
+                        var link = new URI(window.location.origin);
+                        if(self.values.endpoint!='/') {
+                            link.segment([self.values.endpoint]);
+                        }
+                        link.addQuery({ 'config': response.url });
+
+                        self.values.dialog.show();
+
+                        $('#' + self.values.element + '-link').val(link.toString());
+                        $('#' + self.values.element + '-link').select();
+
+                        try {
+                            document.execCommand('copy');
+                        } catch(err) {
+                            $('#' + self.values.element + '-btn-copy').addClass('disabled');
+
+                            $('#' + self.values.element + '-error').html(PublicaMundi.i18n.getResource('action.create-link.error.copy'));
+                        }
+                    }
+
+                    resolve(response);
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					console.log('Failed to save configuration : ' + JSON.stringify(config));
+
+					reject(errorThrown);
+				});
+			});
+		},
+        getPosition: function() {
+            if(this.values.projection) {
+                var x = parseFloat(parseFloat($('#' + this.values.element + '-x').val()).toFixed(4));
+                var y = parseFloat(parseFloat($('#' + this.values.element + '-y').val()).toFixed(4));
+
+                if((!isNaN(x)) && (!isNaN(y))) {
+                    return [x,y];
+                }
+            }
+            return null;
         }
     });
 

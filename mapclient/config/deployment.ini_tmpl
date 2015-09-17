@@ -27,13 +27,15 @@ beaker.session.secret = ${app_instance_secret}
 app_instance_uuid = ${app_instance_uuid}
 
 # Map Client - Application Settings
-mapclient.debug = false
+mapclient.debug = true
+mapclient.proxy = true
 
-mapclient.url.prefix = 
+mapclient.url.prefix =
 mapclient.relative.path = /
 mapclient.url.catalog = http://web.dev.publicamundi.eu/
-mapclient.catalog.metadata.relative = 
-mapclient.catalog.metadata.physical = 
+mapclient.catalog.metadata.relative =
+mapclient.catalog.metadata.physical =
+mapclient.feedback.url =
 
 #Proxy
 

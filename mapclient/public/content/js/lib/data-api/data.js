@@ -92,7 +92,6 @@
         }
 
         function getResourceFromAlias(name) {
-            console.log(configuration);
             if((name) && (configuration.alias) && (configuration.alias.hasOwnProperty(name))) {
                 return configuration.alias[name];
             }

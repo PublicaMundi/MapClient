@@ -223,6 +223,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             if (typeof this.values.events[event] === 'undefined') {
                 throw 'Event not supported.';
             }
+
             var listeners = this.values.events[event].listeners;
 
             for (var i = 0; i < listeners.length; i++) {
@@ -333,7 +334,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         },
     });
 
-    PublicaMundi.Maps.LayerManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
+    PublicaMundi.Maps.ResourceManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
         initialize: function (options) {
             if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
@@ -342,9 +343,10 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             this.values.readers = {};
             this.values.layers = []
             this.values.layerCounter = 0;
+            this.values.maxLayerCount = this.values.maxLayerCount || 5;
             this.values.queryable = [];
 
-            this.event('layer:add');
+            this.event('layer:created');
         },
         setCatalogResourceMetadataOptions: function(resource) {
             if (!resource) {
@@ -374,20 +376,31 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			return this.values.readers[type].getMetadata(parameters);
         },
-        addResourceFromCatalog: function (map, resource) {
+        addResourceFromCatalog: function (map, resource, opacity) {
             var self = this;
+
+            if(this.values.layerCounter >= this.values.maxLayerCount) {
+                return null;
+            }
+
+            opacity = opacity || 100.0;
+            if(opacity < 0) {
+                opacity = 0.0;
+            } else if(opacity > 100) {
+                opacity = 100.0;
+            }
 
             if (!resource) {
                 throw 'Resource is missing.';
             }
             if (typeof shared.adapters[resource.format.toUpperCase()] !== 'object') {
-                return false;
+                return null;
             }
 
             resource = this.setCatalogResourceMetadataOptions(resource);
 
-            this.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
-                var layer;
+            return this.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
+                var layer = null;
 
                 for(var i=0; i < metadata.layers.length; i++){
                     if(metadata.layers[i].key == resource.metadata.extras.layer) {
@@ -396,12 +409,13 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     }
                 }
                 if(layer) {
-                    self.createLayer(map, metadata, resource.id + '_' + layer.key);
+                    var __object = self.createLayer(map, metadata, resource.id + '_' + layer.key);
 
-                    self.trigger('layer:add', { id : resource.id + '_' + layer.key});
+                    if(__object) {
+                        __object.setOpacity(opacity / 100.0);
+                    }
                 }
             });
-            return true;
         },
         getResourceTypes: function () {
             var types = [];
@@ -447,6 +461,10 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             return this.values.queryable;
         },
         createLayer: function (map, metadata, id) {
+            if(this.values.layerCounter >= this.values.maxLayerCount) {
+                return null;
+            }
+
 			var title = '', bbox = null;
 
 			var parts = id.split('_');
@@ -468,35 +486,48 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 					break;
 				}
 			}
+
 			if(!__object) {
 				var factory = new shared.resources[metadata.type].factory({
 					proxy: this.values.proxy
 				});
 
+                __object = factory.create(map, metadata, layer, title)
+
 				this.values.layers.push({
 					id: id,
-					layer : factory.create(map, metadata, layer, title),
+					layer : __object,
                     title: title
 				});
 
                 if(bbox) {
-                    if((!this.values.extent) ||
-                       ((bbox[0] > this.values.extent[0]) &&
-                        (bbox[1] > this.values.extent[1]) &&
-                        (bbox[2] < this.values.extent[2]) &&
-                        (bbox[3] < this.values.extent[3]))) {
-                            var view = map.getView();
-                            var size = map.getSize();
-                            view.fitExtent(bbox, size);
+                    if(this.values.extent) {
+                        if(bbox[0] < this.values.extent[0]) {
+                            bbox[0] = this.values.extent[0];
+                        }
+                        if(bbox[1] < this.values.extent[1]) {
+                            bbox[1] = this.values.extent[1];
+                        }
+                        if(bbox[2] > this.values.extent[2]) {
+                            bbox[2] = this.values.extent[2];
+                        }
+                        if(bbox[3] > this.values.extent[3]) {
+                            bbox[3] = this.values.extent[3];
+                        }
                     }
+                    var view = map.getView();
+                    var size = map.getSize();
+                    view.fitExtent(bbox, size);
                 }
 
 				this.values.layerCounter++;
 
-				return true;
+                this.trigger('layer:created', { id : id});
+
+				return __object;
 			}
 
-			return false;
+			return null;
         },
         destroyLayer: function (map, id) {
 			var index = -1, __object = null;
@@ -521,6 +552,15 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
             return false;
         },
+        getLayerById: function(id) {
+			for(var i=0; i < this.values.layers.length; i++) {
+				if(this.values.layers[i].id == id) {
+					return this.values.layers[i].layer;
+				}
+			}
+
+            return null;
+        },
         getLayerCount: function() {
 			return this.values.layerCounter;
 		},
@@ -531,7 +571,8 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                 return {
                     resource_id: parts[0],
                     layer_id: parts[1],
-                    title: currentValue.title
+                    title: currentValue.title,
+                    opacity: (currentValue.layer.getOpacity() * 100)
                 }
             });
         },
@@ -610,7 +651,10 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 			}
 
 			return false;
-		}
+		},
+        getMaxLayerCount: function() {
+            return this.values.maxLayerCount;
+        }
     });
 
     PublicaMundi.Maps.UI.View = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
@@ -627,6 +671,87 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         show: function () {
 
         }
+    });
+
+    var LocaleManager = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
+        initialize: function (options) {
+            if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
+            }
+
+            this.event('locale:load');
+            this.event('locale:change');
+
+			this.values.i18n = {
+                locale : 'el',
+                strings : {
+                },
+                loaded: {
+                    el : false,
+                    en : false
+                }
+            };
+        },
+        setLocale : function(locale) {
+            var self = this;
+
+            if(this.values.i18n.loaded.hasOwnProperty(locale)) {
+                this.values.i18n.locale = locale;
+            } else {
+                this.values.i18n.locale = 'el';
+            }
+
+            return this.loadResources().then(function() {
+                self.trigger('locale:change', locale);
+            });
+        },
+        getLocale : function() {
+            return this.values.i18n.locale;
+        },
+        getResource : function(id, text) {
+            return this.values.i18n.strings[this.values.i18n.locale][id] || text || '';
+        },
+        loadResources : function() {
+            var self = this;
+
+            var uri = new URI();
+            uri.segment([(this.values.path === '/' ? '' : this.values.path), 'content', 'js', 'i18n', this.values.i18n.locale, 'strings.js']);
+            uri.addQuery({ 'v': (new Date()).getTime() });
+
+            return new Promise(function(resolve, reject) {
+                if(self.values.i18n.loaded[self.values.i18n.locale]) {
+                    self.trigger('locale:load', self.values.i18n.locale);
+
+                    resolve(self.values.i18n.strings[self.values.i18n.locale]);
+                    return;
+                }
+                $.ajax({
+                    url: uri.toString(),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    context: self
+                }).done(function (data) {
+                    self.values.i18n.loaded[self.values.i18n.locale] = true;
+
+                    self.values.i18n.strings[self.values.i18n.locale] = data;
+
+                    self.trigger('locale:load', self.values.i18n.locale);
+
+                    resolve(self.values.i18n.strings[self.values.i18n.locale]);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log('Failed to load resources : ' + uri.toString());
+
+                    reject(errorThrown);
+                });
+            });
+        },
+        setResource: function(locale, id, value) {
+            this.values.i18n.strings[locale][id] = value;
+        }
+    });
+
+    PublicaMundi.i18n = new LocaleManager({
+        path : module.config().path
     });
 
     return PublicaMundi;
