@@ -287,8 +287,14 @@
 							_package = {
 								id: packages[p].id,
 								name: packages[p].name,
-								title: packages[p].title,
-								notes: packages[p].notes,
+								title: {
+                                    'el': packages[p].title,
+                                    'en': packages[p].title
+                                },
+								notes: {
+                                    'el': packages[p].notes,
+                                    'en': packages[p].notes
+                                },
 								organization: packages[p].organization.id,
 								groups: [],
 								resources: [],
