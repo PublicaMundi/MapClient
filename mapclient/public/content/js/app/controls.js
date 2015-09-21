@@ -65,6 +65,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.contentElement = this.values.element + '-result';
 
             this.values.filter = {
+                term: null,
                 organizations : [],
                 groups : []
             };
@@ -137,7 +138,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     if((!preload) || (!this.values.ckan.isGroupEmpty(groups[i].id))) {
                         var caption = PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.i18n.getLocale()]);
 
-                        var cssClass = ((this.values.filter.groups.length > 0) && (this.values.filter.groups.indexOf(groups[i].id) < 0) ? 'node-filtered' : '');
+                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
 
                         content.push('<li id="node-' + this.values.element + '-' + groups[i].id +'" class="tree-node ' + cssClass+ '">');
                         content.push('<div class="clearfix node-container">');
@@ -159,7 +160,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				$('#' + this.values.contentElement).html('');
 
 				var content = [];
-				var organizations = this.values.ckan.getOrganizations();
+				var all_organizations = this.values.ckan.getOrganizations();
+                var organizations = [];
+                
+                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
+                    var packages = this.values.ckan.getFilteredPackages();
+
+                    for(var i=0; i < all_organizations.length; i++) {
+                        for(var j=0; j < packages.length; j++) {
+                            if(all_organizations[i].id === packages[j].organization) {
+                                organizations.push(all_organizations[i]);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    organizations = all_organizations;
+                }
 
 				organizations.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
@@ -167,7 +184,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     if((!preload) || (!this.values.ckan.isOrganizationEmpty(organizations[i].id))) {
                         var caption = PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]);
 
-                        var cssClass = ((this.values.filter.organizations.length > 0) && (this.values.filter.organizations.indexOf(organizations[i].id) < 0) ? 'node-filtered' : '');
+                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
 
                         content.push('<li id="node-' + this.values.element + '-' + organizations[i].id +'" class="tree-node ' + cssClass + '"><div class="clearfix">');
                         content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
@@ -232,11 +249,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					for(var i = 0; i < group_organizations.length; i++) {
                         var caption = PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]);
 
-                        var cssClass = ((this.values.filter.organizations.length > 0) && (this.values.filter.organizations.indexOf(group_organizations[i].id) < 0) ? 'node-filtered' : '');
+                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
 
 						content.push('<li id="node-' + this.values.element + '-' + group_organizations[i].id +'" class="tree-node ' + cssClass + '">');
 						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + group_id + '_' + group_organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
+						content.push('<div class="node-left"><img id="' + group_organizations[i].id + '_' + group_id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
 
                         if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.i18n.getLocale()] != group_organizations[i].description[PublicaMundi.i18n.getLocale()])) {
                             content.push('<div class="node-right tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
@@ -255,8 +272,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderOrganizationPackages = function(element, id) {
 				var parts = id.split('_');
-				var group_id = parts[0];
-				var organization_id = parts[1];
+				var organization_id = parts[0];
 
 				var packages = [], organization_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -266,7 +282,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
 
 				for(var p = 0; p < packages.length; p++) {
-					if ((packages[p].organization === organization_id) && ($.inArray(group_id, packages[p].groups) !== -1)) {
+					if (packages[p].organization === organization_id) {
 						organization_packages.push(packages[p]);
 					}
 				}
@@ -297,10 +313,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 organization_packages[j].id + '_' +
-                                                                                 resourceId + '_' +
+							content.push('<div style="float: left;"><img id="' + resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 
                             if(organization_packages[j].notes) {
@@ -316,10 +329,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 organization_packages[j].id + '_' +
-                                                                                 resourceId + '_' +
+							content.push('<div class="node-left"><img id="' +    resourceId + '_' +
                                                                                  this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 
                             if(organization_packages[j].notes) {
@@ -333,10 +343,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					    } else {
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 organization_packages[j].id + '_' +
-                                                                                 this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
+							content.push('<div class="node-left"><img id="' + organization_packages[j].id + '_' +
+                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
 
                             if(organization_packages[j].notes) {
                                 content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
@@ -402,11 +410,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					for(var i = 0; i < organization_groups.length; i++) {
                         var caption = PublicaMundi.i18n.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.i18n.getLocale()]);
 
-                        var cssClass = ((this.values.filter.groups.length > 0) && (this.values.filter.groups.indexOf(organization_groups[i].id) < 0) ? 'node-filtered' : '');
+                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
 
 						content.push('<li id="node-' + this.values.element + '-' + organization_groups[i].id +'" class="tree-node ' + cssClass + '">');
 						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + organization_groups[i].id + '_' + organization_id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
+						content.push('<div class="node-left"><img id="' + organization_groups[i].id + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
 
                         if((organization_groups[i].description) && (organization_groups[i].title[PublicaMundi.i18n.getLocale()] != organization_groups[i].description[PublicaMundi.i18n.getLocale()])) {
                             content.push('<div class="node-right tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
@@ -426,7 +434,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var renderGroupPackages = function(element, id) {
 				var parts = id.split('_');
 				var group_id = parts[0];
-				var organization_id = parts[1];
 
 				var packages = [], group_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -467,10 +474,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 							content.push('<li class="tree-node tree-node-checkbox">');
 							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 group_packages[j].id + '_' +
-                                                                                 resourceId + '_' +
+							content.push('<div style="float: left;"><img id="' + resourceId + '_' +
                                                                                  this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 
                             if(group_packages[j].notes) {
@@ -486,11 +490,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 group_packages[j].id + '_' +
-                                                                                 resourceId + '_' +
-                                                                                 this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
+							content.push('<div class="node-left"><img id="' + resourceId + '_' +
+                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
 
                             if(group_packages[j].notes) {
                                 content.push('<div class="node-right tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
@@ -503,10 +504,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					    } else {
 							content.push('<li class="tree-node">');
 							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + group_id + '_' +
-                                                                                 organization_id + '_' +
-                                                                                 group_packages[j].id + '_' +
-                                                                                 this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
+							content.push('<div class="node-left"><img id="' + group_packages[j].id + '_' +
+                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
 
                             if(group_packages[j].notes) {
                                 content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
@@ -526,9 +525,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderPackageResources = function(element, id) {
 				var parts = id.split('_');
-                var group_id = parts[0];
-                var organization_id = parts[1];
-				var package_id = parts[2];
+				var package_id = parts[0];
 
 				var _package = this.values.ckan.getPackageById(package_id);
 
@@ -548,10 +545,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 						content.push('<li class="tree-node tree-node-checkbox">');
 						content.push('<div class="clearfix node-container">');
-						content.push('<div style="float: left;"><img id="' + group_id + '_' +
-                                                                             organization_id + '_' +
-                                                                             package_id + '_' +
-                                                                             resource.id + '_' +
+						content.push('<div style="float: left;"><img id="' + resource.id + '_' +
                                                                              this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 						content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
 						content.push('</div>');
@@ -559,11 +553,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					} else {
 						content.push('<li class="tree-node">');
 						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + group_id + '_' +
-                                                                             organization_id + '_' +
-                                                                             package_id + '_' +
-                                                                             resource.id + '_' +
-                                                                             this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
+						content.push('<div class="node-left"><img id="' + resource.id + '_' +
+                                                                          this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
                         content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
 						content.push('</div>');
 						content.push('</li>');
@@ -576,10 +567,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderResourceLayers = function(element, id, layers) {
 				var parts = id.split('_');
-                var group_id = parts[0];
-                var organization_id = parts[1];
-				var package_id = parts[2];
-				var resource_id = parts[3];
+				var resource_id = parts[0];
 
 				var resource = this.values.ckan.getResourceById(resource_id);
 
@@ -593,11 +581,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 					content.push('<li class="tree-node tree-node-checkbox">');
 					content.push('<div class="clearfix">');
-					content.push('<div style="float: left;"><img id="' + group_id + '_' +
-                                                                         organization_id + '_' +
-                                                                         package_id + '_' +
-                                                                         resource_id + '_' +
-                                                                         layers[i].key + '_' +
+					content.push('<div style="float: left;"><img id="' + resource_id + '_' +
                                                                          this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
 					content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + layers[i].title + '</div>');
 					content.push('</div>');
@@ -652,7 +636,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							});
 						} else if (type === 'organization') {
 							self.values.ckan.loadOrganizationById(parts[0]).then(function(organization) {
-								renderOrganizationGroups.call(self, $('#' + id).closest('li'), id);
+								renderOrganizationPackages.call(self, $('#' + id).closest('li'), id);
 								$(element).data('loaded', true);
 								$(element).data('expanded', true);
 								$(element).removeClass('tree-node-collapse');
@@ -678,7 +662,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 						} else if (type === 'resource') {
 								var parts = id.split('_');
-								var resource_id = parts[3];
+								var resource_id = parts[0];
 
 								var resource = self.values.ckan.getResourceById(resource_id);
 
@@ -958,7 +942,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			} else if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByOrganization) {
 				this.values.renderOrganizations.call(this);
 			} else {
-                this.values.renderGroups.call(this);
+                this.values.renderOrganizations.call(this);
             }
         },
         show: function() {
@@ -967,7 +951,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 $('#' + this.values.element + '-text').focus();
             }
         },
-        filter: function(term) {
+        getFilter: function() {
+            return this.values.filter.term;
+        },
+        setFilter: function(term) {
             var self =  this;
             if(this.values.timeout) {
                 clearTimeout(this.values.timeout);
@@ -993,6 +980,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     }
 
                     self.values.filter = {
+                        term: term,
                         organizations : organizations,
                         groups : groups
                     };
@@ -1017,6 +1005,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     $('li.tree-node').removeClass('node-filtered');
                     self.values.filter = {
+                        term: null,
                         organizations : [],
                         groups : []
                     };
@@ -3315,7 +3304,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     dataType: "json",
                     data: JSON.stringify(config)
 				}).done(function (response) {
-                    console.log(response);
                     if(response.success) {
                         var link = new URI(window.location.origin);
                         if(self.values.endpoint!='/') {

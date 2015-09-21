@@ -429,6 +429,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
             return types;
         },
+        setQueryableResources: function(resources) {
+            this.values.queryable = resources;
+        },
         updateQueryableResources: function() {
             var self = this;
 
