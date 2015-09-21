@@ -43,8 +43,6 @@ class ConfigController(BaseController):
         url = ''
 
         try:
-            log.warn(config)
-            log.warn(ip)
             link = Link()
             link.configuration = config
             link.ip = ip

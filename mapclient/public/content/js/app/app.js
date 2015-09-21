@@ -754,9 +754,6 @@
         // Make tool window draggable
         $('.tools-container').draggable({handle : '.tools-header', containment: 'parent'})
 
-        // Tooltips
-        $('.selected-layer-opacity-label, .img-text').tooltip();
-
         // Tab control
 		$('#organization, #group, #search').click(function() {
 			if($(this).data('selected')) {
@@ -795,6 +792,8 @@
         // Layer handling events
 		var layerRemoved  = function(args) {
 			members.components.layerSelection.remove(args.id);
+            
+            resize();
 		}
 
         var showCatalogObjectInfo = function(args) {
@@ -890,17 +889,20 @@
         $('#tree-filter-text').keyup(function() {
             var term = $(this).val();
 
-            members.components.layerTreeGroup.filter(term);
-            members.components.layerTreeOrganization.filter(term);
+            members.components.layerTreeGroup.setFilter(term);
+            members.components.layerTreeOrganization.setFilter(term);
         });
 
 
         $('#tree-filter-remove').click(function() {
             $('#tree-filter-text').val('');
-            members.components.layerTreeGroup.filter(null);
-            members.components.layerTreeOrganization.filter(null);
+            members.components.layerTreeGroup.setFilter(null);
+            members.components.layerTreeOrganization.setFilter(null);
             $(this).blur();
         });
+
+        // Tooltips
+        $('.selectpicker, .img-text').tooltip();
 
         // Initialize layout
         $(window).resize(resize);
@@ -1112,6 +1114,26 @@
 
             $('#loading-text').html('Initializing Catalog ... 0%');
 
+            var afterQueryableLoaded = function() {
+                setTimeout(function () {
+                    $('#block-ui').fadeOut(500).hide();
+                    $('body').css('overflow-y', 'auto');
+
+                    if ($('#view-layers').hasClass('ui-panel-closed')) {
+                        $('#view-layers').panel('toggle');
+                    }
+                    $('#search').focus();
+
+                    if(members.map.config) {
+                        initializeConfiguration();
+                    } else {
+                        initializeResourcePreview();
+                    }
+                }, 500);
+                
+                resize();
+            };
+            
             var afterPreload = function() {
                 // Refresh localization strings (CKAN metadata may have added new resources)
                 localizeUI();
@@ -1121,31 +1143,36 @@
 
                 var term = $('#tree-filter-text').val();
 
-                members.components.layerTreeGroup.filter(term);
-                members.components.layerTreeOrganization.filter(term);
+                members.components.layerTreeGroup.setFilter(term);
+                members.components.layerTreeOrganization.setFilter(term);
 
-                $('#loading-text').html('Loading Metadata ... 0%');
-                members.resources.updateQueryableResources().then(function(resources) {
-                    $('#loading-text').html('Loading Metadata ... 100%');
-
-                    setTimeout(function () {
-                        $('#block-ui').fadeOut(500).hide();
-                        $('body').css('overflow-y', 'auto');
-
-                        if ($('#view-layers').hasClass('ui-panel-closed')) {
-                            $('#view-layers').panel('toggle');
+                if(members.ckan.isPreloadingEnabled()) {
+                    var resources = [];
+                    var packages = members.ckan.getPackages();
+                    for(var p=0;p<packages.length;p++) {
+                        for(var r=0; r<packages[p].resources.length;r++) {
+                            var resource = packages[p].resources[r];
+                            if(resource.queryable) {
+                                resources.push({
+                                    wms: resource.id,
+                                    table : resource.queryable.resource,
+                                    geometry_type: resource.queryable.geometry,
+                                    srid: resource.queryable.srid
+                                });
+                            }
                         }
-                        $('#search').focus();
+                    }
+                    members.resources.setQueryableResources(resources);
+                    
+                    afterQueryableLoaded();
+                } else {
+                    $('#loading-text').html('Loading Metadata ... 0%');
+                    members.resources.updateQueryableResources().then(function(resources) {
+                        $('#loading-text').html('Loading Metadata ... 100%');
 
-                        if(members.map.config) {
-                            initializeConfiguration();
-                        } else {
-                            initializeResourcePreview();
-                        }
-                    }, 500);
-                });
-
-                resize();
+                        afterQueryableLoaded();
+                    });
+                }
             }
 
             if(members.ckan.isPreloadingEnabled()) {
