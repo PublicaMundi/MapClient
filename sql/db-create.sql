@@ -166,7 +166,8 @@ CREATE TABLE public.resource_queryable
   resource text NOT NULL,
   "table" text NOT NULL,
   srid integer,
-  geometry text,
+  geometry_type text,
+  geometry_column text,
   template text,
   active boolean,
   CONSTRAINT pk_resource_queryable PRIMARY KEY (id),
@@ -186,9 +187,12 @@ CREATE TABLE public.resource_field
   id bigint NOT NULL DEFAULT nextval('resource_field_id_seq'::regclass),
   queryable bigint NOT NULL,
   name text NOT NULL,
+  "type" text,
+  export boolean,
+  active boolean,
+  "default" boolean,
   caption_en text,
   caption_el text,
-  active boolean,
   CONSTRAINT pk_resource_fields PRIMARY KEY (id),
   CONSTRAINT fk_queryable FOREIGN KEY (queryable)
       REFERENCES public.resource_queryable (id) MATCH SIMPLE

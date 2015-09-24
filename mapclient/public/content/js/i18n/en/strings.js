@@ -30,6 +30,7 @@
 
     "control.tree.filter.prompt" : "Filter results ...",
     "control.tree.search.prompt" : "Search resources ...",
+    "control.tree.search.no-criteria" : "No search criteria set. Draw a bounding box or enter text.",
 
     "control.tree.search.button.draw" : "Draw bounding box for spatial search. Hold Shift and left mouse button pressed to begin drawing.",
     "control.tree.search.button.remove" : "Remove",

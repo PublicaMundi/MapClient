@@ -35,7 +35,7 @@ class PackageGroup(object):
 
 class Resource(object):
     pass
-    
+
 class Queryable(object):
     pass
 
@@ -64,19 +64,19 @@ class ResourceGenerator(object):
     def _initialize_model(self):
         if self.session:
             self.organizations = Table('organization',
-                                  self.metadata,  
+                                  self.metadata,
                                   autoload=True,
                                   autoload_with=self.engine)
 
             mapper(Organization, self.organizations)
-            
+
             self.groups = Table('group',
-                           self.metadata,  
+                           self.metadata,
                            autoload=True,
                            autoload_with=self.engine)
 
             mapper(Group, self.groups)
-            
+
             self.packages = Table('package',
                              self.metadata,
                              Column('the_geom', Geometry(4326)),
@@ -88,7 +88,7 @@ class ResourceGenerator(object):
                                    self.metadata,
                                    Column('package_id', Text, ForeignKey('package.id')),
                                    Column('group_id', Text, ForeignKey('group.id')),
-                                   autoload=True, 
+                                   autoload=True,
                                    autoload_with=self.engine)
 
             mapper(PackageGroup, self.package_groups, properties={
@@ -123,7 +123,7 @@ class ResourceGenerator(object):
                                Column('tree_node_id', Text, ForeignKey('resource_tree_node.id')),
                                autoload=True,
                                autoload_with=self.engine)
-                             
+
             mapper(Resource, self.resources, properties = {
                 # M:1 relation
                 'packageRef': relation(Package, uselist=False, remote_side=[self.packages.c.id], lazy=False),
@@ -138,13 +138,13 @@ class ResourceGenerator(object):
                                Column('resource', Text, ForeignKey('resource.id')),
                                autoload=True,
                                autoload_with=self.engine)
-                               
+
             self.fields = Table('resource_field',
                            self.metadata,
                            Column('queryable', Text, ForeignKey('resource_queryable.id')),
                            autoload=True,
                            autoload_with=self.engine)
-                             
+
             mapper(Field, self.fields)
 
 
@@ -156,7 +156,7 @@ class ResourceGenerator(object):
     def _get_organizations(self, args, data):
         if args.verbose:
             print 'Loading organizations ...'
-                
+
         # Example : http://labs.geodata.gov.gr/api/3/action/organization_list?all_fields=true
 
         data['organizations'] = []
@@ -208,11 +208,11 @@ class ResourceGenerator(object):
                                         organization[f]['el'] = t['term_translation']
 
                     data['organizations'].append(organization)
-                    
+
     def _get_groups(self, args, data):
         if args.verbose:
             print 'Loading groups ...'
-                
+
         group_translations = None
 
         if args.groups:
@@ -439,19 +439,19 @@ class ResourceGenerator(object):
 
                     for resource_id in resources_response['resources']:
                         counter += 1
-                        
+
                         resource = resources_response['resources'][resource_id]
-                        
+
                         for package in data['packages']:
                             for package_resource in package['resources']:
                                 if package_resource['id'] == resource['wms']:
                                     package_resource['queryable'] = {
                                         'fields' : [],
-                                        'geometry' : resource['geometry_type'],
+                                        'geometry_type' : resource['geometry_type'],
                                         'srid' : None,
                                         'resource' : resource_id
                                     }
-                                
+
                                     # Get table resource metadata
                                     # Example : http://web.dev.publicamundi.eu/maps/api/resource_describe/3e2d4224-65f5-408e-b6b9-340066dc3fa0
                                     metadata_url = urlparse.urljoin(args.endpoint, 'api/resource_describe/' + resource_id)
@@ -461,9 +461,16 @@ class ResourceGenerator(object):
                                         metadata_response = request_metadata.json()
                                         if metadata_response['success']:
                                             resource_metadata = metadata_response['resource']
-                                            
+
                                             package_resource['queryable']['srid'] = resource_metadata['srid']
-                                            package_resource['queryable']['fields'] = [f for f in resource_metadata['fields'] if resource_metadata['fields'][f]['type'] == 'varchar']
+                                            package_resource['queryable']['geometry_column'] = resource_metadata['geometry_column'],
+                                            for name in resource_metadata['fields']:
+                                                field = resource_metadata['fields'][name]
+
+                                                package_resource['queryable']['fields'].append({
+                                                    'name' : name,
+                                                    'type' : field['type'],
+                                                })
 
                         if args.verbose:
                             progress = 100 * counter / total
@@ -472,17 +479,17 @@ class ResourceGenerator(object):
                             sys.stdout.flush()
 
                     if args.verbose: print ''
-             
+
     def _save_metadata(self, args, data):
         # Delete data that is always re-created
         self.session.query(PackageGroup).delete()
-        
+
         catalogOrganizations = [o['id'] for o in data['organizations']]
         deletedOranizations = []
 
         catalogGroups = [o['id'] for o in data['groups']]
         deletedGroups = []
-        
+
         catalogPackages = [o['id'] for o in data['packages']]
         deletedPackages = []
 
@@ -500,15 +507,15 @@ class ResourceGenerator(object):
                 # Insert new or update existing organizations
                 for o in data['organizations']:
                     id = o['id']
-                    
+
                     dbOrganization = self.session.query(Organization).filter(Organization.id == id).first()
-                    
+
                     if not dbOrganization:
                         dbOrganization = Organization()
                         dbOrganization.id = id
-                        
+
                         self.session.add(dbOrganization)
-                        
+
                     dbOrganization.name = o['name']
                     dbOrganization.image = o['image']
                     dbOrganization.caption_en = o['caption']['en']
@@ -539,9 +546,9 @@ class ResourceGenerator(object):
                     if not dbGroup:
                         dbGroup = Group()
                         dbGroup.id = id
-                        
+
                         self.session.add(dbGroup)
-                        
+
                     dbGroup.name = g['name']
                     dbGroup.image = g['image']
                     dbGroup.caption_en = g['caption']['en']
@@ -569,15 +576,15 @@ class ResourceGenerator(object):
                 # Insert new or update existing packages
                 for p in data['packages']:
                     id = p['id']
-                    
+
                     dbPackage = self.session.query(Package).filter(Package.id == id).first()
-                    
+
                     if not dbPackage:
                         dbPackage = Package()
                         dbPackage.id = id
-                        
+
                         self.session.add(dbPackage)
-                        
+
                     dbPackage.name = p['name']
                     dbPackage.title_en = p['title']['en']
                     dbPackage.title_el = p['title']['el']
@@ -585,10 +592,10 @@ class ResourceGenerator(object):
                     dbPackage.notes_el = p['notes']['el']
 
                     dbPackage.organization = p['organization']
-                    
+
                     if 'spatial' in p and p['spatial']:
                         s = shape(geojson.loads(p['spatial']))
-                        
+
                         dbPackage.the_geom = WKTSpatialElement(s.wkt)
 
                     if p['groups']:
@@ -596,7 +603,7 @@ class ResourceGenerator(object):
                             packageGroup = PackageGroup()
                             packageGroup.package_id = id
                             packageGroup.group_id = groupId
-                            
+
                             self.session.add(packageGroup)
 
 
@@ -616,9 +623,9 @@ class ResourceGenerator(object):
                 # Insert new or update existing resources
                 for r in [r for p in data['packages'] for r in p['resources']]:
                     createQueryable = False
-                    
+
                     id = r['id']
-                    
+
                     dbResource = self.session.query(Resource).filter(Resource.id == id).first()
                     dbQueryable = None
 
@@ -627,12 +634,12 @@ class ResourceGenerator(object):
                         dbQueryable = self.session.query(Queryable).filter(Queryable.resource == id).first()
                     else:
                         dbResource = Resource()
-                        
+
                         dbResource.id = id
                         dbResource.package = r['package']
-                        
+
                         self.session.add(dbResource)
-                        
+
                     dbResource.name_en = r['name']['en']
                     dbResource.name_el = r['name']['el']
                     dbResource.description_en = r['description']['en']
@@ -647,26 +654,30 @@ class ResourceGenerator(object):
                         if not dbQueryable:
                             dbQueryable = Queryable()
                             dbQueryable.resource = id
-                            
+
                             self.session.add(dbQueryable)
                             createFields = True
 
-                        dbQueryable.geometry = r['queryable']['geometry']
+                        dbQueryable.geometry_type = r['queryable']['geometry_type']
+                        dbQueryable.geometry_column = r['queryable']['geometry_column']
                         dbQueryable.srid = r['queryable']['srid']
                         dbQueryable.table = r['queryable']['resource']
-                        
+                        dbQueryable.active = True
+
                         if createFields:
                             # Fetch new key for queryable
                             self.session.flush()
-                            
+
                             for f in r['queryable']['fields']:
                                 dbField = Field()
                                 dbField.queryable = dbQueryable.id
-                                dbField.name = f
-                                dbField.caption_en = f
-                                dbField.caption_el = f
+                                dbField.name = f['name']
+                                dbField.type = f['type']
+                                dbField.export = (False if f['type'] == 'geometry' else True)
                                 dbField.active = False
-                                
+                                dbField.caption_en = f['name']
+                                dbField.caption_el = f['name']
+
                                 dbQueryable.fields.append(dbField)
                     elif dbQueryable:
                         #self.session.execute(delete(self.fields, whereclause = (self.fields.c.queryable == dbQueryable.id)))
@@ -682,7 +693,7 @@ class ResourceGenerator(object):
                 self.session.commit()
         except:
             self.session.rollback()
-            
+
             raise
 
     def _export_metadata(self, args, data):
@@ -700,9 +711,9 @@ class ResourceGenerator(object):
         if args.verbose:
             print ''
             print 'Export completed. Metadata is writen at [{filename}].'.format(filename = filename)
-                
+
     def get_metadata(self, args):
-        try:        
+        try:
             self._initialize_session(args)
 
             self._initialize_model()
@@ -731,9 +742,9 @@ class ResourceGenerator(object):
             self._get_packages(args, data)
 
             self._get_queryable_resources(args, data)
-            
+
             self._save_metadata(args, data)
-            
+
             self._export_metadata(args, data)
         except requests.exceptions.HTTPError as ex:
             print 'Export has failed (HTTPError): ' + str(ex)
@@ -745,7 +756,7 @@ class ResourceGenerator(object):
             print 'Unexpected exception has occured: ' + str(ex)
         finally:
             self._cleanup()
-        
+
     def _cleanup(self):
         try:
             if self.session:

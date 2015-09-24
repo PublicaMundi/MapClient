@@ -35,8 +35,9 @@ def load_environment(global_conf, app_conf):
     config['pylons.strict_c'] = True
 
     # Setup the SQLAlchemy database engine
-    engine = engine_from_config(config, 'sqlalchemy.')
-    init_model(engine)
+    engine = engine_from_config(config, 'mapclient.sqlalchemy.')
+    engine_ckan_data = engine_from_config(config, 'vectorstore.sqlalchemy.')
+    init_model(engine, engine_ckan_data)
 
     # CONFIGURATION OPTIONS HERE (note: all config options will override
     # any Pylons config options)

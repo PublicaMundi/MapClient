@@ -52,6 +52,7 @@
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}',
                         metadata: {
+                            database: {{config['mapclient.catalog.metadata.database']}},
                             path : '{{config['mapclient.catalog.metadata.relative']}}',
                             version: '{{c.metadata['version']}}'
                         }

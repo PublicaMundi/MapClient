@@ -1,6 +1,29 @@
 define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
     "use strict";
 
+    var sortByProperty = function(prop, locale) {
+        if(locale) {
+            return function(a, b) {
+                if(a[prop][locale] < b[prop][locale]) {
+                    return -1;
+                }
+                if(a[prop][locale] > b[prop][locale]) {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+        return function(a, b) {
+            if(a[prop] < b[prop]) {
+                return -1;
+            }
+            if(a[prop] > b[prop]) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
     PublicaMundi.Maps.Component = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
         initialize: function (options) {
 			this.values.element = null;
@@ -65,9 +88,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.contentElement = this.values.element + '-result';
 
             this.values.filter = {
-                term: null,
-                organizations : [],
-                groups : []
+                term: null
             };
 
 			this.event('layer:added');
@@ -79,35 +100,173 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('bbox:cancel');
 
             this.event('catalog:search');
-            this.event('catalog:info');
+            this.event('catalog:info-loading');
+            this.event('catalog:info-loaded');
 
-			var sortByProperty = function(prop, locale) {
-                if(locale) {
-                    return function(a, b) {
-                        if(a[prop][locale] < b[prop][locale]) {
-                            return -1;
+            this.values.rootTreeNode = {
+                id: null,
+                children: []
+            };
+
+            this.values.getTreeNodeById = function(id, parent) {
+                if(!id) {
+                    return null;
+                }
+                parent = parent || self.values.rootTreeNode;
+
+                var node = null;
+                for(var i=0; i < parent.children.length; i++) {
+                    if(parent.children[i].id == id) {
+                        return parent.children[i];
+                    } else {
+                        node = self.values.getTreeNodeById(id, parent.children[i]);
+                        if(node) {
+                            return node;
                         }
-                        if(a[prop][locale] > b[prop][locale]) {
-                            return 1;
-                        }
-                        return 0;
                     }
                 }
-                return function(a, b) {
-                    if(a[prop] < b[prop]) {
-                        return -1;
-                    }
-                    if(a[prop] > b[prop]) {
-                        return 1;
-                    }
-                    return 0;
+                return null;
+            };
+
+            this.values.createTreeNodeElement = function(parentTreeNode, options, properties) {
+                var content = [];
+
+                if(options.isLeaf) {
+                    content.push('<li id="node-' + this.values.element + '-' + options.id +'" class="tree-node tree-node-checkbox">');
+                } else {
+                    content.push('<li id="node-' + this.values.element + '-' + options.id +'" class="tree-node">');
                 }
-			};
+                content.push('<div class="clearfix node-container">');
+                if(options.isLeaf) {
+                    content.push('<div class="node-left"><img src="' + options.image + '" class="node-select img-16"/></div>');
+                } else {
+                    content.push('<div class="node-left"><img src="' + options.image + '" class="tree-toggle tree-node-collapse img-16"/></div>');
+                }
+
+                if(options.hasInformation) {
+                    content.push('<div class="node-right tree-info"><img src="content/images/info.png" class="img-16" /></div>');
+                }
+
+                if(options.i18n) {
+                    content.push('<div class="tree-text" data-i18n-id="' + options.i18n + '">' + options.caption + '</div>');
+                } else {
+                    content.push('<div class="tree-text">' + options.caption + '</div>');
+                }
+
+                content.push('</div></li>');
+
+                var elem = $(content.join(''));
+                elem.data(properties);
+
+                parentTreeNode.children.push({
+                    id : options.id,
+                    element :elem,
+                    children: [],
+                    caption : options.caption
+                });
+
+                return elem;
+            };
+
+            this.values.renderTreeNodeElements = function(parentTreeNodeId) {
+                var parentTreeNode = this.values.getTreeNodeById(parentTreeNodeId) || this.values.rootTreeNode;
+                var parentTreeNodeElement = parentTreeNode.element || $('#' + this.values.contentElement);
+
+                var node = this.values.ckan.getNodeById(parentTreeNodeId);
+
+                if(!node) {
+                    $(parentTreeNodeElement).html('');
+                } else {
+                    var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                    $(parentTreeNodeElement).append(children);
+
+                    parentTreeNodeElement = children;
+                }
+
+
+				var nodes = this.values.ckan.getNodeChidlren(parentTreeNodeId);
+				nodes.sort(sortByProperty('id'));
+
+				for(var i = 0; i < nodes.length; i++) {
+                    if((nodes[i].resources.length > 0) || (nodes[i].children.length > 0)) {
+                        var properties = {
+                            id: nodes[i].id,
+                            expanded: false,
+                            loaded: false,
+                            type: 'node',
+                            parent: nodes[i].parent
+                        };
+
+                        var options = {
+                            id: nodes[i].id,
+                            image: 'content/images/expand-arrow.png',
+                            isLeaf: false,
+                            caption: PublicaMundi.i18n.getResource('node.' + nodes[i].id, nodes[i].caption[PublicaMundi.i18n.getLocale()]),
+                            hasInformation: false,
+                            i18n: 'node.' + nodes[i].id
+                        };
+
+
+                        var elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
+                        $(parentTreeNodeElement).append(elem);
+                    }
+				}
+
+                if((node) && (node.resources.length > 0)) {
+                    node.resources.sort(sortByProperty('position'));
+
+                    for(var i = 0; i < node.resources.length; i++) {
+                        var resource = this.values.ckan.getResourceById(node.resources[i]);
+                        var _package = this.values.ckan.getPackageById(resource.package);
+
+                        this.values.resources.setCatalogResourceMetadataOptions(resource);
+
+                        if(!!resource.metadata.extras.layer) {
+                            var layerId = resource.id + '_' + resource.metadata.extras.layer;
+                            var selected = this.values.resources.isLayerSelected(layerId);
+
+                            var properties = {
+                                id: layerId.replace(/[^\w\s]/gi, ''),
+                                expanded: false,
+                                loaded: false,
+                                type: 'layer',
+                                layer: layerId,
+                                selected: selected
+                            };
+
+                            var options = {
+                                id: layerId.replace(/[^\w\s]/gi, ''),
+                                image: (selected ? 'content/images/checked.png' : 'content/images/unchecked.png'),
+                                isLeaf: true,
+                                caption: (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]),
+                                hasInformation: false
+                            };
+                        } else {
+                            var properties = {
+                                id: resource.id,
+                                expanded: false,
+                                loaded: false,
+                                type: 'resource'
+                            };
+
+                            var options = {
+                                id: resource.id,
+                                image: 'content/images/expand-arrow.png',
+                                isLeaf: false,
+                                caption: (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]),
+                                hasInformation: false
+                            };
+                        }
+
+                        var elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
+                        $(parentTreeNodeElement).append(elem);
+                    }
+                }
+            };
 
 			this.values.renderGroups = function() {
 				$('#' + this.values.contentElement).html('');
 
-				var content = [];
 				var all_groups = this.values.ckan.getGroups();
                 var groups = [];
 
@@ -136,33 +295,40 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				for(var i = 0; i < groups.length; i++) {
                     if((!preload) || (!this.values.ckan.isGroupEmpty(groups[i].id))) {
-                        var caption = PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].title[PublicaMundi.i18n.getLocale()]);
+                        var properties = {
+                            id: groups[i].id,
+                            expanded: false,
+                            loaded: false,
+                            type: 'group',
+                            info: {
+                                type: 'group',
+                                id: groups[i].id
+                            }
+                        };
 
-                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
+                        var options = {
+                            id: groups[i].id,
+                            image: 'content/images/expand-arrow.png',
+                            isLeaf: false,
+                            caption: PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].caption[PublicaMundi.i18n.getLocale()]),
+                            hasInformation: (groups[i].info) ||
+                                            ((groups[i].description) && (groups[i].caption[PublicaMundi.i18n.getLocale()] != groups[i].description[PublicaMundi.i18n.getLocale()])),
+                            i18n: 'group.' + groups[i].id
+                        };
 
-                        content.push('<li id="node-' + this.values.element + '-' + groups[i].id +'" class="tree-node ' + cssClass+ '">');
-                        content.push('<div class="clearfix node-container">');
-                        content.push('<div class="node-left"><img id="' + groups[i].id + '_' + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group"/></div>');
 
-                        if((groups[i].description) && (groups[i].title[PublicaMundi.i18n.getLocale()] != groups[i].description[PublicaMundi.i18n.getLocale()])) {
-                            content.push('<div class="node-right tree-info" data-type="group" data-id="' + groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                        }
-
-                        content.push('<div class="tree-text tree-text-1" style="margin: 0px 16px 0px 16px;" data-i18n-id="group.' + groups[i].id + '">' + caption + '</div>');
-
-                        content.push('</div></li>');
+                        var elem = this.values.createTreeNodeElement.call(this, this.values.rootTreeNode, options, properties);
+                        $('#' + this.values.contentElement).append(elem);
                     }
 				}
-				$('#' + this.values.contentElement).append(content.join(''));
 			};
 
 			this.values.renderOrganizations = function() {
 				$('#' + this.values.contentElement).html('');
 
-				var content = [];
 				var all_organizations = this.values.ckan.getOrganizations();
                 var organizations = [];
-                
+
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     var packages = this.values.ckan.getFilteredPackages();
 
@@ -182,28 +348,38 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				for(var i = 0; i < organizations.length; i++) {
                     if((!preload) || (!this.values.ckan.isOrganizationEmpty(organizations[i].id))) {
-                        var caption = PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]);
+                        var properties = {
+                            id: organizations[i].id,
+                            expanded: false,
+                            loaded: false,
+                            type: 'organization',
+                            info: {
+                                type: 'organization',
+                                id: organizations[i].id
+                            }
+                        };
 
-                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
+                        var options = {
+                            id: organizations[i].id,
+                            image: 'content/images/expand-arrow.png',
+                            isLeaf: false,
+                            caption: PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]),
+                            hasInformation: (organizations[i].info) ||
+                                            ((organizations[i].description) && (organizations[i].caption[PublicaMundi.i18n.getLocale()] != organizations[i].description[PublicaMundi.i18n.getLocale()])),
+                            i18n: 'organization.' + organizations[i].id
+                        };
 
-                        content.push('<li id="node-' + this.values.element + '-' + organizations[i].id +'" class="tree-node ' + cssClass + '"><div class="clearfix">');
-                        content.push('<div style="float: left;"><img id="' + organizations[i].id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization"/></div>');
 
-                        if((organizations[i].description) && (organizations[i].caption[PublicaMundi.i18n.getLocale()] != organizations[i].description[PublicaMundi.i18n.getLocale()])) {
-                            content.push('<div class="node-right tree-info" data-type="organization" data-id="' + organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                        }
-
-                        content.push('<div class="tree-text tree-text-1" style="margin: 0px 16px 0px 16px;" data-i18n-id="organization.' + organizations[i].id + '">' + caption + '</div>');
-
-                        content.push('</div></li>');
-                    }
+                        var elem = this.values.createTreeNodeElement.call(this, this.values.rootTreeNode, options, properties);
+                        $('#' + this.values.contentElement).append(elem);
+                   }
 				}
-				$('#' + this.values.contentElement).append(content.join(''));
 			};
 
-			var renderGroupOrganizations = function(element, id) {
-                var parts = id.split('_');
-                var group_id = parts[0];
+			var renderGroupOrganizations = function(element, group_id) {
+                var parentNode = this.values.getTreeNodeById( group_id);
+
+                var parent = $('#node-' + this.values.element + '-' + group_id);
 
 				var organizations = this.values.ckan.getOrganizations(), group_organizations = [], group_packages = [], packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -237,42 +413,46 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				group_organizations.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
-				var content = [];
-
 				if(group_packages.length === 0) {
-					$('#' + id).addClass('disabled');
-					$('#' + id).attr('src', 'content/images/empty-node.png');
-					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
+                    var handler = $(parent).find('img.tree-toggle').first();
+					$(handler).addClass('disabled');
+					$(handler).attr('src', 'content/images/empty-node.png');
+					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				} else {
-					content.push('<ul class="tree-node" style="display: none;">');
+					var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                    $(parent).append(children);
 
 					for(var i = 0; i < group_organizations.length; i++) {
-                        var caption = PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]);
+                        var properties = {
+                            id: group_organizations[i].id,
+                            expanded: false,
+                            loaded: false,
+                            type: 'organization',
+                            info: {
+                                type: 'organization',
+                                id: group_organizations[i].id
+                            }
+                        };
 
-                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
+                        var options = {
+                            id: group_organizations[i].id,
+                            image: 'content/images/expand-arrow.png',
+                            isLeaf: false,
+                            caption: PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]),
+                            hasInformation: (group_organizations[i].info) ||
+                                            ((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.i18n.getLocale()] != group_organizations[i].description[PublicaMundi.i18n.getLocale()])),
+                            i18n: 'organization.' + group_organizations[i].id
+                        };
 
-						content.push('<li id="node-' + this.values.element + '-' + group_organizations[i].id +'" class="tree-node ' + cssClass + '">');
-						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + group_organizations[i].id + '_' + group_id + '_' + this.values.element +  '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="group_organization"/></div>');
-
-                        if((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.i18n.getLocale()] != group_organizations[i].description[PublicaMundi.i18n.getLocale()])) {
-                            content.push('<div class="node-right tree-info" data-type="organization" data-id="' + group_organizations[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                        }
-
-                        content.push('<div class="tree-text tree-text-2" style="margin: 0px 16px 0px 16px;" data-i18n-id="organization.' + group_organizations[i].id + '">' + caption + '</div>');
-
-						content.push('</div>');
-						content.push('</li>');
+                        var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                        $(children).append(elem);
 					}
-					content.push('</ul>');
-
-					$(element).append(content.join(''));
 				}
 			}
 
-			var renderOrganizationPackages = function(element, id) {
-				var parts = id.split('_');
-				var organization_id = parts[0];
+			var renderOrganizationPackages = function(element, organization_id) {
+                var parent = $('#node-' + this.values.element + '-' + organization_id);
+                var parentNode = this.values.getTreeNodeById( organization_id);
 
 				var packages = [], organization_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -289,311 +469,200 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				organization_packages.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
 
-				var content = [];
-
 				if(organization_packages.length === 0) {
-					$('#' + id).addClass('disabled');
-					$('#' + id).attr('src', 'content/images/empty-node.png');
-					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
+					var handler = $(parent).find('img.tree-toggle').first();
+					$(handler).addClass('disabled');
+					$(handler).attr('src', 'content/images/empty-node.png');
+					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				} else {
-					content.push('<ul class="tree-node" style="display: none;">');
+					var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                    $(parent).append(children);
 
 					for(var j = 0; j < organization_packages.length; j++) {
-						for(var r=0; r < organization_packages[j].resources.length; r++) {
-							this.values.resources.setCatalogResourceMetadataOptions(organization_packages[j].resources[r]);
-						}
-
-						if((organization_packages[j].resources.length === 1) &&
-						   (organization_packages[j].resources[0].metadata) &&
-						   (!!organization_packages[j].resources[0].metadata.extras.layer)) {
-
-							var resourceId = organization_packages[j].resources[0].id ;
-							var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
-							var selected = this.values.resources.isLayerSelected(layerId);
-
-							content.push('<li class="tree-node tree-node-checkbox">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + resourceId + '_' +
-                                                                                 this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-
-                            if(organization_packages[j].notes) {
-                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                        if(organization_packages[j].resources.length > 0) {
+                            for(var r=0; r < organization_packages[j].resources.length; r++) {
+                                this.values.resources.setCatalogResourceMetadataOptions(organization_packages[j].resources[r]);
                             }
 
-							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
+                            if((organization_packages[j].resources.length === 1) &&
+                               (organization_packages[j].resources[0].metadata) &&
+                               (!!organization_packages[j].resources[0].metadata.extras.layer)) {
 
-							content.push('</div>');
-							content.push('</li>');
-						} else if(organization_packages[j].resources.length === 1) {
-							var resourceId = organization_packages[j].resources[0].id ;
+                                var resourceId = organization_packages[j].resources[0].id ;
+                                var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
+                                var selected = this.values.resources.isLayerSelected(layerId);
 
-							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' +    resourceId + '_' +
-                                                                                 this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
+                                var properties = {
+                                    id: layerId.replace(/[^\w\s]/gi, ''),
+                                    expanded: false,
+                                    loaded: false,
+                                    type: 'layer',
+                                    layer: layerId,
+                                    selected: selected,
+                                    info: {
+                                        type: 'package',
+                                        id: organization_packages[j].id
+                                    }
+                                };
 
-                            if(organization_packages[j].notes) {
-                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
+                                var options = {
+                                    id: layerId.replace(/[^\w\s]/gi, ''),
+                                    image: (selected ? 'content/images/checked.png' : 'content/images/unchecked.png'),
+                                    isLeaf: true,
+                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
+                                };
+
+                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                $(children).append(elem);
+                            } else if(organization_packages[j].resources.length === 1) {
+                                var resourceId = organization_packages[j].resources[0].id ;
+
+                                var properties = {
+                                    id: resourceId,
+                                    expanded: false,
+                                    loaded: false,
+                                    type: 'resource',
+                                    info: {
+                                        type: 'package',
+                                        id: organization_packages[j].id
+                                    }
+                                };
+
+                                var options = {
+                                    id: resourceId,
+                                    image: 'content/images/expand-arrow.png',
+                                    isLeaf: false,
+                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
+                                };
+
+                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                $(children).append(elem);
+                            } else {
+                                var properties = {
+                                    id: organization_packages[j].id,
+                                    expanded: false,
+                                    loaded: false,
+                                    type: 'package',
+                                    info: {
+                                        type: 'package',
+                                        id: organization_packages[j].id
+                                    }
+                                };
+
+                                var options = {
+                                    id: organization_packages[j].id,
+                                    image: 'content/images/expand-arrow.png',
+                                    isLeaf: false,
+                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
+                                };
+
+                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                $(children).append(elem);
                             }
-
-                            content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
-
-							content.push('</div>');
-							content.push('</li>');
-					    } else {
-							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + organization_packages[j].id + '_' +
-                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
-
-                            if(organization_packages[j].notes) {
-                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + organization_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                            }
-
-							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + organization_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
-
-							content.push('</div>');
-							content.push('</li>');
-						}
-					}
-					content.push('</ul>');
-
-					$(element).append(content.join(''));
-				}
-			}
-
-			var renderOrganizationGroups = function(element, id) {
-                var parts = id.split('_');
-                var organization_id = parts[0];
-
-				var groups = this.values.ckan.getGroups(), packages = [], organization_groups = [], organization_packages = [];
-                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    packages = this.values.ckan.getFilteredPackages();
-                } else {
-                    packages = this.values.ckan.getPackages();
-                }
-
-				for(var p = 0; p < packages.length; p++) {
-					if (organization_id === packages[p].organization) {
-						organization_packages.push(packages[p]);
-
-						for(var g = 0; g < packages[p].groups.length; g++) {
-							var index = this.values.ckan.getIndexOfGroup(packages[p].groups[g]);
-
-							var exists = false;
-							if(index !== -1) {
-								for(var o = 0; o < organization_groups.length; o++) {
-									if(organization_groups[o].id === packages[p].groups[g]) {
-										exists = true;
-										break;
-									}
-								}
-								if(!exists) {
-									organization_groups.push(groups[index]);
-								}
-							}
-						}
-					}
-				}
-
-				organization_groups.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
-
-				var content = [];
-
-				if(organization_packages.length === 0) {
-					$('#' + id).addClass('disabled');
-					$('#' + id).attr('src', 'content/images/empty-node.png');
-					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
-				} else {
-					content.push('<ul class="tree-node" style="display: none;">');
-
-					for(var i = 0; i < organization_groups.length; i++) {
-                        var caption = PublicaMundi.i18n.getResource('group.' + organization_groups[i].id, organization_groups[i].title[PublicaMundi.i18n.getLocale()]);
-
-                        var cssClass = ((caption.indexOf(this.values.filter.term) < 0) ? 'node-filtered' : '');
-
-						content.push('<li id="node-' + this.values.element + '-' + organization_groups[i].id +'" class="tree-node ' + cssClass + '">');
-						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + organization_groups[i].id + this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="organization_group"/></div>');
-
-                        if((organization_groups[i].description) && (organization_groups[i].title[PublicaMundi.i18n.getLocale()] != organization_groups[i].description[PublicaMundi.i18n.getLocale()])) {
-                            content.push('<div class="node-right tree-info" data-type="group" data-id="' + organization_groups[i].id + '"><img src="content/images/info.png" class="img-16" /></div>');
                         }
-
-						content.push('<div class="tree-text tree-text-2" style="margin: 0px 16px 0px 16px;" data-i18n-id="group.' + organization_groups[i].id + '">' + caption + '</div>');
-
-						content.push('</div>');
-						content.push('</li>');
-					}
-					content.push('</ul>');
-
-					$(element).append(content.join(''));
-				}
-			}
-
-			var renderGroupPackages = function(element, id) {
-				var parts = id.split('_');
-				var group_id = parts[0];
-
-				var packages = [], group_packages = [];
-                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
-                    packages = this.values.ckan.getFilteredPackages();
-                } else {
-                    packages = this.values.ckan.getPackages();
-                }
-
-				for(var p = 0; p < packages.length; p++) {
-					if ((packages[p].organization === organization_id) && ($.inArray(group_id, packages[p].groups) !== -1)) {
-						group_packages.push(packages[p]);
-					}
+                    }
 				}
 
-				group_packages.sort(sortByProperty('title', PublicaMundi.i18n.getLocale()));
+                self.setFilter(self.getFilter(), 0);
+            }
 
-				var content = [];
-
-				if(group_packages.length === 0) {
-					$('#' + id).addClass('disabled');
-					$('#' + id).attr('src', 'content/images/empty-node.png');
-					$('#' + id).closest('li').find('.tree-text-2').first().addClass('tree-text-disabled');
-				} else {
-					content.push('<ul class="tree-node" style="display: none;">');
-
-					for(var j = 0; j < group_packages.length; j++) {
-						for(var r=0; r < group_packages[j].resources.length; r++) {
-							this.values.resources.setCatalogResourceMetadataOptions(group_packages[j].resources[r]);
-						}
-
-						if((group_packages[j].resources.length === 1) &&
-						   (group_packages[j].resources[0].metadata) &&
-						   (!!group_packages[j].resources[0].metadata.extras.layer)) {
-
-							var resourceId = group_packages[j].resources[0].id ;
-							var layerId = resourceId + '_' + group_packages[j].resources[0].metadata.extras.layer;
-                            var selected = this.values.resources.isLayerSelected(layerId);
-
-							content.push('<li class="tree-node tree-node-checkbox">');
-							content.push('<div class="clearfix">');
-							content.push('<div style="float: left;"><img id="' + resourceId + '_' +
-                                                                                 this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-
-                            if(group_packages[j].notes) {
-                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                            }
-
-							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
-
-							content.push('</div>');
-							content.push('</li>');
-						} else if(group_packages[j].resources.length === 1) {
-							var resourceId = group_packages[j].resources[0].id ;
-
-							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + resourceId + '_' +
-                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
-
-                            if(group_packages[j].notes) {
-                                content.push('<div class="node-right tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                            }
-
-							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
-
-                            content.push('</div>');
-							content.push('</li>');
-					    } else {
-							content.push('<li class="tree-node">');
-							content.push('<div class="clearfix node-container">');
-							content.push('<div class="node-left"><img id="' + group_packages[j].id + '_' +
-                                                                              this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="package"/></div>');
-
-                            if(group_packages[j].notes) {
-                                content.push('<div class="tree-info" data-type="package" data-id="' + group_packages[j].id + '"><img src="content/images/info.png" class="img-16" /></div>');
-                            }
-
-							content.push('<div class="tree-text tree-text-3" style="margin: 0px 16px 0px 16px;">' + group_packages[j].title[PublicaMundi.i18n.getLocale()] + '</div>');
-
-							content.push('</div>');
-							content.push('</li>');
-						}
-					}
-					content.push('</ul>');
-
-					$(element).append(content.join(''));
-				}
-			}
-
-			var renderPackageResources = function(element, id) {
-				var parts = id.split('_');
-				var package_id = parts[0];
+			var renderPackageResources = function(element, package_id) {
+                var parent = $('#node-' + this.values.element + '-' + package_id);
+                var parentNode = this.values.getTreeNodeById( package_id);
 
 				var _package = this.values.ckan.getPackageById(package_id);
 
 				_package.resources.sort(sortByProperty('name'));
 
-				var content = [];
-
-				content.push('<ul class="tree-node" style="display: none;">');
+                var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                $(parent).append(children);
 
 				for(var i = 0; i < _package.resources.length; i++) {
 					var resource = _package.resources[i];
 
 					if(!!resource.metadata.extras.layer) {
-
-						var layerId = resource.id + '_' + resource.metadata.extras.layer;
+                        var layerId = resource.id + '_' + resource.metadata.extras.layer;
 						var selected = this.values.resources.isLayerSelected(layerId);
 
-						content.push('<li class="tree-node tree-node-checkbox">');
-						content.push('<div class="clearfix node-container">');
-						content.push('<div style="float: left;"><img id="' + resource.id + '_' +
-                                                                             this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-						content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
-						content.push('</div>');
-						content.push('</li>');
-					} else {
-						content.push('<li class="tree-node">');
-						content.push('<div class="clearfix node-container">');
-						content.push('<div class="node-left"><img id="' + resource.id + '_' +
-                                                                          this.values.element + '" src="content/images/expand-arrow.png" class="tree-toggle tree-node-collapse img-16" data-expanded="false" data-loaded="false" data-type="resource"/></div>');
-                        content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + resource.name[PublicaMundi.i18n.getLocale()] + '</div>');
-						content.push('</div>');
-						content.push('</li>');
-					}
-				}
-				content.push('</ul>');
+                        var properties = {
+                            id: layerId.replace(/[^\w\s]/gi, ''),
+                            expanded: false,
+                            loaded: false,
+                            type: 'layer',
+                            layer: layerId,
+                            selected: selected
+                        };
 
-				$(element).append(content.join(''));
+                        var options = {
+                            id: layerId.replace(/[^\w\s]/gi, ''),
+                            image: (selected ? 'content/images/checked.png' : 'content/images/unchecked.png'),
+                            isLeaf: true,
+                            caption: resource.name[PublicaMundi.i18n.getLocale()],
+                            hasInformation: false
+                        };
+					} else {
+                        var properties = {
+                            id: resource.id,
+                            expanded: false,
+                            loaded: false,
+                            type: 'resource'
+                        };
+
+                        var options = {
+                            id: resource.id,
+                            image: 'content/images/expand-arrow.png',
+                            isLeaf: false,
+                            caption: resource.name[PublicaMundi.i18n.getLocale()],
+                            hasInformation: false
+                        };
+					}
+                    var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                    $(children).append(elem);
+				}
 			}
 
-			var renderResourceLayers = function(element, id, layers) {
-				var parts = id.split('_');
-				var resource_id = parts[0];
+			var renderResourceLayers = function(element, resource_id, layers) {
+                var parent = $('#node-' + this.values.element + '-' + resource_id);
+                var parentNode = this.values.getTreeNodeById( resource_id);
 
 				var resource = this.values.ckan.getResourceById(resource_id);
 
-				var content = [];
-
-				content.push('<ul class="tree-node" style="display: none;">');
+                var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                $(parent).append(children);
 
 				for(var i = 0; i < layers.length; i++) {
+                    // Layer Id should be unique
 					var layerId = resource_id + '_' + layers[i].name;
                     var selected = this.values.resources.isLayerSelected(layerId);
 
-					content.push('<li class="tree-node tree-node-checkbox">');
-					content.push('<div class="clearfix">');
-					content.push('<div style="float: left;"><img id="' + resource_id + '_' +
-                                                                         this.values.element + '" src="' + (selected ? 'content/images/checked.png' : 'content/images/unchecked.png') + '" class="node-select img-16" data-selected="' + (selected ? 'true' : 'false') + '" data-type="layer" data-layer="' + layerId +'" /></div>');
-					content.push('<div class="tree-text tree-text-4" style="margin: 0px 0px 0px 16px;">' + layers[i].title + '</div>');
-					content.push('</div>');
-					content.push('</li>');
+                    var properties = {
+                        id: layerId.replace(/[^\w\s]/gi, ''),
+                        expanded: false,
+                        loaded: false,
+                        type: 'layer',
+                        layer: layerId,
+                        selected: selected
+                    };
 
+                    var options = {
+                        id: layerId.replace(/[^\w\s]/gi, ''),
+                        image: (selected ? 'content/images/checked.png' : 'content/images/unchecked.png'),
+                        isLeaf: true,
+                        caption: layers[i].title,
+                        hasInformation: false
+                    };
+
+                    var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                    $(children).append(elem);
 				}
-				content.push('</ul>');
 
-				$(element).append(content.join(''));
+                self.setFilter(self.getFilter(), 0);
 			}
 
-            $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-text-1, .tree-text-2, .tree-text-3, .tree-text-4', function() {
+            $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-text', function() {
                 var handler = $(this).parent().find('.tree-toggle');
                 if(handler.size() > 0) {
                     handler.click();
@@ -607,118 +676,112 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			$('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-toggle', function() {
 				var element = this;
+                var parent = $(this).closest('li');
 
-				var id = $(this).attr('id');
-				var type = $(this).data('type');
+                var properties = $(parent).data();
 
-                var parts = id.split('_');
+				var id = properties.id;
+				var type = properties.type;
 
-				if($(this).hasClass('disabled')) {
+				if($(parent).hasClass('disabled')) {
 					return;
 				}
-				if($(this).data('expanded')) {
-					$(this).data('expanded', false);
+
+				if(properties.expanded) {
+					properties.expanded = false;
 					$(this).addClass('tree-node-collapse');
-					$('#' + id).closest('li').find('ul').first().fadeOut(250);
-				} else if(!$(this).data('loading')) {
-					if($(this).data('loaded')) {
-						$(this).data('expanded', true);
+					$(parent).find('ul').first().fadeOut(250);
+				} else if(!properties.loading) {
+					if(properties.loaded) {
+						properties.expanded = true;
 						$(this).removeClass('tree-node-collapse');
-						$('#' + id).closest('li').find('ul').first().fadeIn(250);
+						$(parent).find('ul').first().fadeIn(250);
 					} else {
-						if(type === 'group') {
-							self.values.ckan.loadGroupById(parts[0]).then(function(group) {
-								renderGroupOrganizations.call(self, $('#' + id).closest('li'), id);
-								$(element).data('loaded', true);
-								$(element).data('expanded', true);
+                        if(type === 'node') {
+                            self.values.renderTreeNodeElements.call(self, id);
+                            properties.loaded = true;
+                            properties.expanded = true;
+                            $(element).removeClass('tree-node-collapse');
+                            $(parent).find('ul').first().fadeIn(250);
+                        } else if(type === 'group') {
+							self.values.ckan.loadGroupById(id).then(function(group) {
+								renderGroupOrganizations.call(self, parent, id);
+								properties.loaded = true;
+								properties.expanded = true;
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);
+								$(parent).find('ul').first().fadeIn(250);
 							});
 						} else if (type === 'organization') {
-							self.values.ckan.loadOrganizationById(parts[0]).then(function(organization) {
-								renderOrganizationPackages.call(self, $('#' + id).closest('li'), id);
-								$(element).data('loaded', true);
-								$(element).data('expanded', true);
+							self.values.ckan.loadOrganizationById(id).then(function(organization) {
+								renderOrganizationPackages.call(self, parent, id);
+								properties.loaded = true;
+								properties.expanded = true;
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);
+								$(parent).find('ul').first().fadeIn(250);
 							});
-						} else if (type === 'group_organization') {
-								renderOrganizationPackages.call(self, $('#' + id).closest('li'), id);
-								$(element).data('loaded', true);
-								$(element).data('expanded', true);
-								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);
-						} else if (type === 'organization_group') {
-								renderGroupPackages.call(self, $('#' + id).closest('li'), id);
-								$(element).data('loaded', true);
-								$(element).data('expanded', true);
-								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);
 						} else if (type === 'package') {
-								renderPackageResources.call(self, $('#' + id).closest('li'), id);
-								$(element).data('loaded', true);
-								$(element).data('expanded', true);
+								renderPackageResources.call(self, parent, id);
+								properties.loaded = true;
+								properties.expanded = true;
 								$(element).removeClass('tree-node-collapse');
-								$('#' + id).closest('li').find('ul').first().fadeIn(250);
+								$(parent).find('ul').first().fadeIn(250);
 						} else if (type === 'resource') {
-								var parts = id.split('_');
-								var resource_id = parts[0];
+                            var resource = self.values.ckan.getResourceById(properties.id);
 
-								var resource = self.values.ckan.getResourceById(resource_id);
+                            $(this).attr('src', 'content/images/ajax-loader.gif');
+                            $(this).addClass('tree-node-ajax-loader');
+                            properties.loading = true;
 
-								$(this).attr('src', 'content/images/ajax-loader.gif');
-								$(this).addClass('tree-node-ajax-loader');
-								$(this).data('loading', true)
+                            self.values.resources.setCatalogResourceMetadataOptions(resource);
 
-                                self.values.resources.setCatalogResourceMetadataOptions(resource);
+                            self.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
+                                $(element).attr('src', 'content/images/expand-arrow.png');
+                                $(element).removeClass('tree-node-ajax-loader');
 
-								self.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
-									$(element).attr('src', 'content/images/expand-arrow.png');
-									$(element).removeClass('tree-node-ajax-loader');
+                                renderResourceLayers.call(self, parent, id, metadata.layers);
 
-									renderResourceLayers.call(self, $('#' + id).closest('li'), id, metadata.layers);
-
-									$(element).data('loaded', true);
-									$(element).data('expanded', true);
-									$(element).data('loading', false);
-									$(element).removeClass('tree-node-collapse');
-									$('#' + id).closest('li').find('ul').first().fadeIn(250);
-								});
+                                properties.loaded = true;
+                                properties.expanded = true;
+                                properties.loading = false;
+                                $(element).removeClass('tree-node-collapse');
+                                $(parent).find('ul').first().fadeIn(250);
+                            });
 						}
 					}
 				}
-			});
+
+                self.setFilter(self.getFilter(), 0);
+            });
 
 			$('#' + this.values.element).on('click.' + this.values.contentElement, '.node-select', function() {
-				var id = $(this).data('layer');
+                var parent = $(this).closest('li');
+				var properties = $(parent).data();
 
-				if($(this).data('selected')) {
-					self.remove(id);
+				if(properties.selected) {
+					self.remove(properties.layer);
 				} else {
-					self.add(id);
+					self.add(properties.layer);
 				}
 			});
 
             $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-info', function() {
-                var id = $(this).data('id');
-                var type = $(this).data('type');
+                var parent = $(this).closest('li');
+                var properties = $(parent).data();
 
-                var data = null;
+                if(properties.info) {
+                    self.trigger(
+                        'catalog:info-loading',
+                        {
+                            sender: self,
+                            type : properties.info.type,
+                            id: properties.info.id,
+                            title: self.values.ckan.getObjectTitle(properties.info.type, properties.info.id)
+                        }
+                    );
 
-                switch(type) {
-                    case 'group':
-                        data = self.values.ckan.getGroupById(id);
-                        break;
-                    case 'organization':
-                        data = self.values.ckan.getOrganizationById(id);
-                        break;
-                    case 'package':
-						data = self.values.ckan.getPackageById(id);
-                        break;
-
-                }
-                if(data) {
-                    self.trigger('catalog:info', { sender: self, type : type, data : data });
+                    self.values.ckan.getObjectDescription(properties.info.type, properties.info.id).then(function(data) {
+                        self.trigger('catalog:info-loaded', { sender: self, type : properties.info.type, id: properties.info.id, data : data });
+                    });
                 }
             });
 
@@ -799,10 +862,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         bbox = geom.getExtent();
                     }
-                    self.values.ckan.search($('#' + self.values.element + '-text').val(), bbox).then(function(packages){
-                        self.refresh();
-                        self.trigger('catalog:search', { packages : packages });
-                    });
+                    var text = $('#' + self.values.element + '-text').val();
+
+                    if((!bbox) && (!text)) {
+                        var content = [];
+                        content.push('<div class="clearfix message-warning" data-i18n-id="control.tree.search.no-criteria">');
+                        content.push(PublicaMundi.i18n.getResource('control.tree.search.no-criteria'));
+                        content.push('</div>');
+                        $('#' + self.values.element + '-result').html(content.join(''));
+                    } else {
+                        $('#' + self.values.element + '-result').html('');
+
+                        self.values.ckan.search(text, bbox).then(function(packages){
+                            self.refresh();
+                            self.trigger('catalog:search', { packages : packages });
+                        });
+                    }
 
                     return false;
                 });
@@ -830,54 +905,79 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         getQueryBoundingBox: function() {
             return this.values.bbox;
         },
-        add: function(id) {
+        add: function(id, fireEvents) {
 			var self = this;
 			var parts = id.split('_');
 
-			if((parts.length > 1) && (!$('[data-layer="' + id +'"]').first().data('loading'))) {
+            var normalizedSelector = '#node-' + this.values.element + '-' + id.replace(/[^\w\s]/gi, '');
+            var parent = $(normalizedSelector);
+            if($(parent).size() === 0){
+                return;
+            }
+            var properties = $(parent).data();
+            var handler = $(parent).find('img.node-select').first();
+
+			if((parts.length > 1) && (!properties.loading)) {
                 var resource = self.values.ckan.getResourceById(parts[0]);
 
-				var layer = parts.splice(1).join('_');
-
-				if(this.values.resources.getLayerCount() < this.values.resources.getMaxLayerCount()) {
-					$('[data-layer="' + id +'"]').data('loading', true)
-					$('[data-layer="' + id +'"]').attr('src', 'content/images/ajax-loader.gif');
-					$('[data-layer="' + id +'"]').addClass('tree-node-ajax-loader');
+				if((this.values.resources.isLayerSelected(id)) || (this.values.resources.getLayerCount() < this.values.resources.getMaxLayerCount())) {
+					properties.loading = true;
+					$(handler).attr('src', 'content/images/ajax-loader.gif').addClass('tree-node-ajax-loader');
 
 					this.values.resources.setCatalogResourceMetadataOptions(resource);
 
 					this.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
-						$('[data-layer="' + id +'"]').data('loading', false)
-						$('[data-layer="' + id +'"]').removeClass('tree-node-ajax-loader');
-						$('[data-layer="' + id +'"]').data('selected', true);
-						$('[data-layer="' + id +'"]').attr('src', 'content/images/checked.png');
+						properties.loading = false;
+                        properties.selected = true;
 
-						self.values.resources.createLayer(self.values.map, metadata, id);
+						$(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checked.png');
 
-						self.trigger('layer:added', {id: id});
+                        if(!self.values.resources.isLayerSelected(id)) {
+                            self.values.resources.createLayer(self.values.map, metadata, id);
+                        }
+
+                        if(fireEvents!==false) {
+                            self.trigger('layer:added', {sender: self, id: id});
+                        }
 					});
 				}
 			}
 		},
-		remove: function(id) {
-			var parts = id.split('_');
+		remove: function(id, fireEvents) {
+			var parts = id.split('_'), properties, handler;
+
+            var normalizedSelector = '#node-' + this.values.element + '-' + id.replace(/[^\w\s]/gi, '');
+            var parent = $(normalizedSelector);
+            var nodeInTree = ($(parent).size() > 0);
+
+            if(nodeInTree) {
+                properties = $(parent).data();
+                handler = $(parent).find('img.node-select').first();
+            }
 
 			if(parts.length > 1) {
-				if($('[data-layer="' + id +'"]').size() > 0) {
-					if(($('[data-layer="' + id +'"]').first().data('loading')) || (!$('[data-layer="' + id +'"]').data('selected'))) {
+				if(properties) {
+					if((properties.loading) || (!properties.selected)) {
 						return;
 					}
 
-					$('[data-layer="' + id +'"]').data('selected', false);
-					$('[data-layer="' + id +'"]').attr('src', 'content/images/unchecked.png');
+					properties.selected = false;
+					$(handler).attr('src', 'content/images/unchecked.png');
 				}
 				if(this.values.resources.destroyLayer(this.values.map, id)) {
-					this.trigger('layer:removed', { id: id});
+                    if(fireEvents!==false) {
+                        this.trigger('layer:removed', {sender: this, id: id});
+                    }
 				}
 			}
 		},
         render: function() {
             var self = this;
+
+            this.values.rootTreeNode = {
+                id: null,
+                children: []
+            };
 
             var content = [];
 
@@ -938,7 +1038,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
 
 			if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByGroup) {
-				this.values.renderGroups.call(this);
+                var nodes = this.values.ckan.getNodeChidlren(null);
+
+                if((nodes) && (nodes.length > 0)) {
+                    this.values.renderTreeNodeElements.call(this);
+                } else {
+                    this.values.renderGroups.call(this);
+                }
 			} else if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByOrganization) {
 				this.values.renderOrganizations.call(this);
 			} else {
@@ -954,63 +1060,84 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         getFilter: function() {
             return this.values.filter.term;
         },
-        setFilter: function(term) {
+        clearFilter: function() {
+            $('li.tree-node').removeClass('node-filtered');
+            this.values.filter = {
+                term: null
+            };
+        },
+        setFilter: function(term, timeout) {
             var self =  this;
+
             if(this.values.timeout) {
                 clearTimeout(this.values.timeout);
                 this.values.timeout = null;
             }
-            this.values.timeout = setTimeout(function() {
-                self.values.timeout = null;
+
+            if(timeout !== 0) {
+                timeout = timeout || 500;
+            }
+
+            var locale = PublicaMundi.i18n.getLocale();
+            var doFiltering = function() {
                 if(term) {
-                    var packages = self.values.ckan.getPackages();
-                    var groups = []; var organizations = [];
+                    self.values.filter.term = term;
 
-                    for(var p = 0; p < packages.length; p++) {
-                        if(packages[p].title[PublicaMundi.i18n.getLocale()].indexOf(term) > -1) {
-                            if(organizations.indexOf(packages[p].organization) < 0) {
-                                organizations.push(packages[p].organization);
-                            }
-                            for(var g = 0; g < packages[p].groups.length; g++) {
-                                if(groups.indexOf(packages[p].groups[g]) < 0) {
-                                    groups.push(packages[p].groups[g]);
-                                }
-                            }
+                    var filterTreeNodes = function(treeNode, term, locale) {
+                        var properties = $(treeNode.element).data();
+                        var isFiltered = true;
+
+                        for(var i=0; i < treeNode.children.length; i++) {
+                            isFiltered = filterTreeNodes(treeNode.children[i], term, locale) && isFiltered;
                         }
-                    }
 
-                    self.values.filter = {
-                        term: term,
-                        organizations : organizations,
-                        groups : groups
+                        switch(properties.type) {
+                            case 'organization':
+                                if((treeNode.children.length > 0 && !isFiltered) ||
+                                   ((treeNode.children.length == 0) && !self.values.ckan.filterOrganization(treeNode.id, term, locale))) {
+                                    $(treeNode.element).removeClass('node-filtered');
+                                    return false;
+                                } else {
+                                    $(treeNode.element).addClass('node-filtered');
+                                    return true;
+                                }
+                                break;
+                            case 'node':
+                                if((treeNode.children.length > 0 && !isFiltered) ||
+                                   ((treeNode.children.length == 0) && !self.values.ckan.filterNode(treeNode.id, term, locale))) {
+                                    $(treeNode.element).removeClass('node-filtered');
+                                    return false;
+                                } else {
+                                    $(treeNode.element).addClass('node-filtered');
+                                    return true;
+                                }
+                                break;
+                            default:
+                                if(((treeNode.children.length >= 0) && !isFiltered) ||
+                                   ((treeNode.children.length == 0) && (treeNode.caption.indexOf(term) > -1))) {
+                                    $(treeNode.element).removeClass('node-filtered');
+                                    return false;
+                                } else {
+                                    $(treeNode.element).addClass('node-filtered');
+                                    return true;
+                                }
+                                break;
+                        }
                     };
 
-                    var allOrganizations = self.values.ckan.getOrganizations();
-                    var allGroups = self.values.ckan.getGroups();
-
-                    for(var o = 0; o < allOrganizations.length; o++) {
-                        if(organizations.indexOf(allOrganizations[o].id) < 0) {
-                            $('#node-' + self.values.element + '-' + allOrganizations[o].id).addClass('node-filtered');
-                        } else {
-                            $('#node-' + self.values.element + '-' + allOrganizations[o].id).removeClass('node-filtered');
-                        }
-                    }
-                    for(var g = 0; g < allGroups.length; g++) {
-                        if(groups.indexOf(allGroups[g].id) < 0) {
-                            $('#node-' + self.values.element + '-' + allGroups[g].id).addClass('node-filtered');
-                        } else {
-                            $('#node-' + self.values.element + '-' + allGroups[g].id).removeClass('node-filtered');
-                        }
+                    for(var i=0; i < self.values.rootTreeNode.children.length; i++) {
+                        filterTreeNodes(self.values.rootTreeNode.children[i], term, locale);
                     }
                 } else {
-                    $('li.tree-node').removeClass('node-filtered');
-                    self.values.filter = {
-                        term: null,
-                        organizations : [],
-                        groups : []
-                    };
+                    self.clearFilter();
                 }
-            }, 500);
+            };
+
+            if(timeout > 0) {
+                this.values.timeout = setTimeout(doFiltering, timeout);
+            } else {
+                doFiltering();
+            }
         }
     });
 
@@ -2332,7 +2459,34 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				queryTokenizer: Bloodhound.tokenizers.whitespace,
 				remote: {
 					url: this.values.endpoint + 'search/query?term=%QUERY&limit=10',
-					wildcard: '%QUERY'
+                    replace: function () {
+                        var url = self.values.endpoint + 'search/query?term=' + $('#' + self.values.element).val() + '&limit=10';
+
+                        var selection = self.values.resources.getSelectedLayers();
+                        var queryables = self.values.resources.getQueryableResources();
+
+                        var resources = [];
+
+                        for(var i=0; i<selection.length; i++) {
+                            for(var j=0; j<queryables.length; j++) {
+                                if(selection[i].resource_id == queryables[j].wms) {
+                                    resources.push(selection[i].resource_id);
+                                    break;
+                                }
+                            }
+                        }
+                        url = url + '&resources=' + resources.join(',');
+
+                        return url;
+                    },
+                    transform : function (data) {
+                        return $.map(data, function (item) {
+                            return {
+                                name: item.properties.dd_default_field,
+                                object: item
+                            };
+                        });
+                    }
 				}
 			});
 
@@ -2372,7 +2526,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<div class="popover-content">');
 
 					content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table">');
-					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.name + '</td>');
+					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.properties.dd_default_field + '</td>');
                     content.push('<td id="' + self.values.element + '-popup-close" style="width: 18px; vertical-align: top; padding-left: 6px;">');
                     content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span></td>');
                     content.push('</tr></table>');
@@ -2416,9 +2570,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				self.removeTooltip();
 
 				if(selection) {
-					addTooltip(selection);
+					addTooltip(selection.object);
 
-					self.trigger('selection:changed', { selection : selection });
+					self.trigger('selection:changed', { selection : selection.object });
 				}
 			};
 
@@ -3276,14 +3430,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 var layer = layers[l];
 
                 var resource = this.values.ckan.getResourceById(layer.resource_id);
-
-                config.layers.push({
-                    title: layer.title,
-                    package : resource.package,
-                    resource : resource.id,
-                    layer: layer.layer_id,
-                    opacity: layer.opacity
-                });
+                if(resource) {
+                    config.layers.push({
+                        title: layer.title,
+                        package : resource.package,
+                        resource : resource.id,
+                        layer: layer.layer_id,
+                        opacity: layer.opacity
+                    });
+                }
             }
             return config;
         },
@@ -3304,6 +3459,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     dataType: "json",
                     data: JSON.stringify(config)
 				}).done(function (response) {
+                    $('#' + self.values.element + '-error').hide();
                     if(response.success) {
                         var link = new URI(window.location.origin);
                         if(self.values.endpoint!='/') {
@@ -3316,12 +3472,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         $('#' + self.values.element + '-link').val(link.toString());
                         $('#' + self.values.element + '-link').select();
 
+                        var copied = false;
                         try {
-                            document.execCommand('copy');
+                            copied = document.execCommand('copy');
                         } catch(err) {
+                            // suppress exception
+                        }
+                        if(!copied) {
                             $('#' + self.values.element + '-btn-copy').addClass('disabled');
 
                             $('#' + self.values.element + '-error').html(PublicaMundi.i18n.getResource('action.create-link.error.copy'));
+                            $('#' + self.values.element + '-error').show();
                         }
                     }
 

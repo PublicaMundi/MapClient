@@ -5,34 +5,42 @@
 
     PublicaMundi.Maps.CKAN.Metadata = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
 		initialize: function (options) {
+            this.values.path = null;
 			this.values.endpoint = null;
+
+			if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
+            }
+
 			this.values.catalog = {
 				groups: [],
 				organizations: [],
 				packages: [],
+                nodes: []
 			};
 			this.values.search = {
 				packages: []
 			};
 			this.values.xhr = null;
-
-			if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
-                PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
-            }
         },
         isPreloadingEnabled: function() {
-            return (((this.values.metadata) && (this.values.metadata.path)) ? true : false);
+            return (((this.values.metadata) && ((this.values.metadata.path) || (this.values.metadata.database))) ? true : false);
         },
         preload: function() {
             if(!this.isPreloadingEnabled()) {
                 return;
             }
 
-            var self = this;
+            var self = this, uri;
 
-            var uri = new URI(this.values.metadata.path);
-            if(this.values.metadata.version) {
-                uri.addQuery({ 'v': this.values.metadata.version });
+            if(this.values.metadata.database) {
+                uri = new URI(this.values.path);
+                uri.segment(['metadata', 'load']);
+            } else {
+                uri = new URI(this.values.metadata.path);
+                if(this.values.metadata.version) {
+                    uri.addQuery({ 'v': this.values.metadata.version });
+                }
             }
 
 			return new Promise(function(resolve, reject) {
@@ -40,6 +48,7 @@
 					url: uri.toString(),
 					context: self
 				}).done(function (response) {
+                    self.values.catalog.nodes = response.nodes || [];
 					self.values.catalog.organizations = response.organizations;
                     self.values.catalog.groups = response.groups;
                     self.values.catalog.packages = response.packages;
@@ -58,6 +67,82 @@
 					reject(errorThrown);
 				});
 			});
+        },
+        getNodeById: function(id) {
+            if(this.values.catalog.nodes.hasOwnProperty(id)) {
+                return this.values.catalog.nodes[id];
+            }
+            return null;
+        },
+        isNodeEmpty: function(id) {
+            var node = this.getNodeById(id);
+
+            if (node.hasOwnProperty('isEmpty')) {
+                return node.isEmpty;
+            }
+
+            if(node.resources.length > 0) {
+                node.isEmpty = false;
+                return false;
+            }
+            if(node.children.length == 0) {
+                node.isEmpty = true;
+                return true;
+            }
+
+            node.isEmpty = true;
+            for(var i=0; i < node.children.length; i++) {
+                node.isEmpty = this.isNodeEmpty(node.children[i]);
+                if(!node.isEmpty) {
+                    return node.isEmpty;
+                }
+            }
+
+            return node.isEmpty;
+        },
+        filterNode: function(id, text, locale) {
+            var node = this.getNodeById(id);
+
+            if(!node) {
+                return true;
+            }
+            for(var r=0; r < node.resources.length; r++) {
+                var resource = this.getResourceById(node.resources[r]);
+                var _package = this.getPackageById(resource.package);
+
+                if((resource.name[locale].indexOf(text) > -1) || (_package.title[locale].indexOf(text) > -1)) {
+                    return false;
+                }
+            }
+            if(node.children.length > 0) {
+                for(var i=0; i < node.children.length; i++) {
+                    var isFiltered = this.filterNode(node.children[i], text, locale);
+                    if(!isFiltered) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        },
+        getNodeChidlren: function(id) {
+            var nodes = [];
+
+            if(id) {
+                var node = this.getNodeById(id);
+
+                for(var index in node.children) {
+                    nodes.push(this.getNodeById(node.children[index]));
+                }
+            } else {
+                for(var id in this.values.catalog.nodes) {
+                    if(!this.values.catalog.nodes[id].parent) {
+                        nodes.push(this.values.catalog.nodes[id]);
+                    }
+                }
+            }
+
+            return nodes;
         },
         loadOrganizations: function () {
 			// Example : http://labs.geodata.gov.gr/api/3/action/organization_list?all_fields=true
@@ -181,6 +266,26 @@
 
             return true;
         },
+        filterOrganization: function(id, text, locale) {
+            var packages = this.getPackages();
+
+            for(var p = 0; p < packages.length; p++) {
+                if (id === packages[p].organization) {
+                    if(packages[p].title[locale].indexOf(text) > -1) {
+                        return false;
+                    }
+                    // For packages with a single resource, package.title overrides resource.name
+                    if(packages[p].resources.length > 1) {
+                        for(var r = 0; r < packages[p].resources.length; r++) {
+                            if(packages[p].resources[r].name[locale].indexOf(text) > -1) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        },
         loadPackages: function() {
             // Example : http://labs.geodata.gov.gr/api/3/action/current_package_list_with_resources
             this.values.catalog.packages = [];
@@ -210,8 +315,14 @@
 							_package = {
 								id: packages[p].id,
 								name: packages[p].name,
-								title: packages[p].title,
-								notes: packages[p].notes,
+								title: {
+                                    el : packages[p].title,
+                                    en : packages[p].title
+                                },
+								notes:  {
+                                    el : packages[p].notes,
+                                    en : packages[p].notes
+                                },
 								organization: packages[p].organization.id,
 								groups: [],
 								resources: [],
@@ -233,6 +344,14 @@
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
 									_resource.package = _package.id;
+                                    _resource.name = {
+                                        el: _resource.name,
+                                        en: _resource.name
+                                    };
+                                    _resource.description = {
+                                        el: _resource.description,
+                                        en: _resource.description
+                                    }
 									_package.resources.push(_resource);
 								}
 							}
@@ -389,9 +508,18 @@
 						organization = {
 								id: response.result.id,
 								name: response.result.name,
-								caption: response.result.display_name,
-								title: response.result.title,
-								description: response.result.description,
+								caption: {
+                                    el: response.result.display_name,
+                                    en: response.result.display_name
+                                },
+								title: {
+                                    el: response.result.title,
+                                    en: response.result.title
+                                },
+								description: {
+                                    el: response.result.description,
+                                    en: response.result.description
+                                },
 								image: response.result.image_display_url,
 								loaded: true
 						};
@@ -403,8 +531,14 @@
 							_package = {
 								id: packages[p].id,
 								name: packages[p].name,
-								title: packages[p].title,
-								notes: packages[p].notes,
+								title: {
+                                    el: packages[p].title,
+                                    en: packages[p].title
+                                },
+								notes: {
+                                    el: packages[p].notes,
+                                    en: packages[p].notes
+                                },
 								organization: packages[p].organization.id,
 								groups: [],
 								resources: [],
@@ -419,6 +553,14 @@
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
 									_resource.package = _package.id;
+                                    _resource.name = {
+                                        el: _resource.name,
+                                        en: _resource.name
+                                    };
+                                    _resource.description = {
+                                        el: _resource.description,
+                                        en: _resource.description
+                                    }
 									_package.resources.push(_resource);
 								}
 							}
@@ -479,9 +621,18 @@
 						group = {
 								id: response.result.id,
 								name: response.result.name,
-								caption: response.result.display_name,
-								title: response.result.title,
-								description: response.result.description,
+                                caption: {
+                                    el: response.result.display_name,
+                                    en: response.result.display_name
+                                },
+								title: {
+                                    el: response.result.title,
+                                    en: response.result.title
+                                },
+								description: {
+                                    el: response.result.description,
+                                    en: response.result.description
+                                },
 								image: response.result.image_display_url,
 								loaded: true
 						};
@@ -493,8 +644,14 @@
 							_package = {
 								id: packages[p].id,
 								name: packages[p].name,
-								title: packages[p].title,
-								notes: packages[p].notes,
+								title: {
+                                    el: packages[p].title,
+                                    en: packages[p].title
+                                },
+								notes: {
+                                    el: packages[p].notes,
+                                    en: packages[p].notes
+                                },
 								organization: packages[p].organization.id,
 								groups: [],
 								resources: [],
@@ -510,6 +667,14 @@
 
 								if(_resource.format === 'wms') {
 									_resource.package = _package.id;
+                                    _resource.name = {
+                                        el: _resource.name,
+                                        en: _resource.name
+                                    };
+                                    _resource.description = {
+                                        el: _resource.description,
+                                        en: _resource.description
+                                    }
 									_package.resources.push(_resource);
 								}
 							}
@@ -653,6 +818,84 @@
             }
 
             return null;
+        },
+        getObjectTitle: function(type, id) {
+                switch(type) {
+                    case 'group':
+                        return this.getGroupById(id).caption;
+                    case 'organization':
+                        return this.getOrganizationById(id).caption;
+                    case 'package':
+                        return this.getPackageById(id).title;
+                    default:
+                        return '';
+                }
+        },
+        getObjectDescription: function(type, id) {
+            var self = this;
+
+            return new Promise(function(resolve, reject) {
+                var data = {};
+
+                switch(type) {
+                    case 'group':
+                        data = {
+                            title: self.getGroupById(id).caption,
+                            description: self.getGroupById(id).description
+                        }
+                        break;
+                    case 'organization':
+                        data = {
+                            title: self.getOrganizationById(id).caption,
+                            description: self.getOrganizationById(id).description
+                        }
+                        break;
+                    case 'package':
+                        data = {
+                            title: self.getPackageById(id).title,
+                            description: self.getPackageById(id).notes
+                        }
+                        break;
+                    default:
+                        resolve({});
+                        return;
+                }
+
+                if(data.description) {
+                    resolve(data);
+                } else {
+                    var uri = new URI(self.values.path);
+                    uri.segment(['metadata', type, id]);
+
+                    $.ajax({
+                        url: uri.toString(),
+                        context: self
+                    }).done(function (response) {
+                        if(response.success) {
+                            switch(type) {
+                                case 'group':
+                                    self.getGroupById(id).description = response.text;
+                                    break;
+                                case 'organization':
+                                    self.getOrganizationById(id).description = response.text;
+                                    break;
+                                case 'package':
+                                    self.getPackageById(id).notes = response.text
+                                    break;
+                            }
+                            data.description = response.text;
+
+                            resolve(data);
+                        } else {
+                            reject(null);
+                        }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        console.log('Failed to object description : ' + uri.toString());
+
+                        reject(errorThrown);
+                    });
+                }
+            });
         }
     });
 });
