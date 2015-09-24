@@ -6,10 +6,13 @@ __all__ = ['Session', 'engine', 'metadata']
 
 # SQLAlchemy database engine. Updated by model.init_model()
 engine = None
+engine_ckan_data = None
 
 # SQLAlchemy session manager. Updated by model.init_model()
 Session = scoped_session(sessionmaker())
+Session_ckan_data = scoped_session(sessionmaker())
 
 # Global metadata. If you have multiple databases with overlapping table
 # names, you'll need a metadata for each database
 metadata = MetaData()
+metadata_ckan_data = MetaData()

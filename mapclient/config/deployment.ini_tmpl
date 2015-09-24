@@ -33,6 +33,7 @@ mapclient.proxy = true
 mapclient.url.prefix =
 mapclient.relative.path = /
 mapclient.url.catalog = http://web.dev.publicamundi.eu/
+mapclient.catalog.metadata.database = false
 mapclient.catalog.metadata.relative =
 mapclient.catalog.metadata.physical =
 mapclient.feedback.url =
@@ -67,9 +68,6 @@ dataapi.wps.corsEnabled = false
 # Bing Maps application key
 mapclient.base.layer.key =
 
-# OSM API endpoint (http://wiki.openstreetmap.org/wiki/Nominatim)
-osm.api.nominatim = http://open.mapquestapi.com/nominatim/v1/search/
-
 # Map center expected to be in the form of X, Y (CRS 3857 / Google 900913)
 mapclient.map.center = 2448716, 4600000
 mapclient.map.zoom = 7
@@ -84,7 +82,8 @@ upload.path = %(here)s/data/uploads/
 #beaker.session.data_dir = %(here)s/data/sessions
 
 # SQLAlchemy database URL
-sqlalchemy.url = postgresql://user:password@host:port/database
+mapclient.sqlalchemy.url = postgresql://user:password@host:port/database
+vectorstore.sqlalchemy.url = postgresql://user:password@host:port/database
 
 # WARNING: *THE LINE BELOW MUST BE UNCOMMENTED ON A PRODUCTION ENVIRONMENT*
 # Debug mode will enable the interactive debugging tool, allowing ANYONE to

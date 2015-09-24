@@ -147,7 +147,6 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                             }),
                             stroke: new ol.style.Stroke({
                                 color: '#ff0000',
-                                lineDash: [10, 10],
                                 width: 2
                             })
                         }),

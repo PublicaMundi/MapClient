@@ -4,7 +4,7 @@ from sqlalchemy import orm
 
 from mapclient.model import meta
 
-def init_model(engine):
+def init_model(engine, engine_ckan_data):
     """Call me before using any of the tables or classes in the model"""
     ## Reflected tables must be defined and mapped here
     #global reflected_table
@@ -14,6 +14,9 @@ def init_model(engine):
     #
     meta.Session.configure(bind=engine)
     meta.engine = engine
+
+    meta.Session_ckan_data.configure(bind=engine_ckan_data)
+    meta.engine_ckan_data = engine_ckan_data
 
 
 ## Non-reflected tables may be defined and mapped at module level

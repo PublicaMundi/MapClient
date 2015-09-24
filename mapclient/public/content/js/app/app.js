@@ -455,8 +455,10 @@
 
         // CKAN catalog
 		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
+            path: members.config.path,
 			endpoint: module.config().ckan.endpoint,
             metadata: {
+                database: module.config().ckan.metadata.database,
                 path: module.config().ckan.metadata.path,
                 version: module.config().ckan.metadata.version
             }
@@ -476,7 +478,8 @@
 		members.components.textSearch = new PublicaMundi.Maps.TextSearch({
 			element: 'location-search',
 			map: members.map.control,
-			endpoint: members.config.path
+			endpoint: members.config.path,
+            resources: members.resources
 		});
 
 		members.components.layerTreeGroup = new PublicaMundi.Maps.LayerTree({
@@ -791,41 +794,63 @@
 
         // Layer handling events
 		var layerRemoved  = function(args) {
+            if(args.sender != members.components.layerTreeGroup) {
+                members.components.layerTreeGroup.remove(args.id, false);
+            }
+            if(args.sender != members.components.layerTreeOrganization) {
+                members.components.layerTreeOrganization.remove(args.id, false);
+            }
+            if(args.sender != members.components.layerTreeSearch) {
+                members.components.layerTreeSearch.remove(args.id, false);
+            }
+
 			members.components.layerSelection.remove(args.id);
-            
+
             resize();
 		}
 
         var showCatalogObjectInfo = function(args) {
             if(args.data) {
-                switch(args.type) {
-                    case 'group':
-                        members.components.catalogInfoDialog.setTitle(args.data.caption[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.setContent(args.data.description[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.show();
-                        break;
-                    case 'organization':
-                        members.components.catalogInfoDialog.setTitle(args.data.caption[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.setContent(args.data.description[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.show();
-                        break;
-                    case 'package':
-                        members.components.catalogInfoDialog.setTitle(args.data.title[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.setContent(args.data.notes[PublicaMundi.i18n.getLocale()]);
-                        members.components.catalogInfoDialog.show();
-                        break;
-                }
+                members.components.catalogInfoDialog.setTitle(args.data.title[PublicaMundi.i18n.getLocale()]);
+                members.components.catalogInfoDialog.setContent(args.data.description[PublicaMundi.i18n.getLocale()]);
+                members.components.catalogInfoDialog.show();
             }
         };
 
+        var resetCatalogObjectInfo = function(args) {
+            if(args.title) {
+                members.components.catalogInfoDialog.setTitle(args.title[PublicaMundi.i18n.getLocale()]);
+                members.components.catalogInfoDialog.setContent('<div style="width: 100%; text-align: center;"><img style="text-align: center;" src="content/images/ajax-loader-big.gif"></div>');
+                members.components.catalogInfoDialog.show();
+            }
+        };
+
+        var layerAdded = function(args) {
+            if(args.sender != members.components.layerTreeGroup) {
+                members.components.layerTreeGroup.add(args.id, false);
+            }
+            if(args.sender != members.components.layerTreeOrganization) {
+                members.components.layerTreeOrganization.add(args.id, false);
+            }
+            if(args.sender != members.components.layerTreeSearch) {
+                members.components.layerTreeSearch.add(args.id, false);
+            }
+        };
+
+        members.components.layerTreeGroup.on('layer:added', layerAdded);
 		members.components.layerTreeGroup.on('layer:removed', layerRemoved);
-        members.components.layerTreeGroup.on('catalog:info', showCatalogObjectInfo);
+        members.components.layerTreeGroup.on('catalog:info-loading', resetCatalogObjectInfo);
+        members.components.layerTreeGroup.on('catalog:info-loaded', showCatalogObjectInfo);
 
+        members.components.layerTreeOrganization.on('layer:added', layerAdded);
         members.components.layerTreeOrganization.on('layer:removed', layerRemoved);
-        members.components.layerTreeOrganization.on('catalog:info', showCatalogObjectInfo);
+        members.components.layerTreeOrganization.on('catalog:info-loading', resetCatalogObjectInfo);
+        members.components.layerTreeOrganization.on('catalog:info-loaded', showCatalogObjectInfo);
 
+        members.components.layerTreeSearch.on('layer:added', layerAdded);
         members.components.layerTreeSearch.on('layer:removed', layerRemoved);
-        members.components.layerTreeSearch.on('catalog:info', showCatalogObjectInfo);
+        members.components.layerTreeSearch.on('catalog:info-loading', resetCatalogObjectInfo);
+        members.components.layerTreeSearch.on('catalog:info-loaded', showCatalogObjectInfo);
 
         // Interaction events
         members.components.layerTreeSearch.on('bbox:draw', function(args) {
@@ -870,6 +895,8 @@
 
 		var layerSelectionRemoved  = function(args) {
 			members.components.layerTreeGroup.remove(args.id);
+            members.components.layerTreeOrganization.remove(args.id);
+            members.components.layerTreeSearch.remove(args.id);
             resize();
 		}
 
@@ -883,6 +910,11 @@
         $('#locale_selection').selectpicker().change(function () {
             PublicaMundi.i18n.setLocale($('#locale_selection option:selected').val());
             $('[data-id="locale_selection"]').blur();
+
+            var term = $('#tree-filter-text').val();
+
+            members.components.layerTreeGroup.setFilter(term);
+            members.components.layerTreeOrganization.setFilter(term);
         });
 
         // Enable package filtering
@@ -903,6 +935,7 @@
 
         // Tooltips
         $('.selectpicker, .img-text').tooltip();
+        $('.selectpicker').tooltip('disable');
 
         // Initialize layout
         $(window).resize(resize);
@@ -930,13 +963,15 @@
 
         $('#base-layer-opacity').val(opacity);
         $('#base_layer').val(type + '-' + set).selectpicker('refresh');
+        $('.selectpicker').tooltip().tooltip('disable');
     };
 
     var attachBaseLayerSelectionEvents = function () {
         $('#base_layer').selectpicker().change(function(e) {
-			var selection = $('#base_layer option:selected')
+			var selection = $('#base_layer option:selected');
+            var opacity = $('#base-layer-opacity').val();
 
-            setBaseLayer($(selection).data('type'), $(selection).data('set'));
+            setBaseLayer($(selection).data('type'), $(selection).data('set'), opacity);
 
             $('[data-id="base_layer"]').blur();
         });
@@ -1066,6 +1101,7 @@
         }
 
         $('#base_layer').selectpicker('refresh');
+        $('.selectpicker').tooltip().tooltip('disable');
 
         setHeaderPosition(members.ui.section);
     };
@@ -1081,6 +1117,10 @@
             var groups = members.ckan.getGroups();
             for(var g=0; g < groups.length; g++) {
                 PublicaMundi.i18n.setResource(locale, 'group.' + groups[g].id, groups[g].caption[locale]);
+            }
+            var nodes = members.ckan.getNodes();
+            for(var n=0; n < nodes.length; n++) {
+                PublicaMundi.i18n.setResource(locale, 'node.' + nodes[n].id, nodes[n].caption[locale]);
             }
         }
     }
@@ -1130,10 +1170,10 @@
                         initializeResourcePreview();
                     }
                 }, 500);
-                
+
                 resize();
             };
-            
+
             var afterPreload = function() {
                 // Refresh localization strings (CKAN metadata may have added new resources)
                 localizeUI();
@@ -1163,7 +1203,7 @@
                         }
                     }
                     members.resources.setQueryableResources(resources);
-                    
+
                     afterQueryableLoaded();
                 } else {
                     $('#loading-text').html('Loading Metadata ... 0%');

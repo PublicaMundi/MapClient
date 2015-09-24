@@ -311,10 +311,12 @@ ul {
     overflow: hidden;
     padding-left: 7px;
     padding-top: 1px;
+    margin: 0px 16px 0px 16px
     -ms-text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: pre-line;
+    cursor: pointer;
 }
 
 .tree-text:hover {
@@ -323,26 +325,6 @@ ul {
 
 .tree-text-disabled {
 	color: #ADADAD;
-}
-
-.tree-text-1 {
-    white-space: pre-line;
-    cursor: pointer;
-}
-
-.tree-text-2 {
-    white-space: pre-line;
-    cursor: pointer;
-}
-
-.tree-text-3 {
-    white-space: pre-line;
-    cursor: pointer;
-}
-
-.tree-text-4 {
-    white-space: pre-line;
-    cursor: pointer;
 }
 
 .tree-node-ajax-loader {
@@ -840,4 +822,13 @@ img.legend {
 
 .modal-dialog {
     margin: 60px 0px 0px;
+}
+
+.message-warning {
+    background: rgb(255, 245, 193) none repeat scroll 0% 0%;
+    border-radius: 4px;
+    padding: 4px;
+    display: block;
+    margin: 4px;
+    text-align: justify;
 }
