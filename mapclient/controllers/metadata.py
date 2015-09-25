@@ -95,8 +95,8 @@ class MetadataController(BaseController):
                         'id': resource.id,
                         'format': resource.format,
                         'name': {
-                            'el': resource.name_el,
-                            'en': resource.name_en
+                            'el': resource.tree_node_caption_el,
+                            'en': resource.tree_node_caption_en
                         },
                         'description': {
                             'el': resource.description_el,
