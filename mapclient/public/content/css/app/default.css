@@ -228,6 +228,7 @@ ul {
     max-width: 280px;
     z-index: 2050;
     margin: 51px 0 -11px 31px;
+    border: 1px solid #E7E7E7;
 }
 
 .tools-container:hover {
