@@ -134,8 +134,8 @@ CREATE TABLE public.resource
 (
   id text NOT NULL,
   "package" text NOT NULL,
-  name_en text,
-  name_el text,
+  name_en text NOT NULL,
+  name_el text NOT NULL,
   description_en text,
   description_el text,
   format text,
@@ -144,6 +144,8 @@ CREATE TABLE public.resource
   wms_layer text,
   tree_node_id bigint,
   tree_node_index integer,
+  tree_node_caption_el text NOT NULL,
+  tree_node_caption_en text NOT NULL,
   visible boolean,
   CONSTRAINT pk_resource PRIMARY KEY (id),
   CONSTRAINT fk_package FOREIGN KEY ("package")
