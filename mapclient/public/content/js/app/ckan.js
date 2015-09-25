@@ -125,6 +125,9 @@
 
             return true;
         },
+        getNodes: function() {
+            return his.values.catalog.nodes;
+        },
         getNodeChidlren: function(id) {
             var nodes = [];
 

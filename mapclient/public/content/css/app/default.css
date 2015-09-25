@@ -64,6 +64,7 @@ body {
 
 .navbar-geodata {
     background-color: white;
+    z-index: 1600 !important;
 }
 
 #map {
@@ -74,42 +75,24 @@ body {
     height: 100%;
 }
 
-
-
 .panel-left {
-    width: 21em;
+    width: 260px;
     min-height: 100%;
     border-width: 0px;
     position: absolute;
     top: 0px;
     display: block;
     background-color: #FFFFFF;
-    z-index: 1;
-    -moz-transition: transform 350ms ease 0s;
-    -o-transition: transform 350ms ease 0s;
-    -webkit-transition: transform 350ms ease 0s;
-    transition: transform 350ms ease 0s;
+    z-index: 1500;
+    -moz-transition: width 350ms ease 0s;
+    -o-transition: width 350ms ease 0s;
+    -webkit-transition: width 350ms ease 0s;
+    transition: width 350ms ease 0s;
 }
-
-
-
-.panel-left-visible {
-    box-shadow: 5px 0px 5px rgba(0, 0, 0, 0.15);
-}
-
-
 
 .panel-left-hidden {
-    -moz-transform: translate3d(-18.4em, 0px, 0px);
-    -ms-transform: translate3d(-18.4em, 0px, 0px);
-    -o-transform: translate3d(-18.4em, 0px, 0px);
-    -webkit-transform: translate3d(-18.4em, 0px, 0px);
-    transform: translate3d(-18.4em, 0px, 0px);
     cursor: pointer;
-    box-shadow: 5px 0px 5px rgba(0, 0, 0, 0.15);
 }
-
-
 
 .panel-left-handler {
     cursor: pointer;
@@ -123,8 +106,6 @@ body {
     z-index: 1;
 }
 
-
-
 .panel-left-handler-toggle {
     -moz-transform: rotate(180deg);
     -ms-transform: rotate(180deg);
@@ -132,8 +113,6 @@ body {
     -webkit-transform: rotate(180deg);
     transform: rotate(180deg);
 }
-
-
 
 .panel-left-label {
     -moz-transform: rotate(-90deg);
@@ -247,7 +226,7 @@ ul {
     background: white none repeat scroll 0 0;
     opacity: 0.8;
     max-width: 280px;
-    z-index: 0;
+    z-index: 2050;
     margin: 51px 0 -11px 31px;
 }
 
@@ -262,26 +241,22 @@ ul {
 }
 
 .selected-layer-text {
-	max-width: 14em;
-	float: left;
     overflow: hidden;
     padding-top: 1px;
-    -ms-text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin-left: 25px;
+    margin-right: 20px;
+    white-space: pre-line;
 }
 
 .selected-layer-close {
     float: left;
-    margin-left: 3px;
-    margin-right: 4px;
+    width: 16px;
 }
 
 .selected-layer-opacity-label {
     float: left;
     margin-left: 3px;
-    margin-right: 2px;
+    margin-right: 4px;
 }
 
 .selected-layer-opacity-slider {
@@ -291,7 +266,8 @@ ul {
 }
 
 .selected-layer-up {
-	float: right;
+    float: right;
+    width: 16px;
 }
 
 .selected-layer-down {
@@ -422,26 +398,20 @@ ul {
     position: absolute;
     bottom: 0;
     width: 100%;
-    z-index: 1;
+    z-index: 1600;
     height: 40px;
     background-color: #FFFFFF;
     border-top: 1px solid #e7e7e7;
 }
-
-
 
 .mouse-pos {
     float: left;
     padding-left: 4px;
 }
 
-
-
 .mouse-pos-img {
     float: left;
 }
-
-
 
 .mouse-pos-text {
     color: #333333;
@@ -449,8 +419,6 @@ ul {
     font-size: 1em;
     margin: 10px 4px;
 }
-
-
 
 .combo-crs {
     float: right;
@@ -831,4 +799,34 @@ img.legend {
     display: block;
     margin: 4px;
     text-align: justify;
+}
+
+.panel-left-splitter {
+    background-color: #ffffff;
+    border-width: 0;
+    display: block;
+    min-height: 100%;
+    position: absolute;
+    top: 0;
+    width: 6px;
+    z-index: 1500;
+    left: 300px;
+    box-shadow: 5px 0px 5px rgba(0, 0, 0, 0.15);
+    border-left: 1px solid #e7e7e7;
+}
+
+.panel-left-splitter-dragging {
+    box-shadow: none !important;
+}
+
+.panel-left-splitter-handler {
+    background: #2e6da4 none repeat scroll 0 0;
+    cursor: col-resize;
+    float: left;
+    height: 40px;
+    margin-top: -20px;
+    padding-top: 40px;
+    position: absolute;
+    top: 50%;
+    width: 5px;
 }
