@@ -1,10 +1,10 @@
 ﻿{
     "index.topics": "Topics",
-    "index.topics.position": [ -26, 75],
+    "index.topics.position": [ -87, 130],
     "index.organizations" : "Organizations",
-    "index.organizations.position": [ -50, 100],
+    "index.organizations.position": [ -85, 130],
     "index.search" : "Search",
-    "index.search.position": [ -26, 75],
+    "index.search.position": [ -87, 130],
 
     "index.input.search.location" : "Search ...",
 

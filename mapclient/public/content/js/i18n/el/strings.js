@@ -1,10 +1,10 @@
 ﻿{
     "index.topics": "Θεματικές Ενότητες",
-    "index.topics.position": [ -71, 125],
+    "index.topics.position": [ -87, 132],
     "index.organizations" : "Οργανισμοί",
-    "index.organizations.position": [ -41, 90],
+    "index.organizations.position": [ -85, 130],
     "index.search" : "Αναζήτηση",
-    "index.search.position": [ -40, 90],
+    "index.search.position": [ -87, 131],
 
     "index.input.search.location" : "Αναζήτηση ...",
 

@@ -1168,12 +1168,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		}
 		content.push('</div>');
 
-		content.push('<div style="float: left;">');
+		content.push('<div style="margin-left: 25px;">');
 
 		content.push('<div class="clearfix" style="padding-bottom: 3px;">');
 		content.push('<div class="selected-layer-close"><img src="content/images/close.png" class="action img-16" data-action="remove"  /></div>');
-		content.push('<div class="selected-layer-text">' + title + '</div>');
 		content.push('<div class="selected-layer-up"><img src="content/images/up.png" class="action img-16 action-disabled" data-action="up"  /></div>');
+		content.push('<div class="selected-layer-text">' + title + '</div>');
 		content.push('</div>');
 
 		content.push('<div class="clearfix">');
@@ -2020,9 +2020,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         var id = 1;
 
         // Clear selection
-        this.clearFeatureFocus();
-        this.values.overlay.getFeatures().clear();
-        this.values.features = new ol.Collection();
+        this.clearSelection();
 
         // Get external features
         var externalFeatures = [];
@@ -2143,6 +2141,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
+            this.values.element = this.values.name;
 
             this.event('selection:changed');
 
@@ -2291,6 +2290,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
             content.push('<div class="arrow"></div>');
             content.push('<div class="clearfix popover-title" id="popover-top">');
+            content.push('<div  id="' + this.values.element + '-popup-close" style="width: 18px; 1px 4px 0px 0px; float: left;">');
+            content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span>');
+            content.push('</div>');
             content.push('<div style="float: left;" data-i18n-id="tool.select.dialog.title">' + PublicaMundi.i18n.getResource('tool.select.dialog.title') + '</div>');
             if(features.length > 1) {
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-12" src="content/images/right.png"></div>');
@@ -2325,6 +2327,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 });
             }
 
+            $('#' + this.values.element + '-popup-close').click(function() {
+                self.clearSelection();
+            });
+
             var element = $('#' + this.values.element + '-popup');
             this.values.tooltip = new ol.Overlay({
                 element: element[0],
@@ -2342,6 +2348,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     this.values.map.getView().setCenter(center);
                 }
             }
+
+
+            $('#' +  this.values.element + '-popup').on('keydown', function(e){
+                if(e.keyCode == 27) {
+                    self.clearSelection();
+                }
+            });
 
             $('#' + this.values.element + '-popup').focus();
 
@@ -2365,6 +2378,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             } else {
                 return this.setFeatureFocus(features.length -1);
             }
+        },
+        clearSelection: function() {
+            this.clearFeatureFocus();
+            this.values.overlay.getFeatures().clear();
+            this.values.features = new ol.Collection();
         }
     });
 
@@ -2541,6 +2559,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         self.removeTooltip();
                     });
 
+                    $('#' +  self.values.element + '-popup').on('keydown', function(e){
+                        if(e.keyCode == 27) {
+                            self.removeTooltip();
+                        }
+                    });
+            
 					var element = $('#' + self.values.element + '-popup');
 					self.values.tooltip = new ol.Overlay({
 						element: element[0],
@@ -2664,7 +2688,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
-	var _zIndex = 2000;
+	var _zIndex = 2100;
 
     PublicaMundi.Maps.Dialog = PublicaMundi.Class(PublicaMundi.Maps.Component, {
         initialize: function (options) {
