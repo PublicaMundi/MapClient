@@ -62,6 +62,9 @@
     "control.parse.dialog.label.crs" : "Σύστημα αναφοράς",    
     "control.parse.dialog.label.delimiter" : "Διαχωριστικό δεκαδικών",
     "control.parse.dialog.label.text" : "Συντεταγμένες",
+    "control.parse.dialog.label.geometry" : "Τύπος γεωμετρίας",
+    "control.parse.geometry.rectangle" : "Ορθογώνια",
+    "control.parse.geometry.point" : "Σημεία",
     
     "action.upload-resource.title" : "Μεταφόρτωση αρχείου",
     "action.upload-resource.select-file" : "Επιλογή αρχείου",

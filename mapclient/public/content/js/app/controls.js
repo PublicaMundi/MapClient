@@ -3593,28 +3593,54 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             
             this.event('parse:completed');
 
-            this.values.overlay = new ol.FeatureOverlay({
-                style: [
+            // http://openlayers.org/en/v3.3.0/examples/vector-labels.js
+            var featureStyleFunction = function(feature, resolution) {
+                var text = '';
+
+                var geom = feature.getGeometry();
+                if (geom instanceof ol.geom.Polygon) {
+                    var p1 = geom.getCoordinates()[0][0];
+                    var p2 = geom.getCoordinates()[0][2];
+                    var text = p1[0].toFixed(4) + ' , ' + p1[1].toFixed(4)  + ' , ' + p2[0].toFixed(4)  + ' , ' + p2[1].toFixed(4) ;
+                } else {
+                    var p1 = geom.getCoordinates();
+                    var text = p1[0].toFixed(4) + ' , ' + p1[1].toFixed(4)
+                }
+
+                return [
                     new ol.style.Style({
                         fill: new ol.style.Fill({
-                            color: [109, 128, 219, 0.4]
+                            color: [40, 96, 144, 0.4]
                         }),
                         stroke: new ol.style.Stroke({
-                            color: '#24C93A',
+                            color: '#286090',
                             width: 2
                         })
                     }),
                     new ol.style.Style({
                         image: new ol.style.Icon({
-                            anchor: [0.5, 46],
+                            anchor: [0.5, 0.5],
                             anchorXUnits: 'fraction',
-                            anchorYUnits: 'pixels',
-                            opacity: 0.75,
-                            src: 'content/images/markers/green.png'
+                            anchorYUnits: 'fraction',
+                            opacity: 1,
+                            src: 'content/images/markers/blue.png'
                         }),
-                        zIndex: Infinity
+                        zIndex: Infinity,
+                        text: new ol.style.Text({
+                            textAlign: 'center',
+                            font: 'Arial 14px Normal',
+                            text: text,
+                            fill: new ol.style.Fill({color: 'black'}),
+                            stroke: new ol.style.Stroke({color: 'white', width: 1}),
+                            offsetX: 0,
+                            offsetY: ((geom instanceof ol.geom.Polygon) ? 0 : 20)
+                        })
                     })
                 ]
+            };
+  
+            this.values.overlay = new ol.FeatureOverlay({
+                style: featureStyleFunction
             });
             this.values.overlay.setMap(this.values.map);
 
@@ -3639,8 +3665,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     var content = [];
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' +
-                                 PublicaMundi.i18n.getResource('control.export.dialog.label.crs')  + '</label>');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.crs">' +
+                                 PublicaMundi.i18n.getResource('control.parse.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326">WGS84</option>');
@@ -3658,10 +3684,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</select>');
                     content.push('</div>');
 
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-type" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.geometry">' +
+                                 PublicaMundi.i18n.getResource('control.parse.dialog.label.geometry')  + '</label>');
+                    content.push('<select name="' + self.values.element + '-type" id="' + self.values.element + '-type" class="selectpicker" data-width="160px">');
+                    content.push('<option data-i18n-id="control.parse.geometry.point" value="POINT" selected="selected">' + PublicaMundi.i18n.getResource('control.parse.geometry.point')+ '</option>');
+                    content.push('<option data-i18n-id="control.parse.geometry.rectangle" value="POLYGON">' + PublicaMundi.i18n.getResource('control.parse.geometry.rectangle') + '</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+                    
                     content.push('<div class="clearfix">');
                     content.push('<label for="' + self.values.element + '-text" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.text">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.text')  + '</label>');
-                    content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="10" style="resize: none;"></textarea>');
+                    content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="5" style="resize: none;"></textarea>');
                     content.push('</div>');
                                         
                     return content;
@@ -3674,6 +3709,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             $('#' + this.values.element + '-delimiter').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-delimiter"]').blur();
+            });
+            
+            $('#' + this.values.element + '-type').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-type"]').blur();
             });
 
             this.values.dialog.on('dialog:action', function(args){
@@ -3694,18 +3733,43 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             for(var c=1; c<coordinates.length; c++) {
                                 bbox[0] = Math.min(bbox[0], coordinates[c][0]);
                                 bbox[1] = Math.min(bbox[1], coordinates[c][1]);
-                                bbox[2] = Math.max(bbox[0], coordinates[c][0]);
-                                bbox[3] = Math.max(bbox[1], coordinates[c][1]);
+                                bbox[2] = Math.max(bbox[2], coordinates[c][0]);
+                                bbox[3] = Math.max(bbox[3], coordinates[c][1]);
                             }
                         }
 
                         self.values.overlay.getFeatures().clear();
                         self.values.features = new ol.Collection;
-                        for(var c=0; c<coordinates.length; c++) {
-                            var geom = new ol.geom.Point(coordinates[c]);
-                            var feature = new ol.Feature({ name: 'point-' + (c+1), geometry: geom });
-                            self.values.features.push(feature);
+
+                        switch($('#' + self.values.element + '-type').val()) {
+                            case 'POINT':
+                                for(var c=0; c<coordinates.length; c++) {
+                                    var geom = new ol.geom.Point(coordinates[c]);
+                                    var feature = new ol.Feature({ name: 'point-' + (c+1), geometry: geom });
+                                    self.values.features.push(feature);
+                                }
+
+                                self.values.features.push(feature);
+                                break;
+                            case 'POLYGON':
+                                for(var c=0; c<coordinates.length; c+=2) {
+                                    if(coordinates[c+1]) {
+                                        var ring = [
+                                            [coordinates[c][0], coordinates[c][1]],
+                                            [coordinates[c][0], coordinates[c+1][1]],
+                                            [coordinates[c+1][0], coordinates[c+1][1]],
+                                            [coordinates[c+1][0], coordinates[c][1]],
+                                            [coordinates[c][0], coordinates[c][1]]
+                                        ];
+                                        
+                                        var geom = new ol.geom.Polygon([ring]);
+                                        var feature = new ol.Feature({ name: 'polygon-' + (c/2 + 1), geometry: geom });
+                                        self.values.features.push(feature);
+                                    }
+                                }
+                                break;
                         }
+
                         self.values.overlay.setFeatures(self.values.features);
 
                         switch(coordinates.length) {
@@ -3718,6 +3782,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             default:
                                 var view = self.values.map.getView();
                                 var size = self.values.map.getSize();
+
                                 view.fitExtent(bbox, size);
                                 break;
                         }
