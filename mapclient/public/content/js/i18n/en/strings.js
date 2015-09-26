@@ -62,6 +62,9 @@
     "control.parse.dialog.label.crs" : "Reference System",    
     "control.parse.dialog.label.delimiter" : "Decimal separator",
     "control.parse.dialog.label.text" : "Coordinates",
+    "control.parse.dialog.label.geometry" : "Geometry Type",
+    "control.parse.geometry.rectangle" : "Rectangles",
+    "control.parse.geometry.point" : "Points",
     
     "action.upload-resource.title" : "Upload resource",
     "action.upload-resource.select-file" : "Select file",
