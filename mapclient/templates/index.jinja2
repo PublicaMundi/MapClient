@@ -160,7 +160,7 @@
 				<div class="device img-text"  style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.base-layer">
                     Υπόβαθρο
 				</div>
-				<div class="device clearfix resource-data-search" style="padding:  9px 9px 0px 0px; margin: 0 650px 0 248px; max-width: 500px">
+				<div class="device clearfix resource-data-search" style="padding:  9px 9px 0px 0px; margin: 0px 650px 0px 262px; max-width: 500px">
 					<input id="location-search" class="form-control input-md" type="text" data-i18n-id="index.input.search.location"
 					data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Αναζήτηση ..." autocomplete="off"></input>
 				</div>
@@ -243,7 +243,7 @@
 
     <div class="dialog-container"></div>
 
-    <div class="tools-container">
+    <div class="clearfix tools-container">
         <div id="tools-header" class="clearfix tools-header">
             <img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
         </div>
@@ -251,13 +251,19 @@
             <div class="tool-wrapper" id="tool-length"></div>
             <div class="tool-wrapper" id="tool-area"></div>
             <div class="tool-wrapper" id="tool-export"></div>
-            <div class="tool-wrapper" id="action-export"></div>
             <div class="tool-wrapper" id="action-wms"></div>
             <div class="tool-wrapper" id="action-upload"></div>
             <div class="tool-wrapper" id="action-position"></div>
             <div class="tool-wrapper" id="action-link"></div>
+            <div class="tool-wrapper" id="action-parse"></div>
             <div class="tool-wrapper" id="restore-zoom"></div>
             <div class="tool-wrapper" id="action-feedback"></div>
+        </div>
+        <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
+            <img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
+        </div>            
+        <div id="tool-actions" class="clearfix tool-actions">
+            <div class="tool-wrapper" id="action-export"></div>
         </div>
     </div>
 </body>

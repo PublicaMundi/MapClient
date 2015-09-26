@@ -631,6 +631,15 @@
             endpoint: members.config.path
         });
 
+        members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
+            element: 'action-parse',
+            name: 'parse',
+            image: 'content/images/map-w.png',
+            title: 'action.parse-coordinates.title',
+            map: members.map.control,
+            resources: members.resources
+        });
+
         members.actions.upload.on('resource:loaded', function(args) {
             members.resources.getResourceMetadata(args.format.toUpperCase(), {
                 url: args.url,
@@ -704,14 +713,24 @@
         members.tools.select.setActive(true);
 
         var handleToolToggle = function(args) {
+            $('.tools-container').height('auto');
+
             var name = args.name;
             if(args.active) {
+                if(args.sender.hasActions()) {
+                    $('#tool-actions-header').show();
+                } else {
+                    $('#tool-actions-header').hide();
+                }
+                var name = args.sender.getName();
                 for(var item in members.tools) {
-                    if(args.name != members.tools[item].getName()) {
+                    if(name != members.tools[item].getName()) {
                         members.tools[item].setActive(false);
                     }
                 }
             } else {
+                $('#tool-actions-header').hide();
+
                 members.tools.select.setActive(true);
             }
             resize();
