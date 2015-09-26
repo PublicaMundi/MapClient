@@ -1432,6 +1432,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         getActive: function() {
             return (this.values.active && this.values.enabled);
         },
+        hasActions: function() {
+            return (this.values.actions.length > 0);
+        },
         setActive: function(active) {
             this.values.active = active && this.values.enabled;
             if(this.values.element) {
@@ -1478,7 +1481,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                 $('#' + this.values.element).find('a').click(function() {
                     self.setActive(!self.values.active);
-                    self.trigger('tool:toggle', { name : self.values.name, active : self.getActive() });
+                    self.trigger('tool:toggle', { sender : self, active : self.getActive() });
                 });
 
                 if(!this.values.visible) {
@@ -3529,6 +3532,206 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
             return null;
         }
+    });
+
+    var _ParseCoordinates = function(crs, delimiter, text) {
+        var re, coordinates = [];
+        
+        text = text || '';
+
+        switch(delimiter) {
+            case '.':
+                re = /\s|,/;
+                break;
+            case ',':
+                re = /\s/;
+                break;
+        }
+        
+        var tokens = text.split(re);
+        var num, numbers = [];
+        
+        for(var i=0; i<tokens.length; i++) {
+            if(tokens[i]) {
+                if(delimiter==',') {
+                    tokens[i] = tokens[i].replace(',', '.');
+                }
+                num = parseFloat(tokens[i]);
+                if(isFinite(num)) {
+                    numbers.push(num);
+                }
+            }
+        }
+
+        if( numbers.length % 2 != 0) {
+            return coordinates;
+        }
+        
+        for(var i=0; i<numbers.length; i+=2) {
+            coordinates.push([numbers[i], numbers[i+1]]);
+        }
+        if(crs != PublicaMundi.Maps.CRS.Mercator) {
+            for(var c=0; c<coordinates.length; c++) {
+                coordinates[c] = ol.proj.transform(coordinates[c], crs , PublicaMundi.Maps.CRS.Mercator);
+            }
+        }
+        
+        return coordinates;
+    };
+    
+    PublicaMundi.Maps.CoordinateParser = PublicaMundi.Class(PublicaMundi.Maps.Action, {
+        initialize: function (options) {
+			var self = this;
+
+            this.values.map = null;
+            
+            if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
+            }
+
+            this.values.buffer = this.values.buffer || 3;
+            
+            this.event('parse:completed');
+
+            this.values.overlay = new ol.FeatureOverlay({
+                style: [
+                    new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: [109, 128, 219, 0.4]
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#24C93A',
+                            width: 2
+                        })
+                    }),
+                    new ol.style.Style({
+                        image: new ol.style.Icon({
+                            anchor: [0.5, 46],
+                            anchorXUnits: 'fraction',
+                            anchorYUnits: 'pixels',
+                            opacity: 0.75,
+                            src: 'content/images/markers/green.png'
+                        }),
+                        zIndex: Infinity
+                    })
+                ]
+            });
+            this.values.overlay.setMap(this.values.map);
+
+            this.values.dialog = new PublicaMundi.Maps.Dialog({
+                title: 'control.parse.dialog.title',
+                element: this.values.element + '-dialog',
+                visible: false,
+                width: 500,
+                height: 350,
+                autofit: true,
+                buttons: {
+                    parse: {
+                        text: 'control.parse.dialog.button.parse',
+                        style: 'primary'
+                    },
+                    close : {
+                        text: 'control.parse.dialog.button.cancel',
+                        style: 'default'
+                    }
+                },
+                renderContent: function() {
+                    var content = [];
+
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.export.dialog.label.crs">' +
+                                 PublicaMundi.i18n.getResource('control.export.dialog.label.crs')  + '</label>');
+                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
+                    content.push('<option value="EPSG:3857">Web Mercator</option>');
+                    content.push('<option value="EPSG:4326">WGS84</option>');
+                    content.push('<option value="EPSG:2100" selected="selected">ΕΓΣΑ87</option>');
+                    content.push('<option value="EPSG:4258">ETRS89</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-delimiter" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.delimiter">' +
+                                 PublicaMundi.i18n.getResource('control.parse.dialog.label.delimiter')  + '</label>');
+                    content.push('<select name="' + self.values.element + '-delimiter" id="' + self.values.element + '-delimiter" class="selectpicker" data-width="50px">');
+                    content.push('<option value="." selected="selected">.</option>');
+                    content.push('<option value=",">,</option>');
+                    content.push('</select>');
+                    content.push('</div>');
+
+                    content.push('<div class="clearfix">');
+                    content.push('<label for="' + self.values.element + '-text" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.text">' +
+                                 PublicaMundi.i18n.getResource('control.parse.dialog.label.text')  + '</label>');
+                    content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="10" style="resize: none;"></textarea>');
+                    content.push('</div>');
+                                        
+                    return content;
+                }
+            });
+
+            $('#' + this.values.element + '-crs').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-crs"]').blur();
+            });
+
+            $('#' + this.values.element + '-delimiter').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-delimiter"]').blur();
+            });
+
+            this.values.dialog.on('dialog:action', function(args){
+                switch(args.action){
+                    case 'close':
+                        this.hide();
+                        break;
+                    case 'parse':
+                        this.hide();
+
+                        var coordinates = _ParseCoordinates($('#' + self.values.element + '-crs').val(),
+                                                            $('#' + self.values.element + '-delimiter').val(),
+                                                            $('#' + self.values.element + '-text').val());
+
+                        var bbox = null;
+                        if(coordinates.length > 1) {
+                            bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
+                            for(var c=1; c<coordinates.length; c++) {
+                                bbox[0] = Math.min(bbox[0], coordinates[c][0]);
+                                bbox[1] = Math.min(bbox[1], coordinates[c][1]);
+                                bbox[2] = Math.max(bbox[0], coordinates[c][0]);
+                                bbox[3] = Math.max(bbox[1], coordinates[c][1]);
+                            }
+                        }
+
+                        self.values.overlay.getFeatures().clear();
+                        self.values.features = new ol.Collection;
+                        for(var c=0; c<coordinates.length; c++) {
+                            var geom = new ol.geom.Point(coordinates[c]);
+                            var feature = new ol.Feature({ name: 'point-' + (c+1), geometry: geom });
+                            self.values.features.push(feature);
+                        }
+                        self.values.overlay.setFeatures(self.values.features);
+
+                        switch(coordinates.length) {
+                            case 0:
+                                break;
+                            case 1:
+                                self.values.map.getView().setCenter(coordinates[0]);
+                                self.values.map.getView().setZoom(17);
+                                break;
+                            default:
+                                var view = self.values.map.getView();
+                                var size = self.values.map.getSize();
+                                view.fitExtent(bbox, size);
+                                break;
+                        }
+                                                    
+                        self.trigger('parse:completed', { sender : self, coordinates : coordinates});
+                        break;
+                }
+            });
+
+            this.render();
+        },
+            execute: function() {
+			this.values.dialog.show();
+		}
     });
 
     return PublicaMundi;

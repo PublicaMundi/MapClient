@@ -216,7 +216,13 @@ ul {
 .tools-header {
     padding: 8px 0px 6px 2px;
     border-bottom: solid 1px #E7E7E7;
-    cursor: pointer;
+    cursor: move;
+}
+
+.tool-actions-header {
+    padding: 8px 0px 6px 2px;
+    border-top: solid 1px #E7E7E7;
+    border-bottom: solid 1px #E7E7E7;
 }
 
 .tools-container {

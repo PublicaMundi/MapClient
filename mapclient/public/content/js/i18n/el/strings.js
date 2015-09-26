@@ -11,6 +11,7 @@
     "index.catalog" : "Κατάλογος",
     "index.selected-layers" : "Επιλεγμένα επίπεδα",
     "index.tools" : "Εργαλεία",
+    "index.tool-actions" : "Λειτουργείες",
 
     "index.feedback" : "Αφήστε τα σχόλιά σας",
 
@@ -54,6 +55,14 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Η αυτόματη αντιγραφή του συνδέσμου απέτυχε. Παρακαλώ επιλέξτε και αντιγράψτε το σύνδεσμο.",
 
+    "action.parse-coordinates.title" : "Εισαγωγή συντεταγμένων",
+    "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
+    "control.parse.dialog.button.parse" : "Εισαγωγή",
+    "control.parse.dialog.button.cancel" : "Ακύρωση",
+    "control.parse.dialog.label.crs" : "Σύστημα αναφοράς",    
+    "control.parse.dialog.label.delimiter" : "Διαχωριστικό δεκαδικών",
+    "control.parse.dialog.label.text" : "Συντεταγμένες",
+    
     "action.upload-resource.title" : "Μεταφόρτωση αρχείου",
     "action.upload-resource.select-file" : "Επιλογή αρχείου",
     "action.upload-resource.error.acceptFileTypes" : "Ο επιλεγμένος τύπος αρχείου δεν υποστηρίζεται.",

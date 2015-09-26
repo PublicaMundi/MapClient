@@ -11,6 +11,7 @@
     "index.catalog" : "Catalog",
     "index.selected-layers" : "Selected Layers",
     "index.tools" : "Tools",
+    "index.tool-actions" : "Actions",
 
     "index.feedback" : "Leave your feedback",
 
@@ -54,6 +55,14 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Failed to copy link to clipboard. Please select & copy the link manually.",
 
+    "action.parse-coordinates.title" : "Insert coordinates",
+    "control.parse.dialog.title" : "Insert coordinates",
+    "control.parse.dialog.button.parse" : "Parse",
+    "control.parse.dialog.button.cancel" : "Cancel",
+    "control.parse.dialog.label.crs" : "Reference System",    
+    "control.parse.dialog.label.delimiter" : "Decimal separator",
+    "control.parse.dialog.label.text" : "Coordinates",
+    
     "action.upload-resource.title" : "Upload resource",
     "action.upload-resource.select-file" : "Select file",
     "action.upload-resource.error.acceptFileTypes" : "Selected file type is not supported.",
