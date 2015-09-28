@@ -838,3 +838,7 @@ img.legend {
     top: 50%;
     width: 5px;
 }
+
+.has-help-resource {
+    box-shadow: 5px 0px 5px rgba(255, 84, 84, 0.15);
+}

@@ -3648,13 +3648,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 title: 'control.parse.dialog.title',
                 element: this.values.element + '-dialog',
                 visible: false,
-                width: 500,
-                height: 350,
+                width: 510,
+                height: 250,
                 autofit: true,
                 buttons: {
                     parse: {
                         text: 'control.parse.dialog.button.parse',
                         style: 'primary'
+                    },
+                    draw: {
+                        text: 'control.parse.dialog.button.draw',
+                        style: 'default'
+                    },
+                    import: {
+                        text: 'control.parse.dialog.button.upload',
+                        style: 'default'
                     },
                     close : {
                         text: 'control.parse.dialog.button.cancel',
@@ -3667,16 +3675,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.crs">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.crs')  + '</label>');
-                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="160px">');
+                    content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="120px">');
                     content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326">WGS84</option>');
                     content.push('<option value="EPSG:2100" selected="selected">ΕΓΣΑ87</option>');
                     content.push('<option value="EPSG:4258">ETRS89</option>');
                     content.push('</select>');
-                    content.push('</div>');
 
-                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-delimiter" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.delimiter">' +
+                    content.push('<label for="' + self.values.element + '-delimiter" style="padding: 0px 10px;" data-i18n-id="control.parse.dialog.label.delimiter">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.delimiter')  + '</label>');
                     content.push('<select name="' + self.values.element + '-delimiter" id="' + self.values.element + '-delimiter" class="selectpicker" data-width="50px">');
                     content.push('<option value="." selected="selected">.</option>');
@@ -3687,16 +3693,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
                     content.push('<label for="' + self.values.element + '-type" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.geometry">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.geometry')  + '</label>');
-                    content.push('<select name="' + self.values.element + '-type" id="' + self.values.element + '-type" class="selectpicker" data-width="160px">');
+                    content.push('<select name="' + self.values.element + '-type" id="' + self.values.element + '-type" class="selectpicker" data-width="120px">');
                     content.push('<option data-i18n-id="control.parse.geometry.point" value="POINT" selected="selected">' + PublicaMundi.i18n.getResource('control.parse.geometry.point')+ '</option>');
                     content.push('<option data-i18n-id="control.parse.geometry.rectangle" value="POLYGON">' + PublicaMundi.i18n.getResource('control.parse.geometry.rectangle') + '</option>');
                     content.push('</select>');
                     content.push('</div>');
                     
                     content.push('<div class="clearfix">');
-                    content.push('<label for="' + self.values.element + '-text" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.text">' +
+                    content.push('<label for="' + self.values.element + '-text" style="padding-right: 10px; width: 145px; float: left;" data-i18n-id="control.parse.dialog.label.text">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.text')  + '</label>');
-                    content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="5" style="resize: none;"></textarea>');
+                    content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="3" style="resize: none; width: 330px; float: left;"></textarea>');
                     content.push('</div>');
                                         
                     return content;
@@ -3718,11 +3724,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.dialog.on('dialog:action', function(args){
                 switch(args.action){
                     case 'close':
+                        self.values.overlay.getFeatures().clear();
                         this.hide();
                         break;
                     case 'parse':
-                        this.hide();
-
                         var coordinates = _ParseCoordinates($('#' + self.values.element + '-crs').val(),
                                                             $('#' + self.values.element + '-delimiter').val(),
                                                             $('#' + self.values.element + '-text').val());

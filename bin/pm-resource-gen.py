@@ -648,8 +648,10 @@ class ResourceGenerator(object):
                     dbResource.url = r['url']
                     dbResource.wms_server = r['wms_server']
                     dbResource.wms_layer = r['wms_layer']
-                    dbResource.tree_node_caption_en = r['name']['en']
-                    dbResource.tree_node_caption_el = r['name']['el']
+                    if not dbResource.tree_node_caption_en:
+                        dbResource.tree_node_caption_en = r['name']['en']
+                    if not dbResource.tree_node_caption_el:
+                        dbResource.tree_node_caption_el = r['name']['el']
 
                     if r['queryable']:
                         createFields = False
