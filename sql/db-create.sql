@@ -119,6 +119,7 @@ CREATE TABLE public.resource_tree_node
   caption_en text NOT NULL,
   caption_el text NOT NULL,
   visible boolean NOT NULL DEFAULT true,
+  index int,
   CONSTRAINT pk_resource_tree_node PRIMARY KEY (id),
   CONSTRAINT fk_resource_tree_node FOREIGN KEY (parent)
       REFERENCES public.resource_tree_node (id) MATCH SIMPLE
