@@ -55,7 +55,7 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Failed to copy link to clipboard. Please select & copy the link manually.",
 
-    "action.parse-coordinates.title" : "Insert coordinates",
+    "action.parse-coordinates.title" : "Insert/Export coordinates",
     "control.parse.dialog.title" : "Insert coordinates",
     "control.parse.dialog.button.parse" : "Parse",
     "control.parse.dialog.button.cancel" : "Cancel",
@@ -65,6 +65,8 @@
     "control.parse.dialog.label.geometry" : "Geometry Type",
     "control.parse.geometry.rectangle" : "Rectangles",
     "control.parse.geometry.point" : "Points",
+    "control.parse.dialog.button.draw" : "Draw",
+    "control.parse.dialog.button.upload" : "Upload",
     
     "action.upload-resource.title" : "Upload resource",
     "action.upload-resource.select-file" : "Select file",

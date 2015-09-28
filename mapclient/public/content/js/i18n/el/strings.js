@@ -55,7 +55,7 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Η αυτόματη αντιγραφή του συνδέσμου απέτυχε. Παρακαλώ επιλέξτε και αντιγράψτε το σύνδεσμο.",
 
-    "action.parse-coordinates.title" : "Εισαγωγή συντεταγμένων",
+    "action.parse-coordinates.title" : "Εισαγωγή/Εξαγωγή συντεταγμένων",
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
     "control.parse.dialog.button.parse" : "Εισαγωγή",
     "control.parse.dialog.button.cancel" : "Ακύρωση",
@@ -65,6 +65,8 @@
     "control.parse.dialog.label.geometry" : "Τύπος γεωμετρίας",
     "control.parse.geometry.rectangle" : "Ορθογώνια",
     "control.parse.geometry.point" : "Σημεία",
+    "control.parse.dialog.button.draw" : "Σχεδίαση",
+    "control.parse.dialog.button.upload" : "Μεταφόρτωση",
     
     "action.upload-resource.title" : "Μεταφόρτωση αρχείου",
     "action.upload-resource.select-file" : "Επιλογή αρχείου",
