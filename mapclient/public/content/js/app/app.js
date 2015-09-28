@@ -407,7 +407,8 @@
 
         $('#layer-tree-group-result-container').height(height - catalogHeight - selectionHeight - footerHeight - $('#tree-filter').outerHeight(true));
         $('#layer-tree-organization-result-container').height(height - catalogHeight - selectionHeight - footerHeight - $('#tree-filter').outerHeight(true));
-        $('#layer-tree-search').height(height - catalogHeight - selectionHeight - footerHeight);
+        $('#layer-tree-search-result').height(height - catalogHeight - selectionHeight - footerHeight - 105);
+        $('#layer-tree-search-result-container').height(height - catalogHeight - selectionHeight - footerHeight - 105);
 
         $('#map').offset({top : headerHeight , left : 0}).height(height - footerHeight + 10);
 

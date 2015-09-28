@@ -987,8 +987,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 } else {
                     $('#' + this.values.element).html('');
 
-                    content.push('<div class="clearfix" id="' + this.values.element + '-form" style="padding: 8px 0px 0px 5px; position: absolute;">');
-
+                    content.push('<div id="' + this.values.element + '-form" class="clearfix layer-tree-search-form">');
                     content.push('<form class="form-horizontal">');
 
                     content.push('<div class="form-group">');
@@ -1019,10 +1018,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('</form>');
-
                     content.push('</div>');
 
+                    content.push('<div id="' + this.values.element + '-result-container" class="clearfix layer-tree-search-result-container">');
                     content.push('<div id="' + this.values.element + '-result" class="clearfix layer-tree-search-result">');
+                    content.push('</div>');
                     content.push('</div>');
 
                     $('#' + this.values.element).html(content.join(''));
