@@ -195,11 +195,18 @@ ul {
     position: relative;
     min-height: 110px;
 }
+.layer-tree-search-form {
+    padding: 8px 0px 0px 5px; 
+    position: absolute;
+}
 
-.layer-tree-search-result {
+.layer-tree-search-result-container {
     margin-top: 105px;
     border-top: 1px solid #E7E7E7;
     min-height: 149px;
+}
+
+.layer-tree-search-result {
     overflow-y: auto
 }
 
