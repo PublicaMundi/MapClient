@@ -13,11 +13,6 @@
             interactions: {
                 zoom: {
                     control: null
-                },
-                bbox: {
-                    control: null,
-                    feature: null,
-                    overlay: null
                 }
             }
         },
@@ -35,8 +30,6 @@
         preview: null,
         locale: null
     };
-
-    window.members = members;
 
     members.config.path = members.config.path || '/';
 
@@ -335,58 +328,6 @@
 			target: document.getElementById('scale-line')
 		});
 		members.map.control.addControl(scaleLineControl);
-
-        // Feature overlays
-        members.map.interactions.bbox.overlay = new ol.FeatureOverlay({
-            style: [
-                new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: [255, 255, 255, 0.4]
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: '#27AE60',
-                        width: 2
-                    })
-                })
-            ]
-        });
-        members.map.interactions.bbox.overlay.setMap(members.map.control);
-
-        // BBOX draw
-        members.map.interactions.bbox.control = new ol.interaction.DragBox({
-            condition: ol.events.condition.shiftKeyOnly,
-            style: new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: [255, 255, 255, 0.4]
-                }),
-                stroke: new ol.style.Stroke({
-                    color: '#27AE60',
-                    width: 2
-                })
-            })
-        });
-
-        members.map.interactions.bbox.control.on('change:active', function (e) {
-
-        });
-
-        members.map.interactions.bbox.control.on('boxstart', function (e) {
-            members.map.interactions.bbox.overlay.getFeatures().clear();
-            members.map.interactions.bbox.feature = null;
-        });
-
-        members.map.interactions.bbox.control.on('boxend', function (e) {
-            var geom = members.map.interactions.bbox.control.getGeometry();
-            var feature = new ol.Feature({ name: 'bbox', geometry: geom });
-
-            members.map.interactions.bbox.overlay.getFeatures().clear();
-            members.map.interactions.bbox.overlay.addFeature(feature);
-
-            members.map.interactions.bbox.feature = feature;
-        });
-
-        members.map.control.addInteraction(members.map.interactions.bbox.control);
-        members.map.interactions.bbox.control.setActive(false);
     };
 
     // TODO : Propagate resize events to controls
@@ -417,7 +358,7 @@
         if($('#panel-left-splitter').is(":visible")) {
             $('#panel-left-splitter').css('left', $('#panel-left').width());
         }
-        
+
         members.map.control.setSize([$('#map').width(), $('#map').height()]);
     };
 
@@ -883,34 +824,14 @@
         members.components.layerTreeSearch.on('bbox:apply', function(args) {
             disableAllInteractions('zoom');
 
-            this.setQueryBoundingBox(members.map.interactions.bbox.feature);
-
             enableAllTools();
         });
 
         members.components.layerTreeSearch.on('bbox:cancel', function(args) {
             disableAllInteractions('zoom');
 
-            members.map.interactions.bbox.overlay.getFeatures().clear();
-
-            var feature = this.getQueryBoundingBox();
-            if(feature) {
-                members.map.interactions.bbox.overlay.addFeature(feature);
-                members.map.interactions.bbox.feature = feature;
-            } else {
-                members.map.interactions.bbox.feature = null;
-            }
-
             enableAllTools();
         });
-
-        members.components.layerTreeSearch.on('bbox:remove', function(args) {
-            members.map.interactions.bbox.overlay.getFeatures().clear();
-            members.map.interactions.bbox.feature = null;
-
-            this.setQueryBoundingBox(null);
-        });
-
 		var layerSelectionAdded  = function(args) {
             resize();
 		}
@@ -937,6 +858,10 @@
 
             members.components.layerTreeGroup.setFilter(term);
             members.components.layerTreeOrganization.setFilter(term);
+
+            // Refresh tooltips
+            $('.selectpicker, .img-text').tooltip();
+            $('.selectpicker').tooltip('disable');
         });
 
         // Enable package filtering
@@ -954,10 +879,6 @@
             members.components.layerTreeOrganization.setFilter(null);
             $(this).blur();
         });
-
-        // Tooltips
-        $('.selectpicker, .img-text').tooltip();
-        $('.selectpicker').tooltip('disable');
 
         // Left pane splitter
         $('#panel-left-splitter').draggable({
@@ -978,10 +899,26 @@
         });
         $('.panel-left-splitter-handler').dblclick(function(e) {
         });
-        
+
+        // Tooltips
+        $('.selectpicker, .img-text').tooltip();
+        $('.selectpicker').tooltip('disable');
+
         // Initialize layout
         $(window).resize(resize);
 	};
+
+    var initializeHelpSystem = function() {
+        /*
+        $('.help').addClass('help-active').on('click.help', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            alert($(this).parent('.help').data('help-resource'));
+        });
+        */
+    };
+
 
     var attachEvents = function () {
         attachBaseLayerSelectionEvents();
@@ -1050,7 +987,9 @@
     };
 
     var enableInteraction = function(name) {
-        members.map.interactions[name].control.setActive(true);
+        if(name in members.map.interactions) {
+            members.map.interactions[name].control.setActive(true);
+        }
     };
 
     var initializeConfiguration = function() {
@@ -1191,6 +1130,8 @@
             initializeMap();
 
             initializeUI();
+
+            initializeHelpSystem();
 
             attachEvents();
 

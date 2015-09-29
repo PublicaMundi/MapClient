@@ -624,7 +624,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             if((__object) && ((currentIndex+1) < layers.length)) {
 				var layer = map.getLayers().removeAt(currentIndex);
                 map.getLayers().insertAt(currentIndex+1, layer);
-                
+
                 this.values.layers.splice(index+1, 0, this.values.layers.splice(index, 1)[0]);
 
 				return true;
@@ -635,7 +635,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 		moveLayerDown: function(map, id) {
 			var __object = null;
             var index;
-            
+
 			for(var i=0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
@@ -657,9 +657,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             if((__object) && ((currentIndex-1) > 1)) {
                 var layer = map.getLayers().removeAt(currentIndex);
                 map.getLayers().insertAt(currentIndex-1, layer);
-                
+
                 this.values.layers.splice(index-1, 0, this.values.layers.splice(index, 1)[0]);
-                
+
 				return true;
 			}
 

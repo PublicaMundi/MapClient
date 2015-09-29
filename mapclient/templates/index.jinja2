@@ -101,13 +101,13 @@
                     </a>
                 </div>
 				<div style="float: right; padding: 8px 0px 0px 15px;">
-					<select name="locale_selection" id="locale_selection" data-width="100px">
+					<select name="locale_selection" id="locale_selection" data-width="100px" class="help" data-help-resource="help.locale">
 						<option value="el">Ελληνικά</option>
                         <option value="en">English</option>
 					</select>
 				</div>
 				<div class="device" style="float: right; padding-top: 15px;" >
-					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" value="100" type="range" style="width: 150px;">
+					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" value="100" type="range" style="width: 150px;" class="help" data-help-resource="help.opacity">
 				</div>
 				<div class="device img-text" style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.opacity" autocomplete="off">
 					Διαφάνεια
@@ -225,9 +225,9 @@
         </div>
         <div class="combo-crs" style="width: 140px;">
             <select name="pos_epsg" id="pos_epsg" class="selectpicker" data-width="140px">
-                <option value="EPSG:3857" selected="selected">Web Mercator</option>
+                <option value="EPSG:3857">Web Mercator</option>
                 <option value="EPSG:4326">WGS84</option>
-                <option value="EPSG:2100">ΕΓΣΑ87</option>
+                <option value="EPSG:2100" selected="selected">ΕΓΣΑ87</option>
                 <option value="EPSG:4258">ETRS89</option>
             </select>
         </div>
@@ -261,7 +261,7 @@
         </div>
         <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
             <img src="content/images/settings.png" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
-        </div>            
+        </div>
         <div id="tool-actions" class="clearfix tool-actions">
             <div class="tool-wrapper" id="action-export"></div>
         </div>

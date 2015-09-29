@@ -75,8 +75,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				map: null,
 				ckan : null,
 				resources: null,
-				mode: PublicaMundi.Maps.LayerTreeViewMode.ByGroup,
-                bbox: null
+				mode: PublicaMundi.Maps.LayerTreeViewMode.ByGroup
 			});
 
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
@@ -90,6 +89,60 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.filter = {
                 term: null
             };
+
+            this.values.bbox = {
+                overlay: null,
+                interaction: null,
+                feature: null
+            };
+
+            if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
+                // Feature overlays
+                this.values.bbox.overlay = new ol.FeatureOverlay({
+                    style: [
+                        new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: [255, 255, 255, 0.4]
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#27AE60',
+                                width: 2
+                            })
+                        })
+                    ]
+                });
+                this.values.bbox.overlay.setMap(this.values.map);
+
+
+                // BBOX draw
+                this.values.bbox.interaction = new ol.interaction.DragBox({
+                    condition: ol.events.condition.shiftKeyOnly,
+                    style: new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: [255, 255, 255, 0.4]
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#27AE60',
+                            width: 2
+                        })
+                    })
+                });
+
+                this.values.bbox.interaction.on('boxstart', function (e) {
+                    self.values.bbox.overlay.getFeatures().clear();
+                });
+
+                this.values.bbox.interaction.on('boxend', function (e) {
+                    var geom = self.values.bbox.interaction.getGeometry();
+                    var feature = new ol.Feature({ name: self.values.element + '-bbox', geometry: geom });
+
+                    self.values.bbox.overlay.getFeatures().clear();
+                    self.values.bbox.overlay.addFeature(feature);
+                });
+
+                this.values.map.addInteraction(this.values.bbox.interaction);
+                this.values.bbox.interaction.setActive(false);
+            }
 
 			this.event('layer:added');
 			this.event('layer:removed');
@@ -790,6 +843,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     e.preventDefault();
                     e.stopPropagation();
 
+                    self.values.bbox.interaction.setActive(true);
+
                     $('#' + self.values.element  +'-search').hide();
                     $('#' + self.values.element  +'-box-draw').hide();
                     $('#' + self.values.element  +'-box-remove').hide();
@@ -804,6 +859,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 $('#' + this.values.element).on('click.' + this.values.element, '#' + this.values.element + '-box-remove-btn', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+
+                    self.values.bbox.overlay.getFeatures().clear();
+                    self.values.bbox.feature = null;
 
                     $('#' + self.values.element  +'-box-remove').hide();
                     $('#' + self.values.element  +'-box-draw').show();
@@ -820,6 +878,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     e.preventDefault();
                     e.stopPropagation();
 
+                    self.setQueryBoundingBox(self.values.bbox.overlay.getFeatures().item(0));
+
+                    self.values.bbox.interaction.setActive(false);
+
                     $('#' + self.values.element  +'-box-apply').hide();
                     $('#' + self.values.element  +'-box-cancel').hide();
                     $('#' + self.values.element  +'-box-draw').show();
@@ -835,10 +897,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     e.preventDefault();
                     e.stopPropagation();
 
+                    self.values.bbox.overlay.getFeatures().clear();
+
+                    self.values.bbox.interaction.setActive(false);
+
+                    var feature = self.getQueryBoundingBox();
+
+                    if(feature) {
+                        self.values.bbox.overlay.addFeature(feature);
+                        self.values.bbox.feature = feature;
+                    } else {
+                        self.values.bbox.feature = null;
+                    }
+
                     $('#' + self.values.element  +'-box-apply').hide();
                     $('#' + self.values.element  +'-box-cancel').hide();
                     $('#' + self.values.element  +'-box-draw').show();
-                    if(self.values.bbox) {
+                    if(self.values.bbox.feature) {
                         $('#' + self.values.element  +'-box-remove').show();
                     } else {
                         $('#' + self.values.element  +'-box-remove').hide();
@@ -855,8 +930,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     e.stopPropagation();
 
                     var bbox = null;
-                    if(self.values.bbox) {
-                        var geom = self.values.bbox.getGeometry().clone();
+                    if(self.values.bbox.feature) {
+                        var geom = self.values.bbox.feature.getGeometry().clone();
 
                         geom.transform('EPSG:3857', 'EPSG:4326');
 
@@ -896,14 +971,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         setQueryBoundingBox: function(bbox) {
             if(bbox) {
-                this.values.bbox = bbox;
+                this.values.bbox.feature = bbox;
             } else {
-                this.values.bbox = null;
+                this.values.bbox.feature = null;
                 $('#' + this.values.element  +'-box-remove').hide();
             }
         },
         getQueryBoundingBox: function() {
-            return this.values.bbox;
+            return this.values.bbox.feature;
         },
         add: function(id, fireEvents) {
 			var self = this;
@@ -2567,7 +2642,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             self.removeTooltip();
                         }
                     });
-            
+
 					var element = $('#' + self.values.element + '-popup');
 					self.values.tooltip = new ol.Overlay({
 						element: element[0],
@@ -3085,11 +3160,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<label for="' + self.values.element + '-format" style="padding-right: 10px; width: 145px;" data-i18n-id="control.upload.dialog.label.format">' +
                                  PublicaMundi.i18n.getResource('control.upload.dialog.label.format') + '</label>');
                     content.push('<select name="' + self.values.element + '-format" id="' + self.values.element + '-format" autocomplete="off" class="selectpicker" data-width="250px">');
-                    content.push('<option value="gml">GML</option>');
-                    content.push('<option value="kml" selected>KML</option>');
-                    content.push('<option value="zip">ESRI Shapefile (compressed file)</option>');
-                    content.push('<option value="geojson">GeoJSON</option>');
+                    content.push('<option value="GML">GML</option>');
+                    content.push('<option value="KML" selected>KML</option>');
+                    content.push('<option value="ESRI Shapefile">ESRI Shapefile (compressed file)</option>');
+                    content.push('<option value="GeoJSON">GeoJSON</option>');
+                    content.push('<option value="DXF">AutoCAD DXF</option>');
+                    content.push('<option value="CSV">Comma Separated Values</option>');
                     content.push('</select>');
+                    content.push('</div>');
+
+                    content.push('<div id="' + self.values.element + '-info" class="clearfix alert alert-info" role="alert" ' +
+                                 'style="margin: 0px 4px 11px 0px; padding: 7px !important; display: none">');
+                    content.push('<span data-i18n-id="control.upload.dialog.info">' +
+                                 PublicaMundi.i18n.getResource('control.upload.dialog.info')  + '</label>');
                     content.push('</div>');
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
@@ -3123,8 +3206,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element + '-format').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-format"]').blur();
 
-                if($('#' + self.values.element + '-format').val() == 'kml') {
+                var format = $('#' + self.values.element + '-format').val();
+
+                $('#' + self.values.element + '-info').hide();
+
+                if(format == 'KML') {
                     $('#' + self.values.element + '-crs').val('EPSG:4326').prop('disabled',true).selectpicker('refresh');
+                } else if(format == 'CSV') {
+                    $('#' + self.values.element + '-info').show();
                 } else {
                     $('#' + self.values.element + '-crs').prop('disabled',false).selectpicker('refresh');
                 }
@@ -3132,7 +3221,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             $('#' + this.values.element + '-crs').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-crs"]').blur();
-                if(($('#' + self.values.element + '-format').val() == 'kml') &&
+                if(($('#' + self.values.element + '-format').val() == 'KML') &&
                    ($('#' + self.values.element + '-crs').val() != 'EPSG:4326')) {
                     $('#' + self.values.element + '-crs').val('EPSG:4326').selectpicker('refresh');
                 }
@@ -3146,7 +3235,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         if(file.error) {
                             switch(file.error) {
                                 case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes': case 'invalidContent': case 'conversionFailed':
-                                case 'crsNotSupported':
+                                case 'crsNotSupported': case 'acceptFileFormats':
                                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' +
                                                                                             PublicaMundi.i18n.getResource('action.upload-resource.error.' + file.error) + '</div>');
                                     break;
@@ -3157,7 +3246,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             };
                         } else {
                             var format = $('#' + self.values.element + '-format').val();
-                            if(format == 'zip') {
+                            if((format == 'ESRI Shapefile') || (format == 'DXF') || (format == 'CSV')) {
                                 format = 'geojson';
                             }
 
@@ -3183,26 +3272,28 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 add : function (e, data) {
                     $('#' + self.values.element + '-error').html('');
 
-                    var allowed = /(\.|\/)(gml|kml|geojson|zip)$/i
-                    var supportedLocally = /(\.|\/)(gml|kml|geojson)$/i
+                    var allowed_extensions = /(\.|\/)(gml|kml|geojson|json|zip|dxf|csv)$/i
+                    var locally_allowed_extensions = /(\.|\/)(gml|kml|geojson|json)$/i
 
                     var submit = true;
 
                     var format = $('#' + self.values.element + '-format').val();
-                    if(format == 'zip') {
-                        format = 'geojson';
-                    }
 
                     $.each(data.files, function (index, file) {
                         var ext = file.name.split('.').pop();
 
-                        if((!allowed.test(file.name)) || ($('#' + self.values.element + '-format').val().toLowerCase() != ext.toLowerCase())) {
+                        if(!allowed_extensions.test(file.name)) {
                             $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.acceptFileTypes">' +
                                                                                     PublicaMundi.i18n.getResource('action.upload-resource.error.acceptFileTypes') + '</div>');
 
                             submit = false;
-                        } else if((window.File) && (window.FileReader) && (supportedLocally.test(file.name))) {
+                        } else if((window.File) && (window.FileReader) && (locally_allowed_extensions.test(file.name))) {
                             var reader = new FileReader();
+
+                            var format = $('#' + self.values.element + '-format').val();
+                            if((format == 'ESRI Shapefile') || (format == 'DXF') || (format == 'CSV')) {
+                                format = 'geojson';
+                            }
 
                             reader.onload = function(e) {
                                 self.trigger('resource:loaded', {
@@ -3535,8 +3626,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     });
 
     var _ParseCoordinates = function(crs, delimiter, text) {
-        var re, coordinates = [];
-        
+        var re, coordinates = [], transformed = [];
+
         text = text || '';
 
         switch(delimiter) {
@@ -3547,10 +3638,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 re = /\s/;
                 break;
         }
-        
+
         var tokens = text.split(re);
         var num, numbers = [];
-        
+
         for(var i=0; i<tokens.length; i++) {
             if(tokens[i]) {
                 if(delimiter==',') {
@@ -3563,49 +3654,49 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
         }
 
-        if( numbers.length % 2 != 0) {
-            return coordinates;
-        }
-        
         for(var i=0; i<numbers.length; i+=2) {
-            coordinates.push([numbers[i], numbers[i+1]]);
-        }
-        if(crs != PublicaMundi.Maps.CRS.Mercator) {
-            for(var c=0; c<coordinates.length; c++) {
-                coordinates[c] = ol.proj.transform(coordinates[c], crs , PublicaMundi.Maps.CRS.Mercator);
+            if(numbers[i+1]) {
+                coordinates.push([numbers[i], numbers[i+1]]);
+                transformed.push([numbers[i], numbers[i+1]]);
             }
         }
-        
-        return coordinates;
+
+        if((coordinates.length > 1) &&
+           ((coordinates[0][0] != coordinates[coordinates.length - 1][0]) ||
+            (coordinates[0][1] != coordinates[coordinates.length - 1][1]))) {
+            coordinates.push([numbers[0], numbers[1]]);
+            transformed.push([numbers[0], numbers[1]]);
+        }
+
+        if(crs != PublicaMundi.Maps.CRS.Mercator) {
+            for(var c=0; c<transformed.length; c++) {
+                transformed[c] = ol.proj.transform(transformed[c], crs , PublicaMundi.Maps.CRS.Mercator);
+            }
+        }
+
+        return {
+            initial: coordinates,
+            transformed: transformed
+        };
     };
-    
+
     PublicaMundi.Maps.CoordinateParser = PublicaMundi.Class(PublicaMundi.Maps.Action, {
         initialize: function (options) {
 			var self = this;
 
             this.values.map = null;
-            
+
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
             }
 
             this.values.buffer = this.values.buffer || 3;
-            
+
             this.event('parse:completed');
 
             // http://openlayers.org/en/v3.3.0/examples/vector-labels.js
             var featureStyleFunction = function(feature, resolution) {
-                var text = '';
-
                 var geom = feature.getGeometry();
-                if (geom instanceof ol.geom.Polygon) {
-                    var p1 = geom.getCoordinates()[0][0];
-                    var p2 = geom.getCoordinates()[0][2];
-                    var text = p1[0].toFixed(4) + ' , ' + p1[1].toFixed(4)  + ' , ' + p2[0].toFixed(4)  + ' , ' + p2[1].toFixed(4) ;
-                } else {
-                    var p1 = geom.getCoordinates();
-                    var text = p1[0].toFixed(4) + ' , ' + p1[1].toFixed(4)
-                }
 
                 return [
                     new ol.style.Style({
@@ -3618,27 +3709,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         })
                     }),
                     new ol.style.Style({
-                        image: new ol.style.Icon({
-                            anchor: [0.5, 0.5],
-                            anchorXUnits: 'fraction',
-                            anchorYUnits: 'fraction',
-                            opacity: 1,
-                            src: 'content/images/markers/blue.png'
-                        }),
                         zIndex: Infinity,
                         text: new ol.style.Text({
                             textAlign: 'center',
-                            font: 'Arial 14px Normal',
-                            text: text,
+                            font: '10pt Tahoma,Arial Normal',
+                            text: feature.get('label') || '',
                             fill: new ol.style.Fill({color: 'black'}),
                             stroke: new ol.style.Stroke({color: 'white', width: 1}),
                             offsetX: 0,
-                            offsetY: ((geom instanceof ol.geom.Polygon) ? 0 : 20)
+                            offsetY: 0
                         })
                     })
                 ]
             };
-  
+
             this.values.overlay = new ol.FeatureOverlay({
                 style: featureStyleFunction
             });
@@ -3648,21 +3732,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 title: 'control.parse.dialog.title',
                 element: this.values.element + '-dialog',
                 visible: false,
-                width: 510,
+                width: 520,
                 height: 250,
                 autofit: true,
                 buttons: {
                     parse: {
                         text: 'control.parse.dialog.button.parse',
                         style: 'primary'
-                    },
-                    draw: {
-                        text: 'control.parse.dialog.button.draw',
-                        style: 'default'
-                    },
-                    import: {
-                        text: 'control.parse.dialog.button.upload',
-                        style: 'default'
                     },
                     close : {
                         text: 'control.parse.dialog.button.cancel',
@@ -3676,10 +3752,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.crs">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.crs')  + '</label>');
                     content.push('<select name="' + self.values.element + '-crs" id="' + self.values.element + '-crs" class="selectpicker" data-width="120px">');
-                    content.push('<option value="EPSG:3857">Web Mercator</option>');
                     content.push('<option value="EPSG:4326">WGS84</option>');
                     content.push('<option value="EPSG:2100" selected="selected">ΕΓΣΑ87</option>');
-                    content.push('<option value="EPSG:4258">ETRS89</option>');
                     content.push('</select>');
 
                     content.push('<label for="' + self.values.element + '-delimiter" style="padding: 0px 10px;" data-i18n-id="control.parse.dialog.label.delimiter">' +
@@ -3691,20 +3765,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-type" style="padding-right: 10px; width: 145px;" data-i18n-id="control.parse.dialog.label.geometry">' +
-                                 PublicaMundi.i18n.getResource('control.parse.dialog.label.geometry')  + '</label>');
-                    content.push('<select name="' + self.values.element + '-type" id="' + self.values.element + '-type" class="selectpicker" data-width="120px">');
-                    content.push('<option data-i18n-id="control.parse.geometry.point" value="POINT" selected="selected">' + PublicaMundi.i18n.getResource('control.parse.geometry.point')+ '</option>');
-                    content.push('<option data-i18n-id="control.parse.geometry.rectangle" value="POLYGON">' + PublicaMundi.i18n.getResource('control.parse.geometry.rectangle') + '</option>');
-                    content.push('</select>');
-                    content.push('</div>');
-                    
-                    content.push('<div class="clearfix">');
                     content.push('<label for="' + self.values.element + '-text" style="padding-right: 10px; width: 145px; float: left;" data-i18n-id="control.parse.dialog.label.text">' +
                                  PublicaMundi.i18n.getResource('control.parse.dialog.label.text')  + '</label>');
                     content.push('<textarea name="' + self.values.element + '-text" id="' + self.values.element + '-text" class="form-control" rows="3" style="resize: none; width: 330px; float: left;"></textarea>');
                     content.push('</div>');
-                                        
+
+                    content.push('<div class="clearfix alert alert-info" role="alert" style="margin: 0 !important; padding: 7px !important; width: 475px;">');
+                    content.push('<span data-i18n-id="control.parse.dialog.info">' +
+                                 PublicaMundi.i18n.getResource('control.parse.dialog.info')  + '</label>');
+                    content.push('</div>');
+
                     return content;
                 }
             });
@@ -3716,7 +3786,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element + '-delimiter').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-delimiter"]').blur();
             });
-            
+
             $('#' + this.values.element + '-type').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-type"]').blur();
             });
@@ -3732,66 +3802,62 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                                             $('#' + self.values.element + '-delimiter').val(),
                                                             $('#' + self.values.element + '-text').val());
 
-                        var bbox = null;
-                        if(coordinates.length > 1) {
-                            bbox = [coordinates[0][0], coordinates[0][1], coordinates[0][0], coordinates[0][1]];
-                            for(var c=1; c<coordinates.length; c++) {
-                                bbox[0] = Math.min(bbox[0], coordinates[c][0]);
-                                bbox[1] = Math.min(bbox[1], coordinates[c][1]);
-                                bbox[2] = Math.max(bbox[2], coordinates[c][0]);
-                                bbox[3] = Math.max(bbox[3], coordinates[c][1]);
+                        var initial = coordinates.initial, transformed = coordinates.transformed;
+                        if(initial.length > 0) {
+                            var bbox = null;
+                            if(transformed.length > 1) {
+                                bbox = [transformed[0][0], transformed[0][1], transformed[0][0], transformed[0][1]];
+                                for(var c=1; c<transformed.length; c++) {
+                                    bbox[0] = Math.min(bbox[0], transformed[c][0]);
+                                    bbox[1] = Math.min(bbox[1], transformed[c][1]);
+                                    bbox[2] = Math.max(bbox[2], transformed[c][0]);
+                                    bbox[3] = Math.max(bbox[3], transformed[c][1]);
+                                }
+                            }
+
+                            self.values.overlay.getFeatures().clear();
+                            self.values.features = new ol.Collection;
+
+                            var ring = []
+                            for(var c=0; c<transformed.length; c++) {
+                                ring.push(transformed[c]);
+
+                                var point = new ol.geom.Point(transformed[c]);
+                                var label = initial[c][0].toFixed(4) + ' , ' + initial[c][1].toFixed(4)
+
+                                var feature = new ol.Feature({
+                                    name: 'point-' + (c+1),
+                                    label: label,
+                                    geometry: point
+                                });
+                                self.values.features.push(feature);
+                            }
+                            var geom = new ol.geom.Polygon([ring]);
+
+                            var feature = new ol.Feature({
+                                name: 'polygo-',
+                                label: '',
+                                geometry: geom
+                            });
+                            self.values.features.push(feature);
+
+                            self.values.overlay.setFeatures(self.values.features);
+
+                            switch(transformed.length) {
+                                case 0:
+                                    break;
+                                case 1:
+                                    self.values.map.getView().setCenter(transformed[0]);
+                                    self.values.map.getView().setZoom(17);
+                                    break;
+                                default:
+                                    var view = self.values.map.getView();
+                                    var size = self.values.map.getSize();
+
+                                    view.fitExtent(bbox, size);
+                                    break;
                             }
                         }
-
-                        self.values.overlay.getFeatures().clear();
-                        self.values.features = new ol.Collection;
-
-                        switch($('#' + self.values.element + '-type').val()) {
-                            case 'POINT':
-                                for(var c=0; c<coordinates.length; c++) {
-                                    var geom = new ol.geom.Point(coordinates[c]);
-                                    var feature = new ol.Feature({ name: 'point-' + (c+1), geometry: geom });
-                                    self.values.features.push(feature);
-                                }
-
-                                self.values.features.push(feature);
-                                break;
-                            case 'POLYGON':
-                                for(var c=0; c<coordinates.length; c+=2) {
-                                    if(coordinates[c+1]) {
-                                        var ring = [
-                                            [coordinates[c][0], coordinates[c][1]],
-                                            [coordinates[c][0], coordinates[c+1][1]],
-                                            [coordinates[c+1][0], coordinates[c+1][1]],
-                                            [coordinates[c+1][0], coordinates[c][1]],
-                                            [coordinates[c][0], coordinates[c][1]]
-                                        ];
-                                        
-                                        var geom = new ol.geom.Polygon([ring]);
-                                        var feature = new ol.Feature({ name: 'polygon-' + (c/2 + 1), geometry: geom });
-                                        self.values.features.push(feature);
-                                    }
-                                }
-                                break;
-                        }
-
-                        self.values.overlay.setFeatures(self.values.features);
-
-                        switch(coordinates.length) {
-                            case 0:
-                                break;
-                            case 1:
-                                self.values.map.getView().setCenter(coordinates[0]);
-                                self.values.map.getView().setZoom(17);
-                                break;
-                            default:
-                                var view = self.values.map.getView();
-                                var size = self.values.map.getSize();
-
-                                view.fitExtent(bbox, size);
-                                break;
-                        }
-                                                    
                         self.trigger('parse:completed', { sender : self, coordinates : coordinates});
                         break;
                 }

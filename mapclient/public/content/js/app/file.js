@@ -116,9 +116,8 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
             }
         },
         create: function (map, metadata, layer, title) {
-            var __object = null;
+            var __object = null, source = null, format = null;
 
-            var format = null;
             switch(metadata.type.toUpperCase()){
                 case PublicaMundi.Maps.Resources.Types.KML:
                     format = new ol.format.KML();
@@ -133,43 +132,48 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                     break;
             }
 
-            if(metadata.url) {
-                __object = new ol.layer.Vector({
-                    source: new ol.source.Vector({
-                        projection: PublicaMundi.Maps.CRS.Mercator,
-                        url: metadata.url,
-                        format: format,
+            var style = [
+                new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: [255, 0, 0, 0.4]
                     }),
-                    style: [
-                        new ol.style.Style({
-                            fill: new ol.style.Fill({
-                                color: [255, 0, 0, 0.4]
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: '#ff0000',
-                                width: 2
-                            })
+                    stroke: new ol.style.Stroke({
+                        color: '#ff0000',
+                        width: 2
+                    })
+                }),
+                new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 6,
+                        fill: new ol.style.Fill({
+                            color: [255, 0, 0, 0.4]
                         }),
-                        new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: 6,
-                                fill: new ol.style.Fill({
-                                    color: [255, 0, 0, 0.4]
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: '#ff0000',
-                                    width: 2
-                                })
-                            }),
-                            zIndex: Infinity
+                        stroke: new ol.style.Stroke({
+                            color: '#ff0000',
+                            width: 2
                         })
-                    ]
-
+                    }),
+                    zIndex: Infinity
+                })
+            ];
+            
+            if(metadata.url) {
+                source = new ol.source.Vector({
+                    projection: PublicaMundi.Maps.CRS.Mercator,
+                    url: metadata.url,
+                    format: format,
+                    useSpatialIndex: true
+                });
+                    
+                __object = new ol.layer.Vector({
+                    source: source,
+                    style: style
                 });
             } else if (metadata.text) {
                 var source = new ol.source.Vector({
                     projection: PublicaMundi.Maps.CRS.Mercator,
-                    format : format
+                    format: format,
+                    useSpatialIndex: true
                 });
 
                 var features = format.readFeatures(metadata.text, {
@@ -179,7 +183,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
 
                 if((metadata.type.toUpperCase() == PublicaMundi.Maps.Resources.Types.GML) &&
                    (features.length > 0) &&
-                   (features[0].getGeometry().getCoordinates().length == 0)) {
+                   ((!features[0].getGeometry()) || (features[0].getGeometry().getCoordinates().length == 0))) {
                     format = new ol.format.GML2();
 
                     var features = format.readFeatures(metadata.text, {
@@ -191,12 +195,39 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                 source.addFeatures(features);
 
                 __object = new ol.layer.Vector({
-                    source : source
+                    source : source,
+                    style: style
                 });
+            }
+
+            var fitExtent = function(map, source) {
+                var extent = ol.extent.createEmpty();
+                var features = source.getFeatures();
+
+                for (var i = 0; i < features.length; i++) {
+                    var geometry = features[i].getGeometry();
+                    if (geometry) {
+                        ol.extent.extend(extent, geometry.getExtent());
+                    }
+                }
+
+                map.getView().fitExtent(extent, map.getSize());
             }
 
             if(__object) {
                 map.addLayer(__object);
+                
+                if(metadata.url) {
+                    var listenerKey = source.on('change', function(e) {
+                        if (source.getState() == 'ready') {
+                            ol.Observable.unByKey(listenerKey);
+
+                            fitExtent(map, source);
+                        }
+                    });
+                } else {
+                    fitExtent(map, source);
+                }
             }
 
             return __object;

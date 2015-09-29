@@ -73,6 +73,7 @@ body {
     left: 0px;
     width: 100%;
     height: 100%;
+    cursor: crosshair;
 }
 
 .panel-left {
@@ -196,7 +197,7 @@ ul {
     min-height: 110px;
 }
 .layer-tree-search-form {
-    padding: 8px 0px 0px 5px; 
+    padding: 8px 0px 0px 5px;
     position: absolute;
 }
 
@@ -846,6 +847,15 @@ img.legend {
     width: 5px;
 }
 
-.has-help-resource {
+.help {
+}
+
+.help-active {
     box-shadow: 5px 0px 5px rgba(255, 84, 84, 0.15);
+    cursor: help !important;
+}
+
+.help-active button {
+   box-shadow: 5px 0px 5px rgba(255, 84, 84, 0.15);
+    cursor: help !important;
 }
