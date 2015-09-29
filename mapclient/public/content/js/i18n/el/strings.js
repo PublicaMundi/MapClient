@@ -57,26 +57,23 @@
 
     "action.parse-coordinates.title" : "Εισαγωγή/Εξαγωγή συντεταγμένων",
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
-    "control.parse.dialog.button.parse" : "Εισαγωγή",
+    "control.parse.dialog.button.parse" : "Ανάλυση κειμένου",
     "control.parse.dialog.button.cancel" : "Ακύρωση",
-    "control.parse.dialog.label.crs" : "Σύστημα αναφοράς",    
+    "control.parse.dialog.label.crs" : "Σύστημα αναφοράς",
     "control.parse.dialog.label.delimiter" : "Διαχωριστικό δεκαδικών",
     "control.parse.dialog.label.text" : "Συντεταγμένες",
-    "control.parse.dialog.label.geometry" : "Τύπος γεωμετρίας",
-    "control.parse.geometry.rectangle" : "Ορθογώνια",
-    "control.parse.geometry.point" : "Σημεία",
-    "control.parse.dialog.button.draw" : "Σχεδίαση",
-    "control.parse.dialog.button.upload" : "Μεταφόρτωση",
-    
+
     "action.upload-resource.title" : "Μεταφόρτωση αρχείου",
     "action.upload-resource.select-file" : "Επιλογή αρχείου",
     "action.upload-resource.error.acceptFileTypes" : "Ο επιλεγμένος τύπος αρχείου δεν υποστηρίζεται.",
+    "action.upload-resource.error.acceptFileFormats" : "Ο επιλεγμένος τύπος αρχείου δεν υποστηρίζεται.",
     "action.upload-resource.error.minFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μεγαλύτερο από 1 byte.",
     "action.upload-resource.error.maxFileSize" : "Το μέγεθος του αρχείου πρέπει να είναι μικρότερο από 5 MByte.",
     "action.upload-resource.error.invalidContent" : "Το περιεχόμενο του αρχείου δεν υποστηρίζεται.",
     "action.upload-resource.error.conversionFailed" : "Σφάλμα κατά τη μετατροπή του αρχείου.",
     "action.upload-resource.error.crsNotSupported" : "Το επιλεγμένο σύστημα αναφοράς δεν υποστηρίζεται.",
     "action.upload-resource.error.unknown" : "Άγνωστο σφάλμα κατά τη μεταφόρτωση του αρχείου.",
+    "control.parse.dialog.info" : "Εισάγετε συντεταγμένες με τη παρακάτω μορφή Χ1 Υ1 Χ2 Υ2 Χ3 Υ3 ...",
 
     "action.create-link.title" : "Σταθερός δεσμός για το χάρτη που βλέπετε",
 
@@ -84,6 +81,7 @@
     "control.upload.dialog.label.title" : "Τίτλος",
     "control.upload.dialog.label.crs" : "Σύστημα αναφοράς",
     "control.upload.dialog.default.title" : "Νέο επίπεδο",
+    "control.upload.dialog.info" : "Το αρχείο πρέπει να περιέχει ένα σημείο ανά γραμμή στη μορφή X,Y",
 
     "tool.export.title" : "Σχεδίαση πολυγώνου",
     "tool.length.title" : "Μέτρηση απόστασης",

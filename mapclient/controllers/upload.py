@@ -17,18 +17,35 @@ from osgeo import ogr
 
 log = logging.getLogger(__name__)
 
+IMPORT_GEOJSON = 'GeoJSON'
+IMPORT_ESRI = 'ESRI Shapefile'
+IMPORT_GML = 'GML'
+IMPORT_KML = 'KML'
+IMPORT_DXF = 'DXF'
+IMPORT_CSV = 'CSV'
+
 MIN_FILE_SIZE = 1 # bytes
 MAX_FILE_SIZE = 5242880 # bytes
-ACCEPT_FILE_TYPES = ['application/gml+xml', 'application/vnd.google-earth.kml+xml', 'application/vnd.geo+json', 'application/json', 'application/octet-stream', 'application/zip', 'text/plain']
+
+ACCEPT_FORMAT = [IMPORT_GML, IMPORT_KML, IMPORT_GEOJSON, IMPORT_CSV, IMPORT_ESRI, IMPORT_DXF]
+
+ACCEPT_FORMAT_TYPES = {
+    IMPORT_GML: ['application/gml+xml'],
+    IMPORT_KML: ['application/vnd.google-earth.kml+xml'],
+    IMPORT_ESRI: ['application/zip', 'application/octet-stream'],
+    IMPORT_GEOJSON: ['application/vnd.geo+json', 'application/json', 'text/plain'],
+    IMPORT_DXF: ['application/dxf', 'application/octet-stream'],
+    IMPORT_CSV: ['application/vnd.ms-excel', 'text/csv', 'text/plain']
+}
+
+ACCEPT_FORMAT_CONVERT = [IMPORT_ESRI, IMPORT_DXF, IMPORT_CSV]
+
 CRS_SUPPORTED = ['EPSG:900913', 'EPSG:3857', 'EPSG:4326', 'EPSG:2100', 'EPSG:4258']
 
 class UploadController(BaseController):
 
-    @rest.dispatch_on(HEAD='upload_HEAD', GET='upload_GET', POST='upload_POST', OPTIONS='upload_POST', DELETE='upload_DELETE')
+    @rest.dispatch_on(POST='upload_POST')
     def upload_resource(self):
-        return ''
-
-    def upload_GET(self):
         return ''
 
     @jsonify
@@ -38,6 +55,10 @@ class UploadController(BaseController):
         in_crs = None
         if request.POST['crs'] and request.POST['crs'] in CRS_SUPPORTED:
             in_crs = request.POST['crs']
+
+        in_format = None
+        if request.POST['format'] and request.POST['format'] in ACCEPT_FORMAT_TYPES:
+            in_format = request.POST['format']
 
         for name, fieldStorage in request.POST.items():
             if isinstance(fieldStorage, unicode):
@@ -58,15 +79,19 @@ class UploadController(BaseController):
             file['size'] = self._get_file_size(fieldStorage.file)
             file['url'] = None
             file['crs'] = in_crs
+            file['format'] = in_format
 
             if self._validate(file):
                 with open(storageFilename, 'w') as f:
                     shutil.copyfileobj( fieldStorage.file , f)
 
-                if extension == '.zip':
+                if file['format'] in ACCEPT_FORMAT_CONVERT:
                     convertFilename = os.path.join(config['upload.path'], token + '.geojson')
 
-                    file['error'] = self._convert(in_crs, os.path.join(config['upload.path'], token), storageFilename, convertFilename)
+                    if file['format'] == IMPORT_CSV:
+                        file['error'] = self._parse_csv(in_crs, os.path.join(config['upload.path'], token), storageFilename, convertFilename)
+                    else:
+                        file['error'] = self._convert(in_crs, in_format, os.path.join(config['upload.path'], token), storageFilename, convertFilename)
 
                     if file['error'] is None:
                         file['name'] = os.path.splitext(os.path.basename(initialFilename))[0] + '.geojson'
@@ -110,38 +135,71 @@ class UploadController(BaseController):
         else:
             abort(404, detail = 'File not found.')
 
-    def upload_OPTIONS(self):
-        return ''
+    def _parse_csv(self, in_crs, unzip_folder, f_input, f_output):
+        # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "GeoJSON" filename.geojson filename.vrt
 
-    def upload_HEAD(self):
-        return ''
-
-    def upload_DELETE(self):
-        return ''
-
-    def _convert(self, in_crs, unzip_folder, f_input, f_output):
-        # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
-        error = None
+        '''
+        <OGRVRTDataSource>
+            <OGRVRTLayer name="source">
+                <SrcDataSource>source.csv</SrcDataSource>
+                <GeometryType>wkbPoint</GeometryType>
+                <LayerSRS>WGS84</LayerSRS>
+                <GeometryField encoding="PointFromColumns" x="field_1" y="field_2"/>
+            </OGRVRTLayer>
+        </OGRVRTDataSource>
+        '''
 
         if not os.path.exists(unzip_folder):
             os.makedirs(unzip_folder)
 
-        with zipfile.ZipFile(f_input, "r") as z:
-            z.extractall(unzip_folder)
+        f_input_path, f_input_file = os.path.split(f_input)
+        shutil.move(f_input, os.path.join(unzip_folder, f_input_file))
 
-        os.remove(f_input)
+        error = None
 
-        f_counter = 0
-        for filename in [ f for f in os.listdir(unzip_folder) ]:
-            if os.path.splitext(filename)[1] == '.shp':
-                f_counter += 1
-                f_input = os.path.join(unzip_folder, filename)
+        # Create VRT file
+        vrtFilename = os.path.join(unzip_folder, str(uuid.uuid4()) + '.vrt')
+        with open(vrtFilename, 'w') as f:
+            f.write('<OGRVRTDataSource>')
+            f.write('<OGRVRTLayer name="' + os.path.splitext(f_input_file)[0] + '">')
+            f.write('<SrcDataSource relativeToVRT="1">' + f_input_file + '</SrcDataSource>')
+            f.write('<GeometryType>wkbPoint</GeometryType>')
+            f.write('<LayerSRS>WGS84</LayerSRS>')
+            f.write('<GeometryField encoding="PointFromColumns" x="field_1" y="field_2"/>')
+            f.write('</OGRVRTLayer>')
+            f.write('</OGRVRTDataSource>')
+        if error is None and not ogr_export(['', '-lco', 'ENCODING=UTF-8', '-t_srs', 'EPSG:3857', '-s_srs', in_crs, '-f', 'GeoJSON', f_output, vrtFilename]):
+            error = 'conversionFailed'
 
-        if f_counter != 1:
-            error = 'invalidContent'
+        if os.path.exists(unzip_folder):
+            shutil.rmtree(unzip_folder)
 
-        if error is None:
-            driver = ogr.GetDriverByName('ESRI Shapefile')
+        return error
+
+    def _convert(self, in_crs, in_format, unzip_folder, f_input, f_output):
+        # ogr2ogr -t_srs EPSG:4326 -s_srs EPSG:3857 -f "ESRI Shapefile" query.shp query.geojson
+        error = None
+
+        if in_format == IMPORT_ESRI:
+            if not os.path.exists(unzip_folder):
+                os.makedirs(unzip_folder)
+
+            with zipfile.ZipFile(f_input, "r") as z:
+                z.extractall(unzip_folder)
+
+            os.remove(f_input)
+
+            f_counter = 0
+            for filename in [ f for f in os.listdir(unzip_folder) ]:
+                if os.path.splitext(filename)[1] == '.shp':
+                    f_counter += 1
+                    f_input = os.path.join(unzip_folder, filename)
+
+            if f_counter != 1:
+                error = 'invalidContent'
+
+        if error is None and in_format == IMPORT_ESRI:
+            driver = ogr.GetDriverByName(IMPORT_ESRI)
             if not driver is None:
                 shapefile = driver.Open(f_input)
                 if not shapefile is None:
@@ -166,18 +224,23 @@ class UploadController(BaseController):
         if error is None and not ogr_export(['', '-lco', 'ENCODING=UTF-8', '-t_srs', 'EPSG:3857', '-s_srs', in_crs, '-f', 'GeoJSON', f_output, f_input]):
             error = 'conversionFailed'
 
-        shutil.rmtree(unzip_folder)
+        if os.path.exists(unzip_folder):
+            shutil.rmtree(unzip_folder)
+        else:
+            os.remove(f_input)
 
         return error
 
     def _validate(self, file):
         if file['crs'] is None:
             file['error'] = 'crsNotSupported'
+        elif file['format'] is None or not file['format'] in ACCEPT_FORMAT:
+            file['error'] = 'acceptFileFormats'
         elif file['size'] < MIN_FILE_SIZE:
             file['error'] = 'minFileSize'
         elif file['size'] > MAX_FILE_SIZE:
             file['error'] = 'maxFileSize'
-        elif not file['type'] in ACCEPT_FILE_TYPES:
+        elif not file['type'] in ACCEPT_FORMAT_TYPES[file['format']]:
             file['error'] = 'acceptFileTypes'
         else:
             return True
