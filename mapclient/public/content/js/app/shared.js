@@ -376,7 +376,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			return this.values.readers[type].getMetadata(parameters);
         },
-        addResourceFromCatalog: function (map, resource, opacity) {
+        addResourceFromCatalog: function (map, resource, opacity, key, title) {
             var self = this;
 
             if(this.values.layerCounter >= this.values.maxLayerCount) {
@@ -403,13 +403,13 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                 var layer = null;
 
                 for(var i=0; i < metadata.layers.length; i++){
-                    if(metadata.layers[i].key == resource.metadata.extras.layer) {
+                    if((metadata.layers[i].key == key) || (metadata.layers[i].key == resource.metadata.extras.layer)) {
                         layer = metadata.layers[i];
                         break;
                     }
                 }
                 if(layer) {
-                    var __object = self.createLayer(map, metadata, resource.id + '_' + layer.key);
+                    var __object = self.createLayer(map, metadata, resource.id + '_' + layer.key, title);
 
                     if(__object) {
                         __object.setOpacity(opacity / 100.0);
@@ -463,12 +463,13 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         getQueryableResources: function() {
             return this.values.queryable;
         },
-        createLayer: function (map, metadata, id) {
+        createLayer: function (map, metadata, id, title) {
+            console.log(title);
             if(this.values.layerCounter >= this.values.maxLayerCount) {
                 return null;
             }
 
-			var title = '', bbox = null;
+			var bbox = null;
 
 			var parts = id.split('_');
 			var resource = parts[0];
@@ -476,7 +477,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			for(var i=0; i<metadata.layers.length;i++) {
 				if(metadata.layers[i].key == layer) {
-					title = metadata.layers[i].title;
+					title = title || metadata.layers[i].title;
 					bbox = metadata.layers[i].bbox;
 					break;
 				}
@@ -500,7 +501,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 				this.values.layers.push({
 					id: id,
 					layer : __object,
-                    title: title
+                    title: title,
+                    endpoint: metadata.endpoint,
+                    key : layer
 				});
 
                 if(bbox) {
@@ -575,7 +578,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     resource_id: parts[0],
                     layer_id: parts[1],
                     title: currentValue.title,
-                    opacity: (currentValue.layer.getOpacity() * 100)
+                    opacity: (currentValue.layer.getOpacity() * 100),
+                    endpoint: currentValue.endpoint,
+                    key : currentValue.key
                 }
             });
         },

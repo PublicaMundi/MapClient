@@ -4,7 +4,7 @@ from sqlalchemy.orm import mapper
 
 from mapclient.model.meta import metadata, engine
 
-links = Table('links',
+links = Table('link',
              metadata,
              autoload=True,
              autoload_with=engine)
