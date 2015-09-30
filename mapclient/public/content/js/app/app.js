@@ -570,7 +570,20 @@
             map: members.map.control,
             resources: members.resources,
             ckan: members.ckan,
-            endpoint: members.config.path
+            endpoint: members.config.path,
+            mode: PublicaMundi.Maps.PermalinkTool.Mode.Link
+        });
+
+        members.actions.embed = new PublicaMundi.Maps.PermalinkTool({
+            element: 'action-embed',
+            name: 'embed',
+            image: 'content/images/map-w.png',
+            title: 'action.create-link-embed.title',
+            map: members.map.control,
+            resources: members.resources,
+            ckan: members.ckan,
+            endpoint: members.config.path,
+            mode: PublicaMundi.Maps.PermalinkTool.Mode.Embed
         });
 
         members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
@@ -590,7 +603,7 @@
                 title: args.title,
                 projection: args.projection
             }).then(function(metadata) {
-                if(members.resources.createLayer(members.map.control, metadata, args.id)) {
+                if(members.resources.createLayer(members.map.control, metadata, args.id, args.title)) {
                     members.components.layerSelection.add(args.id, metadata);
                 }
             });
@@ -1012,12 +1025,18 @@
                     var loader = function() {
                         if(index < config.layers.length) {
                             var layer = config.layers[index];
+                            var title = null;
                             index++;
 
-                            members.ckan.loadPackageById(layer.package).then(function(data) {
+                            members.ckan.loadPackageById(layer.package).then(function(_package) {
                                 var resource = members.ckan.getResourceById(layer.resource);
                                 if(resource) {
-                                    members.resources.addResourceFromCatalog(members.map.control, resource, layer.opacity).then(loader);
+                                    resource = members.resources.setCatalogResourceMetadataOptions(resource);
+                                    
+                                    if(!!resource.metadata.extras.layer) {
+                                        title = (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]);
+                                    }
+                                    members.resources.addResourceFromCatalog(members.map.control, resource, layer.opacity, layer.key, layer.title).then(loader);
                                 }
                             }, function(error) {
                                 console.log('Failed to load resource ' + layer.resource + ' from package ' + layer.package);

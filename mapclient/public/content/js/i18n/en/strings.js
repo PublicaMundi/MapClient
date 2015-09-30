@@ -33,7 +33,7 @@
     "control.tree.search.prompt" : "Search resources ...",
     "control.tree.search.no-criteria" : "No search criteria set. Draw a bounding box or enter text.",
 
-    "control.tree.search.button.draw" : "Draw bounding box for spatial search. Hold Shift and left mouse button pressed to begin drawing.",
+    "control.tree.search.button.draw" : "Draw bounding box for spatial search. Hold the left mouse button pressed to begin drawing.",
     "control.tree.search.button.remove" : "Remove",
     "control.tree.search.button.apply" : "Apply",
     "control.tree.search.button.discard" : "Discard",
@@ -52,8 +52,10 @@
     "action.import-wms.error.metadata" : "Get WMS capabilities request has failed.",
 
     "action.create-link.title" : "Copy link",
+    "action.create-link-embed.title": "Embed map",
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Failed to copy link to clipboard. Please select & copy the link manually.",
+    "action.create-link-embed.label.lib" : "Mapping Library",
 
     "action.parse-coordinates.title" : "Insert/Export coordinates",
     "control.parse.dialog.title" : "Insert coordinates",

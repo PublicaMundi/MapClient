@@ -33,7 +33,7 @@
     "control.tree.search.prompt" : "Αναζήτηση δεδομένων ...",
     "control.tree.search.no-criteria" : "Δεν έχετε ορίσει κριτήρια αναζήτησης. Σχεδιάστε ένα πλαίσιο οριοθέτησης ή εισάγετε κείμενο αναζήτησης.",
 
-    "control.tree.search.button.draw" : "Σχεδίαση πλαισίου για χωρική αναζήτηση. Κρατήστε πατημένο το πλήκτρο shift και το αριστερό πλήκτρο του ποντικιού για την έναρξη της σχεδίασης.",
+    "control.tree.search.button.draw" : "Σχεδίαση πλαισίου για χωρική αναζήτηση. Κρατήστε πατημένο το αριστερό πλήκτρο του ποντικιού για την έναρξη της σχεδίασης.",
     "control.tree.search.button.remove" : "Αφαίρεση φίλτρου",
     "control.tree.search.button.apply" : "Εφαρμογή φίλτρου",
     "control.tree.search.button.discard" : "Ακύρωση",
@@ -52,8 +52,10 @@
     "action.import-wms.error.metadata" : "Η ανάγνωση των μεταδεδομένων απέτυχε.",
 
     "action.create-link.title" : "Αντιγραφή συνδέσμου",
+    "action.create-link-embed.title" : "Ενσωμάτωση χάρτη σε web site",
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Η αυτόματη αντιγραφή του συνδέσμου απέτυχε. Παρακαλώ επιλέξτε και αντιγράψτε το σύνδεσμο.",
+    "action.create-link-embed.label.lib" : "Βιβλιοθήκη",
 
     "action.parse-coordinates.title" : "Εισαγωγή/Εξαγωγή συντεταγμένων",
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",

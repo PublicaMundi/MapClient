@@ -621,6 +621,7 @@ ul {
   border-radius: 0px;
   outline-style: none;
   background-color: transparent;
+  cursor: pointer !important;
 }
 
 .ol-zoomslider:hover {
@@ -651,6 +652,7 @@ ul {
     right: 0.2em;
     left: auto;
     border-radius: 0px;
+    cursor: pointer !important;
 }
 
 .ol-zoom .ol-zoom-in {

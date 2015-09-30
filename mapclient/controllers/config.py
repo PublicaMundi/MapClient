@@ -6,12 +6,14 @@ log = logging.getLogger(__name__)
 
 from paste.deploy.converters import asbool
 
-from pylons import request, response, session
-from pylons.controllers.util import abort
+from pylons import config, request, response, session, url, tmpl_context as c
+from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import rest
 from pylons import config
 
-from mapclient.lib.base import BaseController
+import mapclient.lib.helpers as h
+
+from mapclient.lib.base import BaseController, render
 
 from mapclient.model.meta import Session
 from mapclient.model.link import Link
@@ -73,14 +75,15 @@ class ConfigController(BaseController):
 
         return {}
 
-
     @rest.restrict('GET')
     def load(self, id):
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        
         try:
             config = self._expand(id)
-
+            
             return json.dumps({
-                'success' : True,
+                'success' : True if config else False,
                 'config' : config
             })
         except Exception as ex:
@@ -93,6 +96,8 @@ class ConfigController(BaseController):
 
     def save(self):
         ip = None
+
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
 
         # Get requested url
         try:
@@ -112,3 +117,14 @@ class ConfigController(BaseController):
             'success' : False,
             'url' : None
         })
+
+    def embed(self, id):
+        try:
+            config = self._expand(id)
+            c.config = json.dumps(config)
+        except Exception as ex:
+            log.error(ex)
+            
+            abort(404, 'Map configuration was not found')
+
+        return render('/embed.jinja2')

@@ -116,7 +116,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                 // BBOX draw
                 this.values.bbox.interaction = new ol.interaction.DragBox({
-                    condition: ol.events.condition.shiftKeyOnly,
                     style: new ol.style.Style({
                         fill: new ol.style.Fill({
                             color: [255, 255, 255, 0.4]
@@ -1008,7 +1007,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						$(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checked.png');
 
                         if(!self.values.resources.isLayerSelected(id)) {
-                            self.values.resources.createLayer(self.values.map, metadata, id);
+                            var title = $(parent).find('div.tree-text').html() || '';
+                            self.values.resources.createLayer(self.values.map, metadata, id, title);
                         }
 
                         if(fireEvents!==false) {
@@ -3383,6 +3383,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
 
                     content.push('<div class="clearfix"  id="' + self.values.element + '-error"></div>');
+
                     return content;
                 }
             });
@@ -3467,19 +3468,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         initialize: function (options) {
 			var self = this;
 
+            options.mode = options.mode || PublicaMundi.Maps.PermalinkTool.Mode.Link;
+            
             if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
             }
-
+            
             this.event('position:changed');
 
             this.values.dialog = new PublicaMundi.Maps.Dialog({
-                title: 'action.create-link.title',
+                title: (options.mode == PublicaMundi.Maps.PermalinkTool.Mode.Link ? 'action.create-link.title' : 'action.create-link-embed.title'),
                 element: this.values.element + '-dialog',
                 visible: false,
                 width: 430,
                 height: 280,
-                autofit: false,
+                autofit: true,
                 buttons: {
                     close : {
                         text: 'button.close',
@@ -3489,25 +3492,46 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 renderContent: function() {
                     var content = [];
 
-                    content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                    switch(self.values.mode) {
+                        case PublicaMundi.Maps.PermalinkTool.Mode.Link:
+                            content.push('<div class="clearfix" style="padding-bottom: 10px;">');
 
-                    content.push('<div class="input-group">');
-                    content.push('<input readonly id="' + self.values.element + '-link" value="" type="text" class="form-control" data-i18n-id="action.create-link.link.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="" style="background: white;">');
-                    content.push('<span class="input-group-btn">');
-                    content.push('<button id="' + self.values.element + '-btn-copy" class="btn btn-default" type="button">');
-                    content.push('<span class="glyphicon glyphicon-copy"></span>');
-                    content.push('</button>');
-                    content.push('</span>');
-                    content.push('</div>');
+                            content.push('<div class="input-group">');
+                            content.push('<input readonly id="' + self.values.element + 
+                                         '-link" value="" type="text" class="form-control" data-i18n-id="action.create-link.link.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="" style="background: white;">');
+                            content.push('<span class="input-group-btn">');
+                            content.push('<button id="' + self.values.element + '-btn-copy" class="btn btn-default" type="button">');
+                            content.push('<span class="glyphicon glyphicon-copy"></span>');
+                            content.push('</button>');
+                            content.push('</span>');
+                            content.push('</div>');
 
-                    content.push('</div>');
+                            content.push('</div>');
 
-                    content.push('<div class="clearfix" style="max-height: 200px; overflow: auto;">');
-                    content.push('<div id="' + self.values.element + '-layers" class="clearfix" style="padding: 0 4px 0 0;"></div>');
-                    content.push('</div>');
-                    content.push('<div class="clearfix" style="background: #fff5c1; border-radius: 4px; padding: 4px;" id="' + self.values.element + '-error"></div>');
+                            content.push('<div class="clearfix" style="max-height: 200px; overflow: auto;">');
+                            content.push('<div id="' + self.values.element + '-layers" class="clearfix" style="padding: 0 4px 0 0;"></div>');
+                            content.push('</div>');
+                            content.push('<div class="clearfix" style="background: #fff5c1; border-radius: 4px; padding: 4px;" id="' + self.values.element + '-error"></div>');
+                            break;
+                        case PublicaMundi.Maps.PermalinkTool.Mode.Embed:
+                            content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                            content.push('<label for="' + self.values.element + '-lib" style="padding-right: 10px; width: 145px;" data-i18n-id="action.create-link-embed.label.lib">' +
+                                         PublicaMundi.i18n.getResource('action.create-link-embed.label.lib')  + '</label>');
+                            content.push('<select name="' + self.values.element + '-lib" id="' + self.values.element + '-lib" class="selectpicker" data-width="160px">');
+                            content.push('<option value="leaflet" selected>LeafLet</option>');
+                            content.push('<option value="ol">OpenLayers 3</option>');
+                            content.push('</select>');
+                            content.push('</div>');
+
+                            break;
+                    }
+
                     return content;
                 }
+            });
+
+            $('#' + this.values.element + '-lib').selectpicker().change(function () {
+                $('[data-id="' + self.values.element + '-lib"]').blur();
             });
 
             $('#' + this.values.element + '-btn-copy').click(function() {
@@ -3554,7 +3578,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         package : resource.package,
                         resource : resource.id,
                         layer: layer.layer_id,
-                        opacity: layer.opacity
+                        opacity: layer.opacity,
+                        endpoint: layer.endpoint,
+                        key: layer.key
                     });
                 }
             }
@@ -3625,6 +3651,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+    PublicaMundi.Maps.PermalinkTool.Mode = {
+        Link : 1,
+        Embed : 2
+    };
+    
     var _ParseCoordinates = function(crs, delimiter, text) {
         var re, coordinates = [], transformed = [];
 
