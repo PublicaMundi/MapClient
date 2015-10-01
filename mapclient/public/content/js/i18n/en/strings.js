@@ -56,6 +56,7 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Failed to copy link to clipboard. Please select & copy the link manually.",
     "action.create-link-embed.label.lib" : "Mapping Library",
+    "action.create-link-embed.label.code" : "Code",
 
     "action.parse-coordinates.title" : "Insert/Export coordinates",
     "control.parse.dialog.title" : "Insert coordinates",
@@ -98,5 +99,6 @@
     "control.set-position.dialog.label.y" : "Y",
     "control.set-position.dialog.button.move" : "Move",
 
+    "button.create" : "Create",
     "button.close" : "Close"
 }

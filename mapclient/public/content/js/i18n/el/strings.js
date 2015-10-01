@@ -56,6 +56,7 @@
     "action.create-link.link.placeholder" : "",
     "action.create-link.error.copy" : "Η αυτόματη αντιγραφή του συνδέσμου απέτυχε. Παρακαλώ επιλέξτε και αντιγράψτε το σύνδεσμο.",
     "action.create-link-embed.label.lib" : "Βιβλιοθήκη",
+    "action.create-link-embed.label.code" : "Κώδικας",
 
     "action.parse-coordinates.title" : "Εισαγωγή/Εξαγωγή συντεταγμένων",
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
@@ -97,5 +98,6 @@
     "control.set-position.dialog.label.y" : "Υ",
     "control.set-position.dialog.button.move" : "Ενημέρωση",
 
+    "button.create" : "Δημιουργία",
     "button.close" : "Κλείσιμο"
 }

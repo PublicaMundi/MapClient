@@ -2743,9 +2743,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             $('#' + this.values.element).find('a').click(function() {
                 if(typeof self.execute === 'function') {
                     self.execute();
-                } else {
-                    self.trigger('action:execute', { name : self.values.name });
                 }
+                self.trigger('action:execute', { name : self.values.name });
             });
 
             if(!this.values.visible) {
@@ -2873,6 +2872,25 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
             });
         },
+        moveToFront: function() {
+            var myElement = $('#' + this.values.element);
+            var myIndex = myElement.zIndex();
+
+            var topModal = null;
+            var topModalIndex = myIndex;
+
+            $('.modal-dialog').each(function(index, element) {
+                var zIndex = $(element).zIndex();
+                if(zIndex > topModalIndex) {
+                    topModalIndex = zIndex;
+                    topModal = element;
+                }
+            });
+            if(topModal) {
+                $(topModal).zIndex(myIndex);
+                $(myElement).zIndex(topModalIndex)
+            }
+        },
         show: function() {
             PublicaMundi.Maps.Component.prototype.show.apply(this, arguments);
 
@@ -2880,7 +2898,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.positionInitialized = true;
                 this.moveToCenter();
             }
-
+            this.moveToFront();
             this.trigger('dialog:show', {sender : this });
 
             $('#' +  this.values.element).focus();
@@ -3469,24 +3487,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var self = this;
 
             options.mode = options.mode || PublicaMundi.Maps.PermalinkTool.Mode.Link;
-            
+
             if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
             }
-            
-            this.event('position:changed');
 
             this.values.dialog = new PublicaMundi.Maps.Dialog({
                 title: (options.mode == PublicaMundi.Maps.PermalinkTool.Mode.Link ? 'action.create-link.title' : 'action.create-link-embed.title'),
                 element: this.values.element + '-dialog',
                 visible: false,
-                width: 430,
+                width: 500,
                 height: 280,
                 autofit: true,
                 buttons: {
-                    close : {
+                    close: {
                         text: 'button.close',
-                        style: 'primary'
+                        style: 'default'
                     }
                 },
                 renderContent: function() {
@@ -3497,7 +3513,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             content.push('<div class="clearfix" style="padding-bottom: 10px;">');
 
                             content.push('<div class="input-group">');
-                            content.push('<input readonly id="' + self.values.element + 
+                            content.push('<input readonly id="' + self.values.element +
                                          '-link" value="" type="text" class="form-control" data-i18n-id="action.create-link.link.placeholder" data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="" style="background: white;">');
                             content.push('<span class="input-group-btn">');
                             content.push('<button id="' + self.values.element + '-btn-copy" class="btn btn-default" type="button">');
@@ -3515,12 +3531,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             break;
                         case PublicaMundi.Maps.PermalinkTool.Mode.Embed:
                             content.push('<div class="clearfix" style="padding-bottom: 10px;">');
-                            content.push('<label for="' + self.values.element + '-lib" style="padding-right: 10px; width: 145px;" data-i18n-id="action.create-link-embed.label.lib">' +
+                            content.push('<label for="' + self.values.element + '-lib" style="padding-right: 10px; width: 115px;" data-i18n-id="action.create-link-embed.label.lib">' +
                                          PublicaMundi.i18n.getResource('action.create-link-embed.label.lib')  + '</label>');
                             content.push('<select name="' + self.values.element + '-lib" id="' + self.values.element + '-lib" class="selectpicker" data-width="160px">');
                             content.push('<option value="leaflet" selected>LeafLet</option>');
                             content.push('<option value="ol">OpenLayers 3</option>');
                             content.push('</select>');
+                            content.push('</div>');
+
+                            content.push('<div class="clearfix" style="padding-bottom: 10px;">');
+                            content.push('<label for="' + self.values.element + '-iframe" style="padding-right: 10px; width: 115px; float: left;" data-i18n-id="action.create-link-embed.label.code">' +
+                                         PublicaMundi.i18n.getResource('action.create-link-embed.label.code')  + '</label>');
+                            content.push('<textarea name="' + self.values.element + '-iframe" id="' + self.values.element + '-iframe" class="form-control" rows="3" style="resize: none; width: 340px; float: left;"></textarea>');
                             content.push('</div>');
 
                             break;
@@ -3532,18 +3554,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             $('#' + this.values.element + '-lib').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-lib"]').blur();
+                self.execute();
             });
 
             $('#' + this.values.element + '-btn-copy').click(function() {
                  $(this).blur();
             });
 
-            this.values.dialog.on('dialog:show', function(args) {
-
-            });
-
             this.values.dialog.on('dialog:action', function(args){
-                    switch(args.action){
+                    switch(args.action) {
                         case 'close':
                             this.hide();
                             break;
@@ -3564,8 +3583,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     set : (base ? base.publicamundi.set : null),
                     opacity : (overlay.getOpacity() * 100)
                 },
-                layers: []
+                layers: [],
+                lib: null
             };
+
+            if(this.values.mode == PublicaMundi.Maps.PermalinkTool.Mode.Embed) {
+                config.lib = $('#' + this.values.element + '-lib').val();
+            }
 
             var layers = this.values.resources.getSelectedLayers();
             for(var l=0;l<layers.length; l++) {
@@ -3590,11 +3614,75 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var self = this;
 
             var config = this.exportToJSON();
-
+            if(self.values.mode == PublicaMundi.Maps.PermalinkTool.Mode.Embed) {
+                config.lib = $('#' + self.values.element + '-lib').val();
+            }
             return new Promise(function(resolve, reject) {
                 var uri = new URI(self.values.endpoint);
                 uri.segment(['config', 'save']);
 
+                var callback = null;
+                switch(self.values.mode) {
+                    case PublicaMundi.Maps.PermalinkTool.Mode.Link:
+                        callback = function (response) {
+                            $('#' + self.values.element + '-error').hide();
+                            if(response.success) {
+                                var link = new URI(window.location.origin);
+                                if(self.values.endpoint!='/') {
+                                    link.segment([self.values.endpoint]);
+                                }
+                                link.addQuery({ 'config': response.url });
+
+                                $('#' + self.values.element + '-link').val(link.toString());
+
+                                var copied = false;
+                                try {
+                                    copied = document.execCommand('copy');
+                                } catch(err) {
+                                    // suppress exception
+                                }
+                                if(!copied) {
+                                    $('#' + self.values.element + '-btn-copy').addClass('disabled');
+
+                                    $('#' + self.values.element + '-error').html(PublicaMundi.i18n.getResource('action.create-link.error.copy'));
+                                    $('#' + self.values.element + '-error').show();
+                                }
+                            }
+
+                            self.values.dialog.show();
+
+                            $('#' + self.values.element + '-link').focus();
+                            $('#' + self.values.element + '-link').select();
+
+                            resolve(response);
+                        };
+                        break;
+                    case PublicaMundi.Maps.PermalinkTool.Mode.Embed:
+                      callback = function (response) {
+                            $('#' + self.values.element + '-error').hide();
+                            if(response.success) {
+                                var link = new URI(window.location.origin);
+                                if(self.values.endpoint!='/') {
+                                    link.segment([self.values.endpoint]);
+                                }
+                                link.segment(['config', 'embed', response.url]);
+
+                                var iframe = [];
+                                iframe.push('<iframe style="border: none 0; padding: 0; margin: 0; width: 600px; height: 600px;" src="');
+                                iframe.push(link.toString());
+                                iframe.push('" frameborder="0" scrolling="hidden"></iframe>');
+
+                                $('#' + self.values.element + '-iframe').val(iframe.join(''));
+                            }
+
+                            self.values.dialog.show();
+                            $('#' + self.values.element + '-iframe').focus();
+                            $('#' + self.values.element + '-iframe').select();
+
+                            resolve(response);
+                        };
+                    break;
+                }
 				$.ajax({
                     type: "POST",
 					url: uri.toString(),
@@ -3602,60 +3690,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
                     data: JSON.stringify(config)
-				}).done(function (response) {
-                    $('#' + self.values.element + '-error').hide();
-                    if(response.success) {
-                        var link = new URI(window.location.origin);
-                        if(self.values.endpoint!='/') {
-                            link.segment([self.values.endpoint]);
-                        }
-                        link.addQuery({ 'config': response.url });
-
-                        self.values.dialog.show();
-
-                        $('#' + self.values.element + '-link').val(link.toString());
-                        $('#' + self.values.element + '-link').select();
-
-                        var copied = false;
-                        try {
-                            copied = document.execCommand('copy');
-                        } catch(err) {
-                            // suppress exception
-                        }
-                        if(!copied) {
-                            $('#' + self.values.element + '-btn-copy').addClass('disabled');
-
-                            $('#' + self.values.element + '-error').html(PublicaMundi.i18n.getResource('action.create-link.error.copy'));
-                            $('#' + self.values.element + '-error').show();
-                        }
-                    }
-
-                    resolve(response);
-				}).fail(function (jqXHR, textStatus, errorThrown) {
+				}).done(callback).fail(function (jqXHR, textStatus, errorThrown) {
 					console.log('Failed to save configuration : ' + JSON.stringify(config));
 
 					reject(errorThrown);
 				});
 			});
-		},
-        getPosition: function() {
-            if(this.values.projection) {
-                var x = parseFloat(parseFloat($('#' + this.values.element + '-x').val()).toFixed(4));
-                var y = parseFloat(parseFloat($('#' + this.values.element + '-y').val()).toFixed(4));
-
-                if((!isNaN(x)) && (!isNaN(y))) {
-                    return [x,y];
-                }
-            }
-            return null;
-        }
+		}
     });
 
     PublicaMundi.Maps.PermalinkTool.Mode = {
         Link : 1,
         Embed : 2
     };
-    
+
     var _ParseCoordinates = function(crs, delimiter, text) {
         var re, coordinates = [], transformed = [];
 
@@ -3717,8 +3765,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.map = null;
 
-            if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
-                PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
+            if (typeof PublicaMundi.Maps.Action.prototype.initialize === 'function') {
+                PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
             }
 
             this.values.buffer = this.values.buffer || 3;
@@ -3896,7 +3944,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.render();
         },
-            execute: function() {
+        execute: function() {
 			this.values.dialog.show();
 		}
     });
