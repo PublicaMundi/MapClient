@@ -1032,7 +1032,7 @@
                                 var resource = members.ckan.getResourceById(layer.resource);
                                 if(resource) {
                                     resource = members.resources.setCatalogResourceMetadataOptions(resource);
-                                    
+
                                     if(!!resource.metadata.extras.layer) {
                                         title = (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]);
                                     }

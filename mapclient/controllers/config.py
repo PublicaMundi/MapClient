@@ -45,20 +45,25 @@ class ConfigController(BaseController):
         url = ''
 
         try:
-            link = Link()
-            link.configuration = config
-            link.ip = ip
+            link = Session.query(Link).filter(Link.configuration==config).first()
+            if not link:
+                link = Link()
+                link.configuration = config
+                link.ip = ip
 
-            Session.add(link)
-            Session.flush()
+                Session.add(link)
+                Session.flush()
 
-            index = link.index
+                index = link.index
 
-            while index != 0:
-                index, remainder = divmod(index - 1, len(self._valid))
-                url += self._valid[remainder]
+                while index != 0:
+                    index, remainder = divmod(index - 1, len(self._valid))
+                    url += self._valid[remainder]
 
-            link.url = url
+                link.url = url
+            else:
+                url = link.url
+
             Session.commit()
         except Exception as ex:
             log.error('Failed to create shortcut for configuration %(configuration)s' % { 'configuration' : config})
@@ -78,10 +83,10 @@ class ConfigController(BaseController):
     @rest.restrict('GET')
     def load(self, id):
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
-        
+
         try:
             config = self._expand(id)
-            
+
             return json.dumps({
                 'success' : True if config else False,
                 'config' : config
@@ -121,10 +126,12 @@ class ConfigController(BaseController):
     def embed(self, id):
         try:
             config = self._expand(id)
+
+            c.lib = config['lib'] if 'lib' in config else 'leaflet'
             c.config = json.dumps(config)
         except Exception as ex:
             log.error(ex)
-            
+
             abort(404, 'Map configuration was not found')
 
         return render('/embed.jinja2')

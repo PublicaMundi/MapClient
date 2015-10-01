@@ -205,7 +205,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         },
         on: function (event, callback, context) {
             if (typeof this.values.events[event] === 'undefined') {
-                throw 'Event not supported.';
+                throw 'Event [' + event + '] not supported.';
             }
             var listeners = this.values.events[event].listeners.push({'callback' : callback, 'context' : context});
         },
@@ -221,7 +221,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         },
         trigger: function (event, args) {
             if (typeof this.values.events[event] === 'undefined') {
-                throw 'Event not supported.';
+                throw 'Event [' + event + '] not supported.';
             }
 
             var listeners = this.values.events[event].listeners;
@@ -464,7 +464,6 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             return this.values.queryable;
         },
         createLayer: function (map, metadata, id, title) {
-            console.log(title);
             if(this.values.layerCounter >= this.values.maxLayerCount) {
                 return null;
             }
