@@ -3857,6 +3857,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     return content;
                 }
             });
+            
+            this.values.dialog.on('dialog:close', function(args) {
+                self.values.overlay.getFeatures().clear();
+            });
 
             $('#' + this.values.element + '-crs').selectpicker().change(function () {
                 $('[data-id="' + self.values.element + '-crs"]').blur();
