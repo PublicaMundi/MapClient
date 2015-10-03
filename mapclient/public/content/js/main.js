@@ -123,15 +123,11 @@
         },
         wms: {
             deps: [
-                'shared'
+                'shared',
+                'xml2json'
             ]
         },
         file: {
-            deps: [
-                'shared'
-            ]
-        },
-        data_api: {
             deps: [
                 'shared'
             ]
@@ -191,7 +187,7 @@ requirejs.onResourceLoad = function (context, map, depArray) {
 	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (initialization.scriptCounter) / initialization.scriptTotal).toFixed(0) + '%'
 };
 
-define(['module'], function (module) {
+define('main', function () {
     "use strict";
 
     require(['jquery', 'app'], function ($, PublicaMundi) {
