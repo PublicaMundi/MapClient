@@ -52,7 +52,8 @@ class MetadataController(BaseController):
                     'en': node.caption_en
                 },
                 'resources': [],
-                'children': []
+                'children': [],
+                'index': node.index
             }
 
             if not node.parent is None:
@@ -108,8 +109,12 @@ class MetadataController(BaseController):
                         'wms_server': resource.wms_server,
                         'wms_layer': resource.wms_layer,
                         'node_id': resource.tree_node_id,
-                        'node_index': resource.tree_node_index
+                        'node_index': resource.tree_node_index,
+                        'info' : False
                     }
+
+                    if(resource.tree_node_caption_en != resource.description_en):
+                        r['info'] = True
 
                     if resource.queryableRef:
                         r['queryable'] = {
