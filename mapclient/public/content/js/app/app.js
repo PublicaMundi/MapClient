@@ -10,23 +10,11 @@
         resources: null,
         map: {
             control: null,
-            interactions: {
-                zoom: {
-                    control: null
-                }
-            }
+            config: null
         },
-        tools: {
-            length: null,
-            area: null,
-            export: null
-        },
-        actions: {
-			import: null,
-            export: null,
-            upload: null,
-            position: null
-        },
+        interactions: { },
+        tools: { },
+        actions: { },
         preview: null,
         locale: null
     };
@@ -255,7 +243,7 @@
 
         interactions.removeAt(interactions.getLength() -1);
 
-        members.map.interactions.zoom.control = new ol.interaction.DragZoom({
+        members.interactions.zoom = new ol.interaction.DragZoom({
             condition: ol.events.condition.shiftKeyOnly,
             style: new ol.style.Style({
                 fill: new ol.style.Fill({
@@ -268,7 +256,7 @@
             })
         });
 
-        interactions.push(members.map.interactions.zoom.control);
+        interactions.push(members.interactions.zoom);
 
         var controls = []; //ol.control.defaults();
         controls.push(new ol.control.Zoom({
@@ -831,19 +819,19 @@
         // Interaction events
         members.components.layerTreeSearch.on('bbox:draw', function(args) {
             disableAllTools();
-            disableAllInteractions('bbox');
+            disableAllInteractions();
         });
 
         members.components.layerTreeSearch.on('bbox:apply', function(args) {
             disableAllInteractions('zoom');
 
-            enableAllTools();
+            enableAllTools('select');
         });
 
         members.components.layerTreeSearch.on('bbox:cancel', function(args) {
             disableAllInteractions('zoom');
 
-            enableAllTools();
+            enableAllTools('select');
         });
 		var layerSelectionAdded  = function(args) {
             resize();
@@ -981,17 +969,20 @@
         }
     }
 
-    var enableAllTools = function() {
+    var enableAllTools = function(name) {
         for(var item in members.tools) {
             if(members.tools[item]) {
                 members.tools[item].setEnabled(true);
             }
         }
+        if((name) && (members.tools.hasOwnProperty(name))) {
+            members.tools[name].setActive(true);
+        }
     }
 
     var disableAllInteractions = function(name) {
-        for(var item in members.map.interactions) {
-            members.map.interactions[item].control.setActive(false);
+        for(var item in members.interactions) {
+            members.interactions[item].setActive(false);
         }
 
         if(name) {
@@ -1000,8 +991,8 @@
     };
 
     var enableInteraction = function(name) {
-        if(name in members.map.interactions) {
-            members.map.interactions[name].control.setActive(true);
+        if((name) && (members.interactions.hasOwnProperty(name))) {
+            members.interactions[name].setActive(true);
         }
     };
 

@@ -237,7 +237,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 
 				var nodes = this.values.ckan.getNodeChidlren(parentTreeNodeId);
-				nodes.sort(sortByProperty('id'));
+				nodes.sort(sortByProperty('index'));
 
 				for(var i = 0; i < nodes.length; i++) {
                     if((nodes[i].resources.length > 0) || (nodes[i].children.length > 0)) {
@@ -265,10 +265,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				}
 
                 if((node) && (node.resources.length > 0)) {
-                    node.resources.sort(sortByProperty('position'));
-
+                    var resources = [];
                     for(var i = 0; i < node.resources.length; i++) {
-                        var resource = this.values.ckan.getResourceById(node.resources[i]);
+                        resources.push(this.values.ckan.getResourceById(node.resources[i]));
+                    }
+                    resources.sort(sortByProperty('node_index'));
+
+                    for(var i = 0; i < resources.length; i++) {
+                        var resource = resources[i];
                         var _package = this.values.ckan.getPackageById(resource.package);
 
                         this.values.resources.setCatalogResourceMetadataOptions(resource);
@@ -283,30 +287,38 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 loaded: false,
                                 type: 'layer',
                                 layer: layerId,
-                                selected: selected
+                                selected: selected,
+                                info: {
+                                    type: 'package',
+                                    id: _package.id
+                                }
                             };
 
                             var options = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
                                 image: (selected ? 'content/images/checked.png' : 'content/images/unchecked.png'),
                                 isLeaf: true,
-                                caption: (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]),
-                                hasInformation: false
+                                caption: resource.name[PublicaMundi.i18n.getLocale()],
+                                hasInformation: (_package.resources.length === 1)
                             };
                         } else {
                             var properties = {
                                 id: resource.id,
                                 expanded: false,
                                 loaded: false,
-                                type: 'resource'
+                                type: 'resource',
+                                info: {
+                                    type: 'package',
+                                    id: _package.id
+                                }
                             };
 
                             var options = {
                                 id: resource.id,
                                 image: 'content/images/expand-arrow.png',
                                 isLeaf: false,
-                                caption: (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]),
-                                hasInformation: false
+                                caption: resource.name[PublicaMundi.i18n.getLocale()],
+                                hasInformation: (_package.resources.length === 1)
                             };
                         }
 
@@ -627,7 +639,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				var _package = this.values.ckan.getPackageById(package_id);
 
-				_package.resources.sort(sortByProperty('name'));
+				_package.resources.sort(sortByProperty('name', PublicaMundi.i18n.getLocale()));
 
                 var children = $('<ul class="tree-node" style="display: none;"></ul>');
                 $(parent).append(children);
@@ -684,6 +696,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                 var children = $('<ul class="tree-node" style="display: none;"></ul>');
                 $(parent).append(children);
+
+                layers.sort(sortByProperty('title'));
 
 				for(var i = 0; i < layers.length; i++) {
                     // Layer Id should be unique
@@ -3857,7 +3871,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     return content;
                 }
             });
-            
+
             this.values.dialog.on('dialog:close', function(args) {
                 self.values.overlay.getFeatures().clear();
             });
