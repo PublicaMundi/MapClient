@@ -240,7 +240,7 @@ ul {
     background: white none repeat scroll 0 0;
     opacity: 0.8;
     max-width: 280px;
-    z-index: 2050;
+    z-index: 1500;
     margin: 51px 0 -11px 31px;
     border: 1px solid #E7E7E7;
 }
