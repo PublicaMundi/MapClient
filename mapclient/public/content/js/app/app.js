@@ -504,15 +504,7 @@
         });
 
         if(members.config.feedback) {
-            members.actions.feedback = new PublicaMundi.Maps.Action({
-                element: 'action-feedback',
-                name: 'feedback',
-                image: 'content/images/comment-w.svg',
-                title: 'index.feedback',
-                visible: true
-            });
-
-            members.actions.feedback.on('action:execute', function(args) {
+            $('.feedback-label').click(function() {
                 window.open(members.config.feedback);
             });
         }

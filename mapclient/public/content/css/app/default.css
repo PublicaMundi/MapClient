@@ -439,14 +439,14 @@ ul {
     margin-top: -2px;
 }
 
-.feedbak-label {
+.feedback-label {
     display: inline;
     border: 1px solid #2E6DA4;
     padding: 4px;
     cursor: pointer;
 }
 
-.feedbak-label:hover{
+.feedback-label:hover{
     border: 1px solid #fff;
     background: #2E6DA4;
     color: #fff;
