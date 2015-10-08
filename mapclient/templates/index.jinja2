@@ -72,12 +72,12 @@
             }
         };
     </script>
-    <script type="text/javascript" data-main="content/js/main.js" src="content/js/lib/requirejs/require.js"></script>
+    <script type="text/javascript" data-main="content/js/{{ c.main }}" src="content/js/lib/requirejs/require.js"></script>
     <script type="text/javascript">
         var result = null;
 
         if (typeof requirejs === 'undefined') {
-            document.write(decodeURI("%3Cscript type='text/javascript' data-main='content/js/main.js' src='content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
+            document.write(decodeURI("%3Cscript type='text/javascript' data-main='content/js/{{ c.main }}' src='content/js/lib/requirejs/require.js' %3E%3C/script%3E"));
         }
     </script>
 </head>
@@ -208,7 +208,7 @@
 			<div id="layer-selection" class="clearfix layer-selection"></div>
 		</div>
         <div class="panel-left-label" style="width: 200px;">
-			<img src="content/images/layers.svg" alt="" class="img-25 panel-left-label-image" /><div class="panel-left-label-text" data-i18n-id="index.catalog">Κατάλογος</div>
+			<img src="content/images/layers.svg" alt="" class="img-25 panel-left-label-image" /><div class="device panel-left-label-text" data-i18n-id="index.catalog">Κατάλογος</div>
 		</div>
 	</div>
     <div id="panel-left-splitter" class="panel-left-splitter">
@@ -216,7 +216,7 @@
     </div>
 	<footer class="footer">
         <div style="position: absolute; left: 50%; margin-left: -90px; padding-top: 10px;">
-            <a href="http://www.imis.athena-innovation.gr/" target="_blank"><div class="imis-logo"></div></a><div data-i18n-id="index.feedback" class="feedback-label">Αφήστε τα σχόλιά σας</div>
+            <a href="http://www.imis.athena-innovation.gr/" target="_blank"><div class="imis-logo"></div></a><div data-i18n-id="index.feedback" class="device feedback-label">Αφήστε τα σχόλιά σας</div>
         </div>
         <div class="mouse-pos">
             <div style="float: left; padding-top: 5px;">
@@ -234,9 +234,9 @@
         <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.crs" data-i18n-type="title" title="Σύστημα αναφοράς">
             <img src="content/images/coordination-system.svg" alt="" />
         </div>
-        <div id="scale-line" style="float: right; padding: 18px 10px 0px 2px;">
+        <div id="scale-line" class="device" style="float: right; padding: 18px 10px 0px 2px;">
         </div>
-        <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.scale" data-i18n-type="title" title="Κλίμακα χάρτη">
+        <div class="device img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.scale" data-i18n-type="title" title="Κλίμακα χάρτη">
             <img src="content/images/scale.svg" alt="" />
         </div>
 	</footer>
@@ -248,15 +248,15 @@
             <img src="content/images/tools.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
         </div>
         <div id="tools" class="clearfix tools">
-            <div class="tool-wrapper" id="tool-length"></div>
-            <div class="tool-wrapper" id="tool-area"></div>
-            <div class="tool-wrapper" id="tool-export"></div>
+            <div class="device tool-wrapper" id="tool-length"></div>
+            <div class="device tool-wrapper" id="tool-area"></div>
+            <div class="device tool-wrapper" id="tool-export"></div>
             <div class="tool-wrapper" id="action-wms"></div>
-            <div class="tool-wrapper" id="action-upload"></div>
+            <div class="device tool-wrapper" id="action-upload"></div>
             <div class="tool-wrapper" id="action-position"></div>
             <div class="tool-wrapper" id="action-link"></div>
-            <div class="tool-wrapper" id="action-embed"></div>
-            <div class="tool-wrapper" id="action-parse"></div>
+            <div class="device tool-wrapper" id="action-embed"></div>
+            <div class="device tool-wrapper" id="action-parse"></div>
             <div class="tool-wrapper" id="restore-zoom"></div>
         </div>
         <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
