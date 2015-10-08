@@ -358,24 +358,24 @@
                         bottom: PublicaMundi.i18n.getResource('index.topics.position')[1],
                         right: PublicaMundi.i18n.getResource('index.topics.position')[0]
                     });
-                    $('.panel-left-label').find('img').attr('src', 'content/images/comments.png');
-                    $('.panel-left-label').find('span').html(PublicaMundi.i18n.getResource('index.topics'));
+                    $('.panel-left-label-image').attr('src', 'content/images/topics.svg');
+                    $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.topics')).css('padding', '4px 0 0 7px');
                     break;
                 case 'organization':
                     $('.panel-left-label').css({
                         bottom: PublicaMundi.i18n.getResource('index.organizations.position')[1],
                         right: PublicaMundi.i18n.getResource('index.organizations.position')[0]
                     });
-                    $('.panel-left-label').find('img').attr('src', 'content/images/organization.png');
-                    $('.panel-left-label').find('span').html(PublicaMundi.i18n.getResource('index.organizations'));
+                    $('.panel-left-label-image').attr('src', 'content/images/organization.svg');
+                    $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.organizations')).css('padding', '4px 0 0 7px');
                     break;
                 case 'search':
                     $('.panel-left-label').css({
                         bottom: PublicaMundi.i18n.getResource('index.search.position')[1],
                         right: PublicaMundi.i18n.getResource('index.search.position')[0]
                     });
-                    $('.panel-left-label').find('img').attr('src', 'content/images/search.png');
-                    $('.panel-left-label').find('span').html(PublicaMundi.i18n.getResource('index.search'));
+                    $('.panel-left-label-image').attr('src', 'content/images/search.svg');
+                    $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.search')).css('padding', '0px 0 0 7px');
                     break;
             }
         }
@@ -494,7 +494,7 @@
         members.actions.restoreZoomLevel = new PublicaMundi.Maps.Action({
             element: 'restore-zoom',
             name: 'restore-zoom',
-            image: 'content/images/restore-zoom-w.png',
+            image: 'content/images/restore-zoom-w.svg',
             title: 'index.resotre-zoom',
             visible: true
         });
@@ -507,7 +507,7 @@
             members.actions.feedback = new PublicaMundi.Maps.Action({
                 element: 'action-feedback',
                 name: 'feedback',
-                image: 'content/images/comments-w.png',
+                image: 'content/images/comment-w.svg',
                 title: 'index.feedback',
                 visible: true
             });
@@ -520,7 +520,7 @@
         members.actions.export = new PublicaMundi.Maps.Action({
             element: 'action-export',
             name: 'export',
-            image: 'content/images/download-w.png',
+            image: 'content/images/download-w.svg',
             title: 'action.export.title',
             visible: false
         });
@@ -528,7 +528,7 @@
         members.actions.import = new PublicaMundi.Maps.ImportWmsTool({
             element: 'action-wms',
             name: 'wms',
-            image: 'content/images/layers-w.png',
+            image: 'content/images/add-layer-w.svg',
             title: 'action.import-wms.title',
             map: members.map.control,
             resources: members.resources
@@ -543,7 +543,7 @@
         members.actions.upload = new PublicaMundi.Maps.UploadFileTool({
             element: 'action-upload',
             name: 'upload',
-            image: 'content/images/upload-w.png',
+            image: 'content/images/upload-w.svg',
             title: 'action.upload-resource.title',
             map: members.map.control,
             resources: members.resources,
@@ -553,7 +553,7 @@
         members.actions.link = new PublicaMundi.Maps.PermalinkTool({
             element: 'action-link',
             name: 'link',
-            image: 'content/images/map-w.png',
+            image: 'content/images/permalink-w.svg',
             title: 'action.create-link.title',
             map: members.map.control,
             resources: members.resources,
@@ -565,7 +565,7 @@
         members.actions.embed = new PublicaMundi.Maps.PermalinkTool({
             element: 'action-embed',
             name: 'embed',
-            image: 'content/images/map-w.png',
+            image: 'content/images/embed-map-w.svg',
             title: 'action.create-link-embed.title',
             map: members.map.control,
             resources: members.resources,
@@ -577,7 +577,7 @@
         members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
             element: 'action-parse',
             name: 'parse',
-            image: 'content/images/map-w.png',
+            image: 'content/images/coordinates-w.svg',
             title: 'action.parse-coordinates.title',
             map: members.map.control,
             resources: members.resources
@@ -600,7 +600,7 @@
         members.actions.position = new PublicaMundi.Maps.PositionTool({
             element: 'action-position',
             name: 'position',
-            image: 'content/images/center-direction-w.png',
+            image: 'content/images/map-location-w.svg',
             title: 'action.set-position.title',
             map: members.map.control,
             projection: ol.proj.get($('#pos_epsg option:selected').val())
@@ -611,8 +611,8 @@
             element: 'tool-length',
             name: 'length',
             images: {
-                enabled: 'content/images/ruler-w.png',
-                disabled: 'content/images/ruler.png'
+                enabled: 'content/images/distance-w.svg',
+                disabled: 'content/images/distance.svg'
             },
             title: 'tool.length.title',
             map: members.map.control,
@@ -623,8 +623,8 @@
             element: 'tool-area',
             name: 'area',
             images: {
-                enabled: 'content/images/surface-w.png',
-                disabled: 'content/images/surface.png'
+                enabled: 'content/images/area-w.svg',
+                disabled: 'content/images/area.svg'
             },
             title: 'tool.area.title',
             map: members.map.control,
@@ -635,8 +635,8 @@
             element: 'tool-export',
             name: 'export',
             images: {
-                enabled: 'content/images/polygon-w.png',
-                disabled: 'content/images/polygon.png'
+                enabled: 'content/images/draw-polygon-w.svg',
+                disabled: 'content/images/draw-polygon.svg'
             },
             title: 'tool.export.title',
             map: members.map.control,

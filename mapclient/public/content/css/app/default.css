@@ -98,7 +98,7 @@ body {
 .panel-left-handler {
     cursor: pointer;
     position: absolute;
-    right: 2px;
+    right: -1px;
     top: 60px;
     -moz-transition: transform 1s ease 0s;
     -o-transition: transform 1s ease 0s;
@@ -125,6 +125,17 @@ body {
     position: absolute;
     bottom: 90px;
     right: -44px;
+}
+
+.panel-left-label-image{
+    float: left;
+}
+
+.panel-left-label-text {
+    float: left;
+    padding: 4px 0 0 7px;
+    font-size: 1.3em;
+    color: #485AA8
 }
 
 .panel-left {
@@ -320,7 +331,7 @@ ul {
 }
 
 .tree-node-ajax-loader {
-	margin-left: 0px;
+    margin: 5px 0 0 !important;
 }
 .tree-info {
     float: right;
@@ -367,12 +378,21 @@ ul {
     cursor: pointer;
 }
 
+.img-30 {
+    cursor: pointer;
+    height: auto;
+    margin: -2px 0px 0px -6px;
+    max-height: 30px;
+    max-width: 30px;
+    width: auto;
+}
+
 .tree-node-collapse {
-    -moz-transform: rotate(-90deg);
-    -ms-transform: rotate(-90deg);
-    -o-transform: rotate(-90deg);
-    -webkit-transform: rotate(-90deg);
-    transform: rotate(-90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
 }
 
 .selected-layer {
@@ -408,6 +428,28 @@ ul {
 
 .logo-header {
     width: 190px;
+}
+
+.imis-logo {
+    background: rgba(123, 123, 255, 0) url("../../images/imis-logo.png") no-repeat scroll 0 0 / cover ;
+    display: block;
+    float: left;
+    height: 27px;
+    width: 68px;
+    margin-top: -2px;
+}
+
+.feedbak-label {
+    display: inline;
+    border: 1px solid #2E6DA4;
+    padding: 4px;
+    cursor: pointer;
+}
+
+.feedbak-label:hover{
+    border: 1px solid #fff;
+    background: #2E6DA4;
+    color: #fff;
 }
 
 .footer {
@@ -469,10 +511,12 @@ ul {
 .node-right {
     float: right;
     width: 16px;
+    margin-top: -3px;
 }
 .node-left {
     float: left;
     width: 16px;
+    margin-top: -3px;
 }
 
 .loading-text {
@@ -492,12 +536,10 @@ ul {
 
 .action-executing {
     position: absolute;
-    background: none repeat scroll 0% 0% white;
     border-radius: 3px;
     padding: 0px 2px;
     bottom: -3px;
-    border: 2px solid rgb(51, 122, 183);
-    right: -10px;
+    right: -7px;
 }
 
 /*
