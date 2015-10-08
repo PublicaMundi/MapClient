@@ -10,26 +10,42 @@ import mapclient.lib.helpers as h
 
 from mapclient.lib.base import BaseController, render
 
+from user_agents import parse as parse_agent
+
 log = logging.getLogger(__name__)
 
 
 class HomeController(BaseController):
+
+    def _isMobileOrTablet(self):
+        if 'User-Agent' in request.headers:
+            user_agent = parse_agent(request.headers['User-Agent'])
+
+            if user_agent and (user_agent.is_mobile or user_agent.is_tablet) and user_agent.is_touch_capable:
+                return True
+
+        return False
+
 
     def index(self):
         # Get metadata version
         c.metadata = {
             'version' : ''
         }
-        
+
         if 'mapclient.catalog.metadata.physical' in config:
             filename = config['mapclient.catalog.metadata.physical']
-        
+
             if os.path.exists(filename):
                 c.metadata['version'] = os.stat(filename).st_mtime
-        
+
         # Export disabled format
         c.exportDisabledFormats = []
         if 'dataapi.export.formats.disabled' in config:
            c.exportDisabledFormats =  filter(None, config['dataapi.export.formats.disabled'].split(','))
 
+        if self._isMobileOrTablet() == False:
+            c.main = 'main.js'
+        else:
+            c.main = 'main-mobile.js'
         return render('/index.jinja2')
