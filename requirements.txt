@@ -61,3 +61,4 @@ dictdiffer
 pytidylib
 
 # MapClient requirements
+user-agents
