@@ -2699,7 +2699,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			}, {
 				name: 'location-search',
 				display: 'name',
-				source: searcher
+				source: searcher,
+                templates: {
+                    suggestion: function(obj) {
+                        return '<div>' + obj.object.properties.dd_default_field + '</div>';
+                    }
+                }
 			}).bind('typeahead:select', selectLocationSearchResult);
 
             this.render();

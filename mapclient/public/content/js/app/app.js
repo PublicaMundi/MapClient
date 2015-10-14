@@ -385,11 +385,11 @@
         // CKAN catalog
 		members.ckan = new PublicaMundi.Maps.CKAN.Metadata({
             path: members.config.path,
-			endpoint: module.config().ckan.endpoint,
+			endpoint: members.config.ckan.endpoint,
             metadata: {
-                database: module.config().ckan.metadata.database,
-                path: module.config().ckan.metadata.path,
-                version: module.config().ckan.metadata.version
+                database: members.config.ckan.metadata.database,
+                path: members.config.ckan.metadata.path,
+                version: members.config.ckan.metadata.version
             }
 		});
 

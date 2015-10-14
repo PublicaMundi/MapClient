@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class GeometryEntityMixIn(object):
 
-    def toObject(self, default_field):
+    def toObject(self):
         exported = []
         if self.exported_fields:
             exported = self.exported_fields
@@ -28,13 +28,18 @@ class GeometryEntityMixIn(object):
         o = {
             'geometry' : None,
             'properties': {
-                'dd_default_field': getattr(self, str(default_field))
+                'dd_default_field': ''
             }
         }
-
+        
         for field in exported:
             o['properties'][field] = getattr(self, str(field))
-        
+
+        if self.template:
+            o['properties']['dd_default_field'] = self.template % o['properties']
+        else:
+            o['properties']['dd_default_field'] = getattr(self, self.default_field)
+
         if hasattr(self, self.geometry_column + '_simple') and getattr(self, self.geometry_column + '_simple'):
             shape = shapely.wkb.loads(getattr(self, self.geometry_column + '_simple').decode("hex"))
             if not shape.is_empty:

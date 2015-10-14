@@ -120,7 +120,8 @@ class MetadataController(BaseController):
                         r['queryable'] = {
                             'geometry' : resource.queryableRef.geometry_column,
                             'srid' : resource.queryableRef.srid,
-                            'resource' : resource.queryableRef.table
+                            'resource' : resource.queryableRef.table,
+                            'template' : resource.queryableRef.template
                         }
 
                     p['resources'].append(r)
