@@ -80,12 +80,15 @@ class SearchController(BaseController):
             queryables = query.all()
 
             for q in queryables:
-                default_field = [str(f.name) for f in q.fields if f.export == True and f.default == True]
+                default_fields = [str(f.name) for f in q.fields if f.export == True and f.default == True]
+                
+                template = q.template
+                default_field = None
 
-                if len(default_field) == 0:
+                if len(default_fields) == 0 and not template:
                     continue
-                else:
-                    default_field = default_field[0]
+                elif len(default_fields) > 0:
+                    default_field = default_fields[0]
 
                 tablename = 'Table_' + q.table
                 typename = 'Class_' + q.table
@@ -106,7 +109,7 @@ class SearchController(BaseController):
                     if not typename in SearchController.__types__:
                         exported_fields = [f.name for f in q.fields if f.export == True]
 
-                        dynamic_type = type(str(typename), (GeometryEntityMixIn,), dict(exported_fields = exported_fields, geometry_column = q.geometry_column, __table__ = dynamic_table))
+                        dynamic_type = type(str(typename), (GeometryEntityMixIn,), dict(exported_fields = exported_fields, default_field = default_field, template = template, geometry_column = q.geometry_column, __table__ = dynamic_table))
 
                         if q.geometry_type == 'POINT':
                             if q.srid != 900913 and q.srid != 3857:
@@ -143,7 +146,7 @@ class SearchController(BaseController):
                 elif len(filters) > 1:
                     result = Session_ckan_data.query(dynamic_type).filter(or_(*filters)).limit(limit).all()
 
-                records.extend([r.toObject(default_field) for r in result])
+                records.extend(filter(None, [r.toObject() for r in result]))
 
             return records
         finally:

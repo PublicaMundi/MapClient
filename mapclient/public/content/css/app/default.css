@@ -6,7 +6,7 @@
     height: 0;
 }
 
-@media screen and (max-height: 740px) {
+@media screen and (max-height: 640px) {
     .device {
         display: none !important;
     }

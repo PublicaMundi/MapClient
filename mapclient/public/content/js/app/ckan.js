@@ -34,8 +34,8 @@
             var self = this, uri;
 
             if(this.values.metadata.database) {
-                uri = new URI(this.values.path);
-                uri.segment(['metadata', 'load']);
+                uri = new URI();
+                uri.segment([(self.values.path === '/' ? '' : this.values.path), 'metadata', 'load']);
             } else {
                 uri = new URI(this.values.metadata.path);
                 if(this.values.metadata.version) {
@@ -867,8 +867,8 @@
                 if(data.description) {
                     resolve(data);
                 } else {
-                    var uri = new URI(self.values.path);
-                    uri.segment(['metadata', type, id]);
+                    var uri = new URI();
+                    uri.segment([(self.values.path === '/' ? '' : this.values.path), 'metadata', type, id]);
 
                     $.ajax({
                         url: uri.toString(),
