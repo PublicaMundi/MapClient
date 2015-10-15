@@ -35,7 +35,11 @@
 
             if(this.values.metadata.database) {
                 uri = new URI();
-                uri.segment([(self.values.path === '/' ? '' : self.values.path), 'metadata', 'load']);
+                if(self.values.path === '/') {
+                    uri.segment(['metadata', 'load']);
+                } else {
+                    uri.segment([self.values.path, 'metadata', 'load']);
+                }
             } else {
                 uri = new URI(this.values.metadata.path);
                 if(this.values.metadata.version) {
@@ -45,7 +49,7 @@
 
 			return new Promise(function(resolve, reject) {
 				$.ajax({
-					url: uri.toString(),
+					url: uri.toString().replace(/\/\//g, '/').replace(/:\//g, '://'),
 					context: self
 				}).done(function (response) {
                     self.values.catalog.nodes = response.nodes || [];
@@ -868,10 +872,15 @@
                     resolve(data);
                 } else {
                     var uri = new URI();
-                    uri.segment([(self.values.path === '/' ? '' : self.values.path), 'metadata', type, id]);
+                    
+                    if(self.values.path === '/') {
+                        uri.segment(['metadata', type, id]);
+                    } else {
+                        uri.segment([self.values.path, 'metadata', type, id]);
+                    }
 
                     $.ajax({
-                        url: uri.toString(),
+                        url: uri.toString().replace(/\/\//g, '/').replace(/:\//g, '://'),
                         context: self
                     }).done(function (response) {
                         if(response.success) {

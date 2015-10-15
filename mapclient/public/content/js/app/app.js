@@ -991,10 +991,14 @@
     var initializeConfiguration = function() {
         return new Promise(function(resolve, reject) {
             var uri = new URI();
-            uri.segment([(members.config.path === '/' ? '' : members.config.path), 'config', 'load', members.map.config]);
+            if(members.config.path === '/') {
+                uri.segment(['config', 'load', members.map.config]);
+            } else {
+                uri.segment([members.config.path, 'config', 'load', members.map.config]);
+            }
 
             $.ajax({
-                url: uri.toString(),
+                url: uri.toString().replace(/\/\//g, '/').replace(/:\//g, '://'),
                 context: this,
                 dataType: "json",
             }).done(function (response) {
