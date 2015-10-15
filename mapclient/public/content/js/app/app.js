@@ -1182,7 +1182,8 @@
                                     wms: resource.id,
                                     table : resource.queryable.resource,
                                     geometry_type: resource.queryable.geometry,
-                                    srid: resource.queryable.srid
+                                    srid: resource.queryable.srid,
+                                    template: resource.queryable.template
                                 });
                             }
                         }

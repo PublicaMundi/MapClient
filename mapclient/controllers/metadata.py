@@ -200,7 +200,12 @@ class MetadataController(BaseController):
         except Exception as ex:
             log.error(ex)
 
-        return json.dumps({})
+        return json.dumps({
+            'organizations': [],
+            'groups' : [],
+            'packages': [],
+            'nodes' : {}
+        })
 
     @rest.restrict('GET')
     def organization(self, id):

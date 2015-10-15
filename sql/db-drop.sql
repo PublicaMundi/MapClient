@@ -1,3 +1,7 @@
+DROP TABLE public.link;
+
+DROP SEQUENCE public.link_index_seq;
+
 DROP TABLE public.resource_field;
 
 DROP SEQUENCE public.resource_field_id_seq;

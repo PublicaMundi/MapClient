@@ -29,7 +29,7 @@ class PackageGroup(object):
 
 class Resource(object):
     pass
-    
+
 class Queryable(object):
     pass
 
@@ -39,16 +39,16 @@ class Field(object):
 
 class TreeNode(object):
     pass
-    
+
 organizations = Table('organization',
-                      metadata,  
+                      metadata,
                       autoload=True,
                       autoload_with=engine)
 
 mapper(Organization, organizations)
 
 groups = Table('group',
-               metadata,  
+               metadata,
                autoload=True,
                autoload_with=engine)
 
@@ -65,7 +65,7 @@ package_groups = Table('package_group',
                        metadata,
                        Column('package_id', Text, ForeignKey('package.id')),
                        Column('group_id', Text, ForeignKey('group.id')),
-                       autoload=True, 
+                       autoload=True,
                        autoload_with=engine)
 
 mapper(PackageGroup, package_groups, properties={
@@ -100,7 +100,7 @@ resources = Table('resource',
                    Column('tree_node_id', Text, ForeignKey('resource_tree_node.id')),
                    autoload=True,
                    autoload_with=engine)
-                 
+
 mapper(Resource, resources, properties = {
     # M:1 relation
     'packageRef': relation(Package, uselist=False, remote_side=[packages.c.id], lazy=False),
@@ -115,13 +115,13 @@ queryables = Table('resource_queryable',
                    Column('resource', Text, ForeignKey('resource.id')),
                    autoload=True,
                    autoload_with=engine)
-                   
+
 fields = Table('resource_field',
                metadata,
                Column('queryable', Text, ForeignKey('resource_queryable.id')),
                autoload=True,
                autoload_with=engine)
-                 
+
 mapper(Field, fields)
 
 

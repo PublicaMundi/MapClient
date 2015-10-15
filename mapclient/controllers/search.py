@@ -80,15 +80,19 @@ class SearchController(BaseController):
             queryables = query.all()
 
             for q in queryables:
-                default_fields = [str(f.name) for f in q.fields if f.export == True and f.default == True]
-                
-                template = q.template
+                # Default field shown as input in the auto-complete text control
                 default_field = None
+                default_fields = [str(f.name) for f in q.fields if f.export == True and f.default == True]
 
-                if len(default_fields) == 0 and not template:
+                if len(default_fields) != 1:
                     continue
-                elif len(default_fields) > 0:
+                else:
                     default_field = default_fields[0]
+
+                # Text template rendered in the drop down list of the auto-complete text control
+                template = q.template
+                if not template:
+                    template = '%(' + default_field + ')s'
 
                 tablename = 'Table_' + q.table
                 typename = 'Class_' + q.table
@@ -109,7 +113,15 @@ class SearchController(BaseController):
                     if not typename in SearchController.__types__:
                         exported_fields = [f.name for f in q.fields if f.export == True]
 
-                        dynamic_type = type(str(typename), (GeometryEntityMixIn,), dict(exported_fields = exported_fields, default_field = default_field, template = template, geometry_column = q.geometry_column, __table__ = dynamic_table))
+                        properties = {
+                            'exported_fields' : exported_fields,
+                            'default_field' : default_field,
+                            'template' : template,
+                            'geometry_column' : q.geometry_column,
+                            '__table__' : dynamic_table
+                        }
+
+                        dynamic_type = type(str(typename), (GeometryEntityMixIn,), properties)
 
                         if q.geometry_type == 'POINT':
                             if q.srid != 900913 and q.srid != 3857:
@@ -181,7 +193,8 @@ class SearchController(BaseController):
             for l in locations:
                 records.append({
                     'properties': {
-                        'dd_default_field': l.name
+                        'dd_default_text': l.name,
+                        'dd_default_suggest': l.name
                     },
                     'geometry': shapely.wkb.loads(l.the_geom_sm.geom_wkb.decode("hex"))
                 })
