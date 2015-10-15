@@ -2406,7 +2406,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             if(($.inArray('__template__', keys) !== -1) && (feature.get('__template__'))) {
                 var text = feature.get('__template__');
                 for (var i = 0; i < keys.length; i++) {
-                    var re = new RegExp('%\\(' + keys[i] + '\\)s');
+                    var re = new RegExp('%\\(' + keys[i] + '\\)s', 'g');
                     text = text.replace(re, (feature.get(keys[i]) ? feature.get(keys[i]) : ''));
                 }
 
@@ -3661,7 +3661,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
             return new Promise(function(resolve, reject) {
                 var uri = new URI();
-                uri.segment([(self.values.endpoint === '/' ? '' : self.values.endpoint), 'config', 'save']);
+                
+                if(self.values.endpoint === '/') {
+                    uri.segment(['config', 'save']);
+                } else {
+                    uri.segment([self.values.endpoint, 'config', 'save']);
+                }
 
                 var callback = null;
                 switch(self.values.mode) {
@@ -3705,11 +3710,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             if(response.success) {
                                 var link = new URI(window.location.origin);
 
-                                link.segment([window.location.pathname, 'config', 'embed', response.url]);
+                                if(window.location.pathname === '/') {
+                                    link.segment(['config', 'embed', response.url]);
+                                } else {
+                                    link.segment([window.location.pathname, 'config', 'embed', response.url]);
+                                }
 
                                 var iframe = [];
                                 iframe.push('<iframe style="border: none 0; padding: 0; margin: 0; width: 600px; height: 600px;" src="');
-                                iframe.push(link.toString());
+                                iframe.push(link.toString().replace(/\/\//g, '/').replace(/:\//g, '://'));
                                 iframe.push('" frameborder="0" scrolling="hidden"></iframe>');
 
                                 $('#' + self.values.element + '-iframe').val(iframe.join(''));
@@ -3725,7 +3734,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
 				$.ajax({
                     type: "POST",
-					url: uri.toString(),
+					url: uri.toString().replace(/\/\//g, '/').replace(/:\//g, '://'),
 					context: self,
                     contentType: "application/json; charset=utf-8",
                     dataType: "json",
