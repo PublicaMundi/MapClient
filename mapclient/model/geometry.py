@@ -28,23 +28,22 @@ class GeometryEntityMixIn(object):
         o = {
             'geometry' : None,
             'properties': {
-                'dd_default_field': ''
+                'dd_default_text': '',
+                'dd_default_suggest': ''
             }
         }
-        
+
         for field in exported:
             o['properties'][field] = getattr(self, str(field))
 
-        if self.template:
-            o['properties']['dd_default_field'] = self.template % o['properties']
-        else:
-            o['properties']['dd_default_field'] = getattr(self, self.default_field)
+        o['properties']['dd_default_text'] = getattr(self, self.default_field)
+        o['properties']['dd_default_suggest'] = self.template % o['properties']
 
         if hasattr(self, self.geometry_column + '_simple') and getattr(self, self.geometry_column + '_simple'):
             shape = shapely.wkb.loads(getattr(self, self.geometry_column + '_simple').decode("hex"))
             if not shape.is_empty:
                 o['geometry'] = shape
-        
+
         if not o['geometry'] and hasattr(self, self.geometry_column + '_transform') and getattr(self, self.geometry_column + '_transform'):
             shape = shapely.wkb.loads(getattr(self, self.geometry_column + '_transform').decode("hex"))
             if not shape.is_empty:

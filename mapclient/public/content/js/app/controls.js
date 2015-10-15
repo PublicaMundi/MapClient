@@ -2132,6 +2132,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         // Get queryable resources
         var layers = this.values.resources.getSelectedLayers();
         var resources = this.values.resources.getQueryableResources();
+        var templates = [];
 
         var quyarable = [];
         for(var i=0; i<layers.length; i++) {
@@ -2141,6 +2142,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         table: resources[j].table,
                         title: layers[i].title
                     });
+                    templates.push(resources[j].template);
                     break;
                 }
             }
@@ -2179,10 +2181,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         for(var i=0; i< response.data.length; i++) {
                             if(response.data[i].features.length > 0) {
-                                // Make feature id unique
+                                // Post process features
                                 for(var j=0; j < response.data[i].features.length; j++) {
+                                    // Create unique feature Id
                                     response.data[i].features[j].id = id;
                                     id++;
+                                    // Set feature template
+                                    response.data[i].features[j].properties.__template__ = templates[i];
                                 }
 
                                 var features = format.readFeatures(response.data[i], {
@@ -2380,7 +2385,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var content = [];
 
             content.push('<div id="' + this.values.element + '-popup" class="popover top feature-popup" tabIndex="1">');
+
             content.push('<div class="arrow"></div>');
+
             content.push('<div class="clearfix popover-title" id="popover-top">');
             content.push('<div  id="' + this.values.element + '-popup-close" style="width: 18px; 1px 4px 0px 0px; float: left;">');
             content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span>');
@@ -2392,19 +2399,31 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 content.push('<div style="float: right;"><img id="' + this.values.element + '-prev" class="img-20" src="content/images/previous.svg"></div>');
             }
             content.push('</div>');
+
             content.push('<div class="popover-content">');
-
-            content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table"><table style="width: 100%;">');
+            content.push('<div style="max-height: 190px; overflow: auto;">');
             var keys = feature.getKeys();
-            for (var i = 0; i < keys.length; i++) {
-                if (keys[i] != feature.getGeometryName()) {
-                    content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' +
-                    (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
+            if(($.inArray('__template__', keys) !== -1) && (feature.get('__template__'))) {
+                var text = feature.get('__template__');
+                for (var i = 0; i < keys.length; i++) {
+                    var re = new RegExp('%\\(' + keys[i] + '\\)s');
+                    text = text.replace(re, (feature.get(keys[i]) ? feature.get(keys[i]) : ''));
                 }
-            }
-            content.push('</div></table></div>')
 
+                content.push(text);
+            } else {
+                content.push('<div class="feature-table"><table style="width: 100%;">');
+                for (var i = 0; i < keys.length; i++) {
+                    if (keys[i] != feature.getGeometryName()) {
+                        content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' +
+                        (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
+                    }
+                }
+                content.push('</table></div>')
+            }
+            content.push('</div>')
             content.push('</div>');
+
             content.push('</div>');
 
             $('body').append(content.join(''));
@@ -2603,7 +2622,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			var addTooltip = function(selection) {
 				self.removeTooltip();
 
-			   if((selection) && (selection.geometry)) {
+                if((selection) && (selection.geometry)) {
 					self.values.selection = selection;
 
 					var format = new ol.format.GeoJSON();
@@ -2636,7 +2655,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					content.push('<div class="popover-content">');
 
 					content.push('<div style="max-height: 190px; overflow: auto;"><div class="feature-table">');
-					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.properties.dd_default_field + '</td>');
+					content.push('<table style="width: 100%;"><tr class=""><td class="text-search tooltip-prop-value">' + selection.properties.dd_default_suggest + '</td>');
                     content.push('<td id="' + self.values.element + '-popup-close" style="width: 18px; vertical-align: top; padding-left: 6px;">');
                     content.push('<span class="glyphicon glyphicon-remove icon-alert" style="cursor: pointer;"></span></td>');
                     content.push('</tr></table>');
@@ -2684,12 +2703,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var selectLocationSearchResult = function(e, selection) {
 				self.removeTooltip();
-
+                $('#' + self.values.element).val('');
 				if(selection) {
 					addTooltip(selection.object);
 
 					self.trigger('selection:changed', { selection : selection.object });
 				}
+
+                $('#' + self.values.element).typeahead('val', '');
 			};
 
 			$('#' + this.values.element).typeahead({
@@ -2698,11 +2719,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				minLength: 3
 			}, {
 				name: 'location-search',
-				display: 'name',
 				source: searcher,
+                display: function(obj) {
+                    return obj.object.properties.dd_default_text;
+                },
                 templates: {
                     suggestion: function(obj) {
-                        return '<div>' + obj.object.properties.dd_default_field + '</div>';
+                        return '<div>' + obj.object.properties.dd_default_suggest + '</div>';
                     }
                 }
 			}).bind('typeahead:select', selectLocationSearchResult);

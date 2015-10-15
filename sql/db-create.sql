@@ -1,3 +1,12 @@
+CREATE SEQUENCE public.link_index_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.link_index_seq
+  OWNER TO tester;
+
 CREATE SEQUENCE public.package_group_id_seq
   INCREMENT 1
   MINVALUE 1
@@ -27,6 +36,25 @@ CREATE SEQUENCE public.resource_field_id_seq
 
 ALTER TABLE public.resource_field_id_seq
   OWNER TO tester;
+
+CREATE TABLE public.link
+(
+  url character varying(30),
+  configuration text NOT NULL,
+  ip character varying(32),
+  index bigint NOT NULL DEFAULT nextval('link_index_seq'::regclass),
+  CONSTRAINT pk_link PRIMARY KEY (index)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.link
+  OWNER TO tester;
+
+CREATE INDEX idx_url
+  ON public.link
+  USING btree
+  (url COLLATE pg_catalog."default");
 
 CREATE TABLE public.organization
 (
