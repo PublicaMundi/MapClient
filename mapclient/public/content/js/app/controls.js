@@ -3704,10 +3704,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             $('#' + self.values.element + '-error').hide();
                             if(response.success) {
                                 var link = new URI(window.location.origin);
-                                if(self.values.endpoint!='/') {
-                                    link.segment([self.values.endpoint]);
-                                }
-                                link.segment(['config', 'embed', response.url]);
+
+                                link.segment([window.location.pathname, 'config', 'embed', response.url]);
 
                                 var iframe = [];
                                 iframe.push('<iframe style="border: none 0; padding: 0; margin: 0; width: 600px; height: 600px;" src="');
