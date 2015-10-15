@@ -903,3 +903,13 @@ img.legend {
    box-shadow: 5px 0px 5px rgba(255, 84, 84, 0.15);
     cursor: help !important;
 }
+
+.dd_tmpl_header {
+    color: #000022;
+    font-size: 12px !important;
+    text-align: justify;
+}
+
+.dd_tmpl_content {
+    text-align: justify;
+}
