@@ -3660,8 +3660,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 config.lib = $('#' + self.values.element + '-lib').val();
             }
             return new Promise(function(resolve, reject) {
-                var uri = new URI(self.values.endpoint);
-                uri.segment(['config', 'save']);
+                var uri = new URI();
+                uri.segment([(self.values.endpoint === '/' ? '' : self.values.endpoint), 'config', 'save']);
 
                 var callback = null;
                 switch(self.values.mode) {
