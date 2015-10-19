@@ -161,7 +161,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             };
 
             this.values.getTreeNodeById = function(id, parent) {
-                if(!id) {
+                if(id == null) {
                     return null;
                 }
                 parent = parent || self.values.rootTreeNode;
@@ -234,7 +234,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     parentTreeNodeElement = children;
                 }
-
 
 				var nodes = this.values.ckan.getNodeChidlren(parentTreeNodeId);
 				nodes.sort(sortByProperty('index'));
@@ -441,7 +440,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			};
 
 			var renderGroupOrganizations = function(element, group_id) {
-                var parentNode = this.values.getTreeNodeById( group_id);
+                var parentNode = this.values.getTreeNodeById(group_id);
 
                 var parent = $('#node-' + this.values.element + '-' + group_id);
 
@@ -516,7 +515,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderOrganizationPackages = function(element, organization_id) {
                 var parent = $('#node-' + this.values.element + '-' + organization_id);
-                var parentNode = this.values.getTreeNodeById( organization_id);
+                var parentNode = this.values.getTreeNodeById(organization_id);
 
 				var packages = [], organization_packages = [];
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
@@ -635,7 +634,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderPackageResources = function(element, package_id) {
                 var parent = $('#node-' + this.values.element + '-' + package_id);
-                var parentNode = this.values.getTreeNodeById( package_id);
+                var parentNode = this.values.getTreeNodeById(package_id);
 
 				var _package = this.values.ckan.getPackageById(package_id);
 
@@ -690,7 +689,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			var renderResourceLayers = function(element, resource_id, layers) {
                 var parent = $('#node-' + this.values.element + '-' + resource_id);
-                var parentNode = this.values.getTreeNodeById( resource_id);
+                var parentNode = this.values.getTreeNodeById(resource_id);
 
 				var resource = this.values.ckan.getResourceById(resource_id);
 
@@ -3661,7 +3660,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
             return new Promise(function(resolve, reject) {
                 var uri = new URI();
-                
+
                 if(self.values.endpoint === '/') {
                     uri.segment(['config', 'save']);
                 } else {
