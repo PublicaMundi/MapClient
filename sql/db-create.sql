@@ -5,7 +5,7 @@ CREATE SEQUENCE public.link_index_seq
   START 1
   CACHE 1;
 ALTER TABLE public.link_index_seq
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE SEQUENCE public.package_group_id_seq
   INCREMENT 1
@@ -15,7 +15,7 @@ CREATE SEQUENCE public.package_group_id_seq
   CACHE 1;
 
 ALTER TABLE public.package_group_id_seq
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE SEQUENCE public.resource_queryable_id_seq
   INCREMENT 1
@@ -25,7 +25,7 @@ CREATE SEQUENCE public.resource_queryable_id_seq
   CACHE 1;
 
 ALTER TABLE public.resource_queryable_id_seq
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE SEQUENCE public.resource_field_id_seq
   INCREMENT 1
@@ -35,7 +35,7 @@ CREATE SEQUENCE public.resource_field_id_seq
   CACHE 1;
 
 ALTER TABLE public.resource_field_id_seq
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.link
 (
@@ -49,7 +49,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE public.link
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE INDEX idx_url
   ON public.link
@@ -74,7 +74,7 @@ WITH (
 );
 
 ALTER TABLE public.organization
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public."group"
 (
@@ -94,7 +94,7 @@ WITH (
 );
 
 ALTER TABLE public."group"
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public."package"
 (
@@ -118,7 +118,7 @@ WITH (
 );
 
 ALTER TABLE public."package"
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.package_group
 (
@@ -138,7 +138,7 @@ WITH (
 );
 
 ALTER TABLE public.package_group
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.resource_tree_node
 (
@@ -157,7 +157,7 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE public.resource_tree_node
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.resource
 (
@@ -189,7 +189,7 @@ WITH (
 );
 
 ALTER TABLE public.resource
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.resource_queryable
 (
@@ -211,7 +211,7 @@ WITH (
 );
 
 ALTER TABLE public.resource_queryable
-  OWNER TO tester;
+  OWNER TO ckaner;
 
 CREATE TABLE public.resource_field
 (
@@ -234,4 +234,4 @@ WITH (
 );
 
 ALTER TABLE public.resource_field
-  OWNER TO tester;
+  OWNER TO ckaner;
