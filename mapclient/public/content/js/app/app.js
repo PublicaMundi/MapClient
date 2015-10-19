@@ -886,7 +886,7 @@
                 $(this).removeClass('panel-left-splitter-dragging');
             },
             drag: function( event, ui ) {
-                ui.position.left = Math.max( 260, ui.position.left );
+                ui.position.left = Math.max( 280, ui.position.left );
                 ui.position.left = Math.min( 550, ui.position.left );
             }
         });

@@ -239,7 +239,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				nodes.sort(sortByProperty('index'));
 
 				for(var i = 0; i < nodes.length; i++) {
-                    if((nodes[i].resources.length > 0) || (nodes[i].children.length > 0)) {
+                    if(!this.values.ckan.isNodeEmpty(nodes[i].id)) {
                         var properties = {
                             id: nodes[i].id,
                             expanded: false,
@@ -256,7 +256,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             hasInformation: false,
                             i18n: 'node.' + nodes[i].id
                         };
-
 
                         var elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
                         $(parentTreeNodeElement).append(elem);
