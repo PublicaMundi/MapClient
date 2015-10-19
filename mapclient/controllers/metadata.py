@@ -126,7 +126,7 @@ class MetadataController(BaseController):
 
                     p['resources'].append(r)
 
-                    if resource.tree_node_id and resource.tree_node_id in metadata['nodes']:
+                    if not resource.tree_node_id is None and resource.tree_node_id in metadata['nodes']:
                         metadata['nodes'][resource.tree_node_id]['resources'].append(resource.id);
 
             # Return a package only if it contains at least on resource

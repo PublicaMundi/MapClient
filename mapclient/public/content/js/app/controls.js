@@ -2414,7 +2414,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             } else {
                 content.push('<div class="feature-table"><table style="width: 100%;">');
                 for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] != feature.getGeometryName()) {
+                    if ((keys[i] != feature.getGeometryName()) && (keys[i] != '__template__')) {
                         content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' +
                         (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
                     }
