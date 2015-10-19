@@ -87,17 +87,18 @@
 
             if(node.resources.length > 0) {
                 node.isEmpty = false;
-                return false;
+                return node.isEmpty;
             }
             if(node.children.length == 0) {
                 node.isEmpty = true;
-                return true;
+                return node.isEmpty;
             }
 
             node.isEmpty = true;
             for(var i=0; i < node.children.length; i++) {
-                node.isEmpty = this.isNodeEmpty(node.children[i]);
-                if(!node.isEmpty) {
+                var isChildEmpty = this.isNodeEmpty(node.children[i]);
+                if(!isChildEmpty) {
+                    node.isEmpty = false;
                     return node.isEmpty;
                 }
             }
