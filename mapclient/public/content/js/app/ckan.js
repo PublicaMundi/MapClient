@@ -132,20 +132,20 @@
         getNodes: function() {
             return his.values.catalog.nodes;
         },
-        getNodeChidlren: function(id) {
+        getNodeChidlren: function(nodeId) {
             var nodes = [];
 
-            if(id) {
-                var node = this.getNodeById(id);
+            if(nodeId == null) {
+                for(var id in this.values.catalog.nodes) {
+                    if(this.values.catalog.nodes[id].parent == null) {
+                        nodes.push(this.values.catalog.nodes[id]);
+                    }
+                }
+            } else {
+                var node = this.getNodeById(nodeId);
 
                 for(var index in node.children) {
                     nodes.push(this.getNodeById(node.children[index]));
-                }
-            } else {
-                for(var id in this.values.catalog.nodes) {
-                    if(!this.values.catalog.nodes[id].parent) {
-                        nodes.push(this.values.catalog.nodes[id]);
-                    }
                 }
             }
 
@@ -872,7 +872,7 @@
                     resolve(data);
                 } else {
                     var uri = new URI();
-                    
+
                     if(self.values.path === '/') {
                         uri.segment(['metadata', type, id]);
                     } else {
