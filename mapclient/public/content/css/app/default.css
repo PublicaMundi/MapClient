@@ -262,6 +262,23 @@ ul {
     border-bottom: solid 1px #E7E7E7;
 }
 
+.tools-container-placholder {
+    display: none;
+    background: white none repeat scroll 0 0;
+    border: 1px solid #e7e7e7;
+    cursor: pointer;
+    margin: 4px;
+    padding: 5px;
+    position: absolute;
+    right: 0;
+    top: 50px;
+    z-index: 1500;
+}
+
+.ui-effects-transfer {
+    border: 2px dotted black;
+}
+
 .tools-container {
     position: absolute;
     right: 0px;
