@@ -75,6 +75,8 @@ FORMAT_SUPPORT_EXPORT = {
 
 class ApiController(BaseController):
 
+    tempfile.tempdir = config['upload.path']
+
     def resource_show(self):
         # Get configuration
         configuration = self._get_configuration()
