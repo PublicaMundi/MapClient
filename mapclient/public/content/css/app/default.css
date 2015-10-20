@@ -233,8 +233,27 @@ ul {
 
 .tools-header {
     padding: 8px 0px 6px 2px;
-    border-bottom: solid 1px #E7E7E7;
     cursor: move;
+}
+
+.tools-content {
+    border-top: solid 1px #E7E7E7;
+}
+
+.tools-header-label {
+    float: left;
+    padding: 5px;
+}
+
+.tools-header-handler {
+    cursor: pointer;
+    float: right;
+    transition: transform 0.4s ease 0s;
+    transform: rotate(180deg);
+}
+
+.tools-header-handler-collapse {
+    transform: rotate(0deg) !important;
 }
 
 .tool-actions-header {

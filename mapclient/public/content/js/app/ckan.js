@@ -391,10 +391,16 @@
 
             var uri = new URI(this.values.endpoint);
             uri.segment(['api', '3', 'action', 'package_search']);
+
+            var query = {};
+
+            if(text) {
+                query.q = text;
+            }
             if(bbox) {
-                uri.addQuery({ 'q': text, 'ext_bbox' : bbox.join(',') });
-            } else {
-                uri.addQuery({ 'q': text });
+                query.extras = {
+                    'ext_bbox': bbox.join(',')
+                };
             }
 
 			if ((this.values.xhr) && (this.values.xhr.readyState !== 4)) {
@@ -405,7 +411,11 @@
 			return new Promise(function(resolve, reject) {
 				self.values.xhr = $.ajax({
 					url: uri.toString(),
-					context: this
+					context: this,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    data: JSON.stringify(query)
 				}).done(function (response) {
 					self.values.xhr = null;
 
@@ -443,6 +453,14 @@
 								_resource = packages[p].resources[r];
 								if(_resource.format === 'wms') {
 									_resource.package = _package.id;
+                                    _resource.name = {
+                                        el: _resource.name,
+                                        en: _resource.name
+                                    };
+                                    _resource.description = {
+                                        el: _resource.description,
+                                        en: _resource.description
+                                    }
 									_package.resources.push(_resource);
 								}
 							}

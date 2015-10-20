@@ -245,25 +245,34 @@
 
     <div class="clearfix tools-container">
         <div id="tools-header" class="clearfix tools-header">
-            <img src="content/images/tools.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
+            <div class="tools-header-label">
+                <img src="content/images/tools.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
+            </div>
+            <div class="tools-header-handler">
+                <img src="content/images/expand.svg" alt="">
+            </div>
         </div>
-        <div id="tools" class="clearfix tools">
-            <div class="device tool-wrapper" id="tool-length"></div>
-            <div class="device tool-wrapper" id="tool-area"></div>
-            <div class="device tool-wrapper" id="tool-export"></div>
-            <div class="tool-wrapper" id="action-wms"></div>
-            <div class="device tool-wrapper" id="action-upload"></div>
-            <div class="tool-wrapper" id="action-position"></div>
-            <div class="tool-wrapper" id="action-link"></div>
-            <div class="device tool-wrapper" id="action-embed"></div>
-            <div class="device tool-wrapper" id="action-parse"></div>
-            <div class="tool-wrapper" id="restore-zoom"></div>
-        </div>
-        <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
-            <img src="content/images/functions.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
-        </div>
-        <div id="tool-actions" class="clearfix tool-actions">
-            <div class="tool-wrapper" id="action-export"></div>
+        <div class="tools-content">
+            <div id="tools" class="clearfix tools">
+                <div class="device tool-wrapper" id="tool-length"></div>
+                <div class="device tool-wrapper" id="tool-area"></div>
+                <div class="device tool-wrapper" id="tool-export"></div>
+                <div class="tool-wrapper" id="action-wms"></div>
+                <div class="device tool-wrapper" id="action-upload"></div>
+                <div class="tool-wrapper" id="action-position"></div>
+                <div class="tool-wrapper" id="action-link"></div>
+                <div class="device tool-wrapper" id="action-embed"></div>
+                <div class="device tool-wrapper" id="action-parse"></div>
+                <div class="tool-wrapper" id="restore-zoom"></div>
+            </div>
+            <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
+                <div class="tools-header-label">
+                    <img src="content/images/functions.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
+                </div>
+            </div>
+            <div id="tool-actions" class="clearfix tool-actions">
+                <div class="tool-wrapper" id="action-export"></div>
+            </div>
         </div>
     </div>
 </body>
