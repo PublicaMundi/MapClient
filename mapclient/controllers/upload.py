@@ -32,7 +32,7 @@ ACCEPT_FORMAT = [IMPORT_GML, IMPORT_KML, IMPORT_GEOJSON, IMPORT_CSV, IMPORT_ESRI
 ACCEPT_FORMAT_TYPES = {
     IMPORT_GML: ['application/gml+xml'],
     IMPORT_KML: ['application/vnd.google-earth.kml+xml'],
-    IMPORT_ESRI: ['application/zip', 'application/octet-stream'],
+    IMPORT_ESRI: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
     IMPORT_GEOJSON: ['application/vnd.geo+json', 'application/json', 'text/plain'],
     IMPORT_DXF: ['application/dxf', 'application/octet-stream'],
     IMPORT_CSV: ['application/vnd.ms-excel', 'text/csv', 'text/plain']

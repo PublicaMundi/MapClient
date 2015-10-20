@@ -46,6 +46,7 @@
     "control.export.dialog.label.format" : "Εξαγωγή σε",
 
     "action.export.title" : "Εξαγωγή αντικειμένων",
+    "action.export.no-resource-selected": "Δεν έχει επιλεχθεί κανένα επίπεδο",
 
     "action.import-wms.title" : "Εισαγωγή WMS",
     "action.import-wms.url.placeholder" : "Διεύθυνση WMS ...",

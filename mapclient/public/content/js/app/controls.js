@@ -1237,12 +1237,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $('#' + this.values.element).html('');
 
                     content.push('<div id="' + this.values.element + '-form" class="clearfix layer-tree-search-form">');
-                    content.push('<form class="form-horizontal">');
 
-                    content.push('<div class="form-group">');
-                    content.push('<div style="float: left; padding-left: 15px; width: 19em;">');
+                    content.push('<div class="clearfix" style="padding: 6px 4px 6px 0px; display: block;">');
+                    content.push('<div class="input-group" style="float: left; width: 100%;">');
                     content.push('<input id="' + this.values.element + '-text" placeholder="' + PublicaMundi.i18n.getResource('control.tree.search.prompt') +
                                  '" data-i18n-id="control.tree.search.prompt" data-i18n-type="attribute" data-i18n-name="placeholder" class="form-control input-md" type="text">');
+                    content.push('<span class="input-group-btn">');
+                    content.push('<button type="button" class="btn btn-default" id="' + this.values.element + '-text-clear">');
+                    content.push('<span class="glyphicon glyphicon-trash"></span>');
+                    content.push('</button>');
+                    content.push('</span>');
                     content.push('</div>');
                     content.push('</div>');
 
@@ -1266,7 +1270,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('</div>');
                     content.push('</div>');
 
-                    content.push('</form>');
                     content.push('</div>');
 
                     content.push('<div id="' + this.values.element + '-result-container" class="clearfix layer-tree-search-result-container">');
@@ -1285,6 +1288,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                 $('#' + this.values.element).html(content.join(''));
             }
+
+            $('#' + this.values.element + '-text-clear').click(function() {
+                $('#' + self.values.element + '-text').val('');
+            });
 
 			if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByGroup) {
                 if(this.values.ckan.getNodeCount() > 0) {
@@ -1970,14 +1977,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if(this.values.action.isBusy()) {
             return;
         };
+
+        $('#' + this.values.element + '-error').html('');
+
         this.values.dialog.show();
         this.values.dialog.moveToCenter();
     };
 
     var _ExportDialogActionExportHandler = function(e) {
-        this.values.dialog.hide();
-
         if(this.values.action.isBusy()) {
+            this.values.dialog.hide();
             return;
         };
 
@@ -2003,7 +2012,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
             }
 
-            if(quyarable.length > 0) {
+            if(quyarable.length === 0) {
+                $('#' + this.values.element + '-error').html('<div class="alert alert-danger" role="alert" data-i18n-id="action.export.no-resource-selected">' + PublicaMundi.i18n.getResource('action.export.no-resource-selected') + '</div>');
+            } else {
+                this.values.dialog.hide();
+
                 this.values.action.suspendUI();
 
                 var query = this.values.query;
@@ -2149,6 +2162,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     }
                     content.push('</select>');
                     content.push('</div>');
+                    content.push('<div class="clearfix"  id="' + self.values.element + '-error" style="margin: 10px 4px 0 0;"></div>');
                     return content;
                 }
             });
@@ -2167,7 +2181,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             this.hide();
                             break;
                         case 'export':
-                            this.hide()
                             _ExportDialogActionExportHandler.apply(self);
                             break;
                     }

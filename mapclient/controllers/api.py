@@ -35,6 +35,8 @@ EXPORT_FORMAT_DXF = 'DXF'
 EXPORT_FORMAT_CSV = 'CSV'
 EXPORT_FORMAT_PDF = 'PDF'
 
+MAX_FILENAME_LENGTH = 40
+
 # Supported formats for export operation
 FORMAT_SUPPORT_EXPORT = {
     EXPORT_FORMAT_ESRI: {
@@ -510,7 +512,7 @@ class ApiController(BaseController):
 
         with zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED) as compressedFile:
             for f in exportedFiles:
-                 compressedFile.write(os.path.join(path,f), f)
+                 compressedFile.write(os.path.join(path,f), f.decode('utf-8'))
 
     def _format_response(self, response, callback=None, output_format=QUERY_FORMAT_JSON):
         if not callback is None:
@@ -552,22 +554,8 @@ class ApiController(BaseController):
                 response.headers['Content-Type'] = 'application/json; charset=utf-8'
 
 
-    #https://gist.github.com/seanh/93666
     def _format_filename(self, filename):
-        """Take a string and return a valid filename constructed from the string.
-    Uses a whitelist approach: any characters not present in valid_chars are
-    removed. Also spaces are replaced with underscores.
-
-    Note: this method may produce invalid filenames such as ``, `.` or `..`
-    When I use this method I prepend a date string like '2009_01_15_19_46_32_'
-    and append a file extension like '.txt', so I avoid the potential of using
-    an invalid filename.
-
-    """
-        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-        filename = ''.join(c for c in filename if c in valid_chars)
-        filename = filename.replace(' ','_') # I don't like spaces in filenames.
-        return filename
+        return filename[:MAX_FILENAME_LENGTH].replace(' ','_')
 
     def _getFormatExtension(self, format):
         if format in FORMAT_SUPPORT_EXPORT:

@@ -46,6 +46,7 @@
     "control.export.dialog.label.format" : "Format",
 
     "action.export.title" : "Export objects",
+    "action.export.no-resource-selected": "No resource is selected",
 
     "action.import-wms.title" : "Import WMS",
     "action.import-wms.url.placeholder" : "WMS endpoint ...",
