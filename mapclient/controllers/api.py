@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import logging
 
 from pylons import config, request, response, session
@@ -514,7 +516,7 @@ class ApiController(BaseController):
 
         with zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED) as compressedFile:
             for f in exportedFiles:
-                 compressedFile.write(os.path.join(path,f), f.decode('utf-8'))
+                 compressedFile.write(os.path.join(path,f), f)
 
     def _format_response(self, response, callback=None, output_format=QUERY_FORMAT_JSON):
         if not callback is None:
@@ -554,7 +556,6 @@ class ApiController(BaseController):
                 response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
             else:
                 response.headers['Content-Type'] = 'application/json; charset=utf-8'
-
 
     def _format_filename(self, filename):
         return filename[:MAX_FILENAME_LENGTH].replace(' ','_')
