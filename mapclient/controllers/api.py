@@ -516,7 +516,7 @@ class ApiController(BaseController):
 
         with zipfile.ZipFile(filename, "w", zipfile.ZIP_DEFLATED) as compressedFile:
             for f in exportedFiles:
-                 compressedFile.write(os.path.join(path,f), f)
+                compressedFile.write(os.path.join(path,f), unicode(f, 'utf-8'))
 
     def _format_response(self, response, callback=None, output_format=QUERY_FORMAT_JSON):
         if not callback is None:
