@@ -711,7 +711,16 @@
 		});
 
         // Make tool window draggable
-        $('.tools-container').draggable({handle : '.tools-header', containment: 'parent'})
+        $('.tools-container').draggable({handle : '.tools-header', containment: 'parent'});
+        $('.tools-header-handler').click(function() {
+            if($(this).hasClass('tools-header-handler-collapse')) {
+                $(this).removeClass('tools-header-handler-collapse');
+                $('.tools-content').fadeIn(400);
+            } else {
+                $(this).addClass('tools-header-handler-collapse');
+                $('.tools-content').fadeOut(400);
+            }
+        });
 
         // Tab control
 		$('#organization, #group, #search').click(function() {

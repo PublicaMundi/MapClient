@@ -1234,9 +1234,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
 
 			if (this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByGroup) {
-                var nodes = this.values.ckan.getNodeChidlren(null);
-
-                if((nodes) && (nodes.length > 0)) {
+                if(this.values.ckan.getNodeCount() > 0) {
                     this.values.renderTreeNodeElements.call(this);
                 } else {
                     this.values.renderGroups.call(this);
