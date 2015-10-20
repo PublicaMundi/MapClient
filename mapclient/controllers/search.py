@@ -202,7 +202,6 @@ class SearchController(BaseController):
             return json.dumps(records, cls=ShapelyGeoJsonEncoder, encoding='utf-8')
         except Exception as ex:
             log.error(ex)
-            raise
 
         abort(500, 'Internal server error')
 
