@@ -131,7 +131,10 @@
             return true;
         },
         getNodes: function() {
-            return his.values.catalog.nodes;
+            return this.values.catalog.nodes;
+        },
+        getNodeCount: function() {
+            return Object.keys(this.values.catalog.nodes).length;
         },
         getNodeChidlren: function(nodeId) {
             var nodes = [];

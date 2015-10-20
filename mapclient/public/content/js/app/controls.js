@@ -297,7 +297,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                 isLeaf: true,
                                 caption: resource.name[PublicaMundi.i18n.getLocale()],
-                                hasInformation: (_package.resources.length === 1)
+                                hasInformation: (_package.resources.length === 1),
+                                i18n: 'node.resource.' + resource.id
                             };
                         } else {
                             var properties = {
@@ -316,7 +317,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 image: 'content/images/show.svg',
                                 isLeaf: false,
                                 caption: resource.name[PublicaMundi.i18n.getLocale()],
-                                hasInformation: (_package.resources.length === 1)
+                                hasInformation: (_package.resources.length === 1),
+                                i18n: 'node.resource.' + resource.id
                             };
                         }
 
@@ -571,8 +573,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                     isLeaf: true,
-                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
-                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
+                                    caption: organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
@@ -595,8 +598,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     id: resourceId,
                                     image: 'content/images/show.svg',
                                     isLeaf: false,
-                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
-                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
+                                    caption: organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
@@ -626,6 +630,105 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             }
                         }
                     }
+				}
+
+                self.setFilter(self.getFilter(), 0);
+            }
+
+            var renderOrganizationResources = function(element, organization_id) {
+                var parent = $('#node-' + this.values.element + '-' + organization_id);
+                var parentNode = this.values.getTreeNodeById(organization_id);
+
+				var packages = [];
+
+                if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
+                    packages = this.values.ckan.getFilteredPackages();
+                } else {
+                    packages = this.values.ckan.getPackages();
+                }
+
+                var total_resources = 0;
+
+				var children = $('<ul class="tree-node" style="display: none;"></ul>');
+                $(parent).append(children);
+
+				for(var p = 0; p < packages.length; p++) {
+					if (packages[p].organization === organization_id) {
+                        var resources = packages[p].resources;
+
+                        resources.sort(sortByProperty('node_index'));
+
+                        for(var r = 0; r < resources.length; r++) {
+                            total_resources++;
+
+                            this.values.resources.setCatalogResourceMetadataOptions(resources[r]);
+
+                            if((resources[r].metadata) &&
+                               (!!resources[r].metadata.extras.layer)) {
+
+                                var resourceId = resources[r].id ;
+                                var layerId = resourceId + '_' + resources[r].metadata.extras.layer;
+                                var selected = this.values.resources.isLayerSelected(layerId);
+
+                                var properties = {
+                                    id: layerId.replace(/[^\w\s]/gi, ''),
+                                    expanded: false,
+                                    loaded: false,
+                                    type: 'layer',
+                                    layer: layerId,
+                                    selected: selected,
+                                    info: {
+                                        type: 'package',
+                                        id: packages[p].id
+                                    }
+                                };
+
+                                var options = {
+                                    id: layerId.replace(/[^\w\s]/gi, ''),
+                                    image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                                    isLeaf: true,
+                                    caption: resources[r].name[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: ((!!(packages[p].notes)) && (packages[p].resources.length == 1)),
+                                    i18n: 'node.resource.' + resourceId
+                                };
+
+                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                $(children).append(elem);
+                            } else {
+                                var resourceId = resources[r].id ;
+
+                                var properties = {
+                                    id: resourceId,
+                                    expanded: false,
+                                    loaded: false,
+                                    type: 'resource',
+                                    info: {
+                                        type: 'package',
+                                        id: packages[p].id
+                                    }
+                                };
+
+                                var options = {
+                                    id: resourceId,
+                                    image: 'content/images/show.svg',
+                                    isLeaf: false,
+                                    caption: resources[r].name[PublicaMundi.i18n.getLocale()],
+                                    hasInformation: ((!!(packages[p].notes)) && (packages[p].resources.length == 1)),
+                                    i18n: 'node.resource.' + resourceId
+                                };
+
+                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                $(children).append(elem);
+                            }
+                        }
+					}
+				}
+
+                if(total_resources === 0) {
+					var handler = $(parent).find('img.tree-toggle').first();
+					$(handler).addClass('disabled');
+					$(handler).attr('src', 'content/images/empty.svg');
+					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				}
 
                 self.setFilter(self.getFilter(), 0);
@@ -663,7 +766,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                             isLeaf: true,
                             caption: resource.name[PublicaMundi.i18n.getLocale()],
-                            hasInformation: false
+                            hasInformation: false,
+                            i18n: 'node.resource.' + resource.id
                         };
 					} else {
                         var properties = {
@@ -678,7 +782,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             image: 'content/images/show.svg',
                             isLeaf: false,
                             caption: resource.name[PublicaMundi.i18n.getLocale()],
-                            hasInformation: false
+                            hasInformation: false,
+                            i18n: 'node.resource.' + resource.id
                         };
 					}
                     var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
@@ -777,7 +882,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 							});
 						} else if (type === 'organization') {
 							self.values.ckan.loadOrganizationById(id).then(function(organization) {
-								renderOrganizationPackages.call(self, parent, id);
+                                if(self.values.ckan.getNodeCount() > 0) {
+                                    renderOrganizationResources.call(self, parent, id);
+                                } else {
+                                    renderOrganizationPackages.call(self, parent, id);
+                                }
 								properties.loaded = true;
 								properties.expanded = true;
 								$(element).addClass('tree-node-collapse');
@@ -1224,6 +1333,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 this.values.timeout = setTimeout(doFiltering, timeout);
             } else {
                 doFiltering();
+            }
+        },
+        localizeUI: function(locale) {
+            switch(this.values.mode) {
+                case PublicaMundi.Maps.LayerTreeViewMode.ByGroup:
+                    break;
+                case PublicaMundi.Maps.LayerTreeViewMode.ByOrganization:
+                    break;
+                case PublicaMundi.Maps.LayerTreeViewMode.ByFilter:
+                    break;
             }
         }
     });

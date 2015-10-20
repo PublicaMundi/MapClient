@@ -725,6 +725,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         getLocale : function() {
             return this.values.i18n.locale;
         },
+        getAllResources: function() {
+            return this.values.i18n.strings[this.values.i18n.locale];
+        },
         getResource : function(id, text) {
             return this.values.i18n.strings[this.values.i18n.locale][id] || text || '';
         },

@@ -1105,9 +1105,15 @@
             for(var g=0; g < groups.length; g++) {
                 PublicaMundi.i18n.setResource(locale, 'group.' + groups[g].id, groups[g].caption[locale]);
             }
-            var nodes = members.ckan.getNodeChidlren();
-            for(var n=0; n < nodes.length; n++) {
-                PublicaMundi.i18n.setResource(locale, 'node.' + nodes[n].id, nodes[n].caption[locale]);
+            var packages = members.ckan.getPackages();
+            for(var p=0; p < packages.length; p++) {
+                for(var r=0; r < packages[p].resources.length; r++) {
+                    PublicaMundi.i18n.setResource(locale, 'node.resource.' + packages[p].resources[r].id, packages[p].resources[r].name[locale]);
+                }
+            }
+            var nodes = members.ckan.getNodes();
+            for(var key in nodes) {
+                PublicaMundi.i18n.setResource(locale, 'node.' + nodes[key].id, nodes[key].caption[locale]);
             }
         }
     }
@@ -1123,15 +1129,10 @@
             PublicaMundi.i18n.on('locale:change', function() {
                 localizeUI();
 
-                members.components.layerTreeGroup.refresh();
-                members.components.layerTreeOrganization.refresh();
-
                 resize();
             });
 
             mergeCkanResources();
-
-            localizeUI();
 
             initializeMap();
 
@@ -1144,6 +1145,9 @@
             $('#loading-text').html('Initializing Catalog ... 0%');
 
             var afterQueryableLoaded = function() {
+                members.components.layerTreeGroup.refresh();
+                members.components.layerTreeOrganization.refresh();
+
                 setTimeout(function () {
                     $('#block-ui').fadeOut(500).hide();
                     $('body').css('overflow-y', 'auto');
@@ -1166,9 +1170,6 @@
             var afterPreload = function() {
                 // Refresh localization strings (CKAN metadata may have added new resources)
                 localizeUI();
-
-                members.components.layerTreeGroup.refresh();
-                members.components.layerTreeOrganization.refresh();
 
                 var term = $('#tree-filter-text').val();
 
