@@ -207,8 +207,9 @@ ul {
     min-height: 110px;
 }
 .layer-tree-search-form {
-    padding: 8px 0px 0px 5px;
+    padding: 0px 0px 0px 4px;
     position: absolute;
+    width: 100%;
 }
 
 .layer-tree-search-result-container {
@@ -857,6 +858,7 @@ img.legend {
 .btn {
     font-size: 12px;
     padding: 6px 8px;
+    height: 31px;
 }
 
 .form-control {
