@@ -712,16 +712,32 @@
 
         // Make tool window draggable
         $('.tools-container').draggable({handle : '.tools-header', containment: 'parent'});
+
         $('.tools-header-handler').click(function() {
-            if($(this).hasClass('tools-header-handler-collapse')) {
-                $(this).removeClass('tools-header-handler-collapse');
-                $('.tools-content').fadeIn(400);
-            } else {
-                $(this).addClass('tools-header-handler-collapse');
-                $('.tools-content').fadeOut(400);
-            }
+            $('.tools-container-placholder').fadeIn(400);
+            $('.tools-container').effect(
+                'transfer', {
+                    to: $('.tools-container-placholder')
+                },
+                400,
+                function() {
+                    $('.tools-container').fadeOut(200);
+                }
+            );
         });
 
+        $('.tools-container-placholder').click(function() {
+            $('.tools-container').fadeIn(400);
+            $('.tools-container-placholder').effect(
+                'transfer', {
+                    to: $('.tools-container')
+                },
+                400,
+                function() {
+                    $('.tools-container-placholder').fadeOut(200);
+                }
+            );
+        });
         // Tab control
 		$('#organization, #group, #search').click(function() {
 			if($(this).data('selected')) {
