@@ -113,9 +113,8 @@
             }
             for(var r=0; r < node.resources.length; r++) {
                 var resource = this.getResourceById(node.resources[r]);
-                var _package = this.getPackageById(resource.package);
 
-                if((resource.name[locale].indexOf(text) > -1) || (_package.title[locale].indexOf(text) > -1)) {
+                if(resource.name[locale].indexOf(text) > -1) {
                     return false;
                 }
             }
@@ -282,15 +281,9 @@
 
             for(var p = 0; p < packages.length; p++) {
                 if (id === packages[p].organization) {
-                    if(packages[p].title[locale].indexOf(text) > -1) {
-                        return false;
-                    }
-                    // For packages with a single resource, package.title overrides resource.name
-                    if(packages[p].resources.length > 1) {
-                        for(var r = 0; r < packages[p].resources.length; r++) {
-                            if(packages[p].resources[r].name[locale].indexOf(text) > -1) {
-                                return false;
-                            }
+                    for(var r = 0; r < packages[p].resources.length; r++) {
+                        if(packages[p].resources[r].name[locale].indexOf(text) > -1) {
+                            return false;
                         }
                     }
                 }

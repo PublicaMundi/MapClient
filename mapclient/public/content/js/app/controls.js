@@ -240,19 +240,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				for(var i = 0; i < nodes.length; i++) {
                     if(!this.values.ckan.isNodeEmpty(nodes[i].id)) {
+                        var caption = PublicaMundi.i18n.getResource('node.' + nodes[i].id, nodes[i].caption[PublicaMundi.i18n.getLocale()]);
                         var properties = {
                             id: nodes[i].id,
                             expanded: false,
                             loaded: false,
                             type: 'node',
-                            parent: nodes[i].parent
+                            parent: nodes[i].parent,
+                            caption: caption,
+                            i18n: 'node.' + nodes[i].id
                         };
 
                         var options = {
                             id: nodes[i].id,
                             image: 'content/images/show.svg',
                             isLeaf: false,
-                            caption: PublicaMundi.i18n.getResource('node.' + nodes[i].id, nodes[i].caption[PublicaMundi.i18n.getLocale()]),
+                            caption: caption,
                             hasInformation: false,
                             i18n: 'node.' + nodes[i].id
                         };
@@ -279,6 +282,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             var layerId = resource.id + '_' + resource.metadata.extras.layer;
                             var selected = this.values.resources.isLayerSelected(layerId);
 
+                            var caption = resource.name[PublicaMundi.i18n.getLocale()];
+
                             var properties = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
                                 expanded: false,
@@ -289,18 +294,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 info: {
                                     type: 'package',
                                     id: _package.id
-                                }
+                                },
+                                caption: caption,
+                                i18n: 'node.resource.' + resource.id
                             };
 
                             var options = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
                                 image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                 isLeaf: true,
-                                caption: resource.name[PublicaMundi.i18n.getLocale()],
+                                caption: caption,
                                 hasInformation: (_package.resources.length === 1),
                                 i18n: 'node.resource.' + resource.id
                             };
                         } else {
+                            var caption = resource.name[PublicaMundi.i18n.getLocale()];
+
                             var properties = {
                                 id: resource.id,
                                 expanded: false,
@@ -309,14 +318,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 info: {
                                     type: 'package',
                                     id: _package.id
-                                }
+                                },
+                                caption: caption,
+                                i18n: 'node.resource.' + resource.id
                             };
 
                             var options = {
                                 id: resource.id,
                                 image: 'content/images/show.svg',
                                 isLeaf: false,
-                                caption: resource.name[PublicaMundi.i18n.getLocale()],
+                                caption: caption,
                                 hasInformation: (_package.resources.length === 1),
                                 i18n: 'node.resource.' + resource.id
                             };
@@ -359,6 +370,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				for(var i = 0; i < groups.length; i++) {
                     if((!preload) || (!this.values.ckan.isGroupEmpty(groups[i].id))) {
+                        var caption = PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].caption[PublicaMundi.i18n.getLocale()]);
+
                         var properties = {
                             id: groups[i].id,
                             expanded: false,
@@ -367,14 +380,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             info: {
                                 type: 'group',
                                 id: groups[i].id
-                            }
+                            },
+                            caption: caption,
+                            i18n: 'group.' + groups[i].id
                         };
 
                         var options = {
                             id: groups[i].id,
                             image: 'content/images/show.svg',
                             isLeaf: false,
-                            caption: PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].caption[PublicaMundi.i18n.getLocale()]),
+                            caption: caption,
                             hasInformation: (groups[i].info) ||
                                             ((groups[i].description) && (groups[i].caption[PublicaMundi.i18n.getLocale()] != groups[i].description[PublicaMundi.i18n.getLocale()])),
                             i18n: 'group.' + groups[i].id
@@ -412,6 +427,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				for(var i = 0; i < organizations.length; i++) {
                     if((!preload) || (!this.values.ckan.isOrganizationEmpty(organizations[i].id))) {
+                        var caption = PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]);
+
                         var properties = {
                             id: organizations[i].id,
                             expanded: false,
@@ -420,14 +437,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             info: {
                                 type: 'organization',
                                 id: organizations[i].id
-                            }
+                            },
+                            caption: caption,
+                            i18n: 'organization.' + organizations[i].id
                         };
 
                         var options = {
                             id: organizations[i].id,
                             image: 'content/images/show.svg',
                             isLeaf: false,
-                            caption: PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]),
+                            caption: caption,
                             hasInformation: (organizations[i].info) ||
                                             ((organizations[i].description) && (organizations[i].caption[PublicaMundi.i18n.getLocale()] != organizations[i].description[PublicaMundi.i18n.getLocale()])),
                             i18n: 'organization.' + organizations[i].id
@@ -487,6 +506,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     $(parent).append(children);
 
 					for(var i = 0; i < group_organizations.length; i++) {
+                        var caption = PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]);
+
                         var properties = {
                             id: group_organizations[i].id,
                             expanded: false,
@@ -495,14 +516,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             info: {
                                 type: 'organization',
                                 id: group_organizations[i].id
-                            }
+                            },
+                            caption: caption,
+                            i18n: 'organization.' + group_organizations[i].id
                         };
 
                         var options = {
                             id: group_organizations[i].id,
                             image: 'content/images/show.svg',
                             isLeaf: false,
-                            caption: PublicaMundi.i18n.getResource('organization.' + group_organizations[i].id, group_organizations[i].caption[PublicaMundi.i18n.getLocale()]),
+                            caption: caption,
                             hasInformation: (group_organizations[i].info) ||
                                             ((group_organizations[i].description) && (group_organizations[i].caption[PublicaMundi.i18n.getLocale()] != group_organizations[i].description[PublicaMundi.i18n.getLocale()])),
                             i18n: 'organization.' + group_organizations[i].id
@@ -556,6 +579,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
                                 var selected = this.values.resources.isLayerSelected(layerId);
 
+                                var caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
+
                                 var properties = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     expanded: false,
@@ -566,14 +591,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     info: {
                                         type: 'package',
                                         id: organization_packages[j].id
-                                    }
+                                    },
+                                    caption: caption,
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                     isLeaf: true,
-                                    caption: organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()],
+                                    caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
                                     i18n: 'node.resource.' + resourceId
                                 };
@@ -583,6 +610,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             } else if(organization_packages[j].resources.length === 1) {
                                 var resourceId = organization_packages[j].resources[0].id ;
 
+                                var caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
+
                                 var properties = {
                                     id: resourceId,
                                     expanded: false,
@@ -591,14 +620,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     info: {
                                         type: 'package',
                                         id: organization_packages[j].id
-                                    }
+                                    },
+                                    caption: caption,
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var options = {
                                     id: resourceId,
                                     image: 'content/images/show.svg',
                                     isLeaf: false,
-                                    caption: organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()],
+                                    caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
                                     i18n: 'node.resource.' + resourceId
                                 };
@@ -606,6 +637,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             } else {
+                                var caption = organization_packages[j].title[PublicaMundi.i18n.getLocale()];
+
                                 var properties = {
                                     id: organization_packages[j].id,
                                     expanded: false,
@@ -614,14 +647,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     info: {
                                         type: 'package',
                                         id: organization_packages[j].id
-                                    }
+                                    },
+                                    caption: caption
                                 };
 
                                 var options = {
                                     id: organization_packages[j].id,
                                     image: 'content/images/show.svg',
                                     isLeaf: false,
-                                    caption: organization_packages[j].title[PublicaMundi.i18n.getLocale()],
+                                    caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
                                 };
 
@@ -670,6 +704,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 var layerId = resourceId + '_' + resources[r].metadata.extras.layer;
                                 var selected = this.values.resources.isLayerSelected(layerId);
 
+                                var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
+
                                 var properties = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     expanded: false,
@@ -680,14 +716,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     info: {
                                         type: 'package',
                                         id: packages[p].id
-                                    }
+                                    },
+                                    caption: caption,
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                     isLeaf: true,
-                                    caption: resources[r].name[PublicaMundi.i18n.getLocale()],
+                                    caption: caption,
                                     hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
                                     i18n: 'node.resource.' + resourceId
                                 };
@@ -697,6 +735,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             } else {
                                 var resourceId = resources[r].id ;
 
+                                var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
+
                                 var properties = {
                                     id: resourceId,
                                     expanded: false,
@@ -705,14 +745,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     info: {
                                         type: 'package',
                                         id: packages[p].id
-                                    }
+                                    },
+                                    caption: caption,
+                                    i18n: 'node.resource.' + resourceId
                                 };
 
                                 var options = {
                                     id: resourceId,
                                     image: 'content/images/show.svg',
                                     isLeaf: false,
-                                    caption: resources[r].name[PublicaMundi.i18n.getLocale()],
+                                    caption: caption,
                                     hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
                                     i18n: 'node.resource.' + resourceId
                                 };
@@ -752,36 +794,44 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         var layerId = resource.id + '_' + resource.metadata.extras.layer;
 						var selected = this.values.resources.isLayerSelected(layerId);
 
+                        var caption = resource.name[PublicaMundi.i18n.getLocale()];
+
                         var properties = {
                             id: layerId.replace(/[^\w\s]/gi, ''),
                             expanded: false,
                             loaded: false,
                             type: 'layer',
                             layer: layerId,
-                            selected: selected
+                            selected: selected,
+                            caption: caption,
+                            i18n: 'node.resource.' + resource.id
                         };
 
                         var options = {
                             id: layerId.replace(/[^\w\s]/gi, ''),
                             image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                             isLeaf: true,
-                            caption: resource.name[PublicaMundi.i18n.getLocale()],
+                            caption: caption,
                             hasInformation: false,
                             i18n: 'node.resource.' + resource.id
                         };
 					} else {
+                        var caption = resource.name[PublicaMundi.i18n.getLocale()];
+
                         var properties = {
                             id: resource.id,
                             expanded: false,
                             loaded: false,
-                            type: 'resource'
+                            type: 'resource',
+                            caption: caption,
+                            i18n: 'node.resource.' + resource.id
                         };
 
                         var options = {
                             id: resource.id,
                             image: 'content/images/show.svg',
                             isLeaf: false,
-                            caption: resource.name[PublicaMundi.i18n.getLocale()],
+                            caption: caption,
                             hasInformation: false,
                             i18n: 'node.resource.' + resource.id
                         };
@@ -807,20 +857,23 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					var layerId = resource_id + '_' + layers[i].name;
                     var selected = this.values.resources.isLayerSelected(layerId);
 
+                    var caption = layers[i].title;
+
                     var properties = {
                         id: layerId.replace(/[^\w\s]/gi, ''),
                         expanded: false,
                         loaded: false,
                         type: 'layer',
                         layer: layerId,
-                        selected: selected
+                        selected: selected,
+                        caption: caption
                     };
 
                     var options = {
                         id: layerId.replace(/[^\w\s]/gi, ''),
                         image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                         isLeaf: true,
-                        caption: layers[i].title,
+                        caption: caption,
                         hasInformation: false
                     };
 
@@ -1273,6 +1326,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             }
 
             var locale = PublicaMundi.i18n.getLocale();
+
             var doFiltering = function() {
                 if(term) {
                     self.values.filter.term = term;
@@ -1281,42 +1335,34 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         var properties = $(treeNode.element).data();
                         var isFiltered = true;
 
-                        for(var i=0; i < treeNode.children.length; i++) {
-                            isFiltered = filterTreeNodes(treeNode.children[i], term, locale) && isFiltered;
+                        if(treeNode.children.length > 0) {
+                            for(var i=0; i < treeNode.children.length; i++) {
+                                isFiltered = filterTreeNodes(treeNode.children[i], term, locale) && isFiltered;
+                            }
+                        } else {
+                            switch(properties.type) {
+                                case 'organization':
+                                    isFiltered = self.values.ckan.filterOrganization(treeNode.id, term, locale);
+                                    break;
+                                case 'node':
+                                    isFiltered = self.values.ckan.filterNode(treeNode.id, term, locale);
+                                    break;
+                                default:
+                                    var caption = PublicaMundi.i18n.getResource(properties.i18n, properties.caption);
+                                    if(caption.indexOf(term) > -1) {
+                                        isFiltered = false;
+                                    } else {
+                                        isFiltered = true;
+                                    }
+                                    break;
+                            }
                         }
-
-                        switch(properties.type) {
-                            case 'organization':
-                                if((treeNode.children.length > 0 && !isFiltered) ||
-                                   ((treeNode.children.length == 0) && !self.values.ckan.filterOrganization(treeNode.id, term, locale))) {
-                                    $(treeNode.element).removeClass('node-filtered');
-                                    return false;
-                                } else {
-                                    $(treeNode.element).addClass('node-filtered');
-                                    return true;
-                                }
-                                break;
-                            case 'node':
-                                if((treeNode.children.length > 0 && !isFiltered) ||
-                                   ((treeNode.children.length == 0) && !self.values.ckan.filterNode(treeNode.id, term, locale))) {
-                                    $(treeNode.element).removeClass('node-filtered');
-                                    return false;
-                                } else {
-                                    $(treeNode.element).addClass('node-filtered');
-                                    return true;
-                                }
-                                break;
-                            default:
-                                if(((treeNode.children.length >= 0) && !isFiltered) ||
-                                   ((treeNode.children.length == 0) && (treeNode.caption.indexOf(term) > -1))) {
-                                    $(treeNode.element).removeClass('node-filtered');
-                                    return false;
-                                } else {
-                                    $(treeNode.element).addClass('node-filtered');
-                                    return true;
-                                }
-                                break;
+                        if(isFiltered) {
+                            $(treeNode.element).addClass('node-filtered');
+                        } else {
+                            $(treeNode.element).removeClass('node-filtered');
                         }
+                        return isFiltered;
                     };
 
                     for(var i=0; i < self.values.rootTreeNode.children.length; i++) {
