@@ -688,7 +688,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
                                     isLeaf: true,
                                     caption: resources[r].name[PublicaMundi.i18n.getLocale()],
-                                    hasInformation: ((!!(packages[p].notes)) && (packages[p].resources.length == 1)),
+                                    hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
                                     i18n: 'node.resource.' + resourceId
                                 };
 
@@ -713,7 +713,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                     image: 'content/images/show.svg',
                                     isLeaf: false,
                                     caption: resources[r].name[PublicaMundi.i18n.getLocale()],
-                                    hasInformation: ((!!(packages[p].notes)) && (packages[p].resources.length == 1)),
+                                    hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
                                     i18n: 'node.resource.' + resourceId
                                 };
 
