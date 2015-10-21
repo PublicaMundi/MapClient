@@ -59,7 +59,7 @@
     "action.create-link-embed.label.lib" : "Βιβλιοθήκη",
     "action.create-link-embed.label.code" : "Κώδικας",
 
-    "action.parse-coordinates.title" : "Εισαγωγή/Εξαγωγή συντεταγμένων",
+    "action.parse-coordinates.title" : "Εισαγωγή συντεταγμένων",
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
     "control.parse.dialog.button.parse" : "Ανάλυση κειμένου",
     "control.parse.dialog.button.cancel" : "Ακύρωση",

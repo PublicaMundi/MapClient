@@ -59,7 +59,7 @@
     "action.create-link-embed.label.lib" : "Mapping Library",
     "action.create-link-embed.label.code" : "Code",
 
-    "action.parse-coordinates.title" : "Insert/Export coordinates",
+    "action.parse-coordinates.title" : "Import coordinates",
     "control.parse.dialog.title" : "Insert coordinates",
     "control.parse.dialog.button.parse" : "Parse",
     "control.parse.dialog.button.cancel" : "Cancel",

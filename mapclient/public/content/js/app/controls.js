@@ -1181,7 +1181,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						$(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checkbox-checked.svg');
 
                         if(!self.values.resources.isLayerSelected(id)) {
-                            var title = $(parent).find('div.tree-text').html() || '';
+                            var title = PublicaMundi.i18n.getResource(properties.i18n, properties.caption);
                             self.values.resources.createLayer(self.values.map, metadata, id, title);
                         }
 
@@ -1406,10 +1406,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             return;
         }
 
-        if(title.hasOwnProperty([PublicaMundi.i18n.getLocale()])) {
-            title = title[PublicaMundi.i18n.getLocale()];
+        if(title.text.hasOwnProperty([PublicaMundi.i18n.getLocale()])) {
+            title.text = title.text[PublicaMundi.i18n.getLocale()];
         } else if(title.hasOwnProperty('el')) {
-            title = title['el'];
+            title.text = title.text['el'];
         }
 
 		var content = [];
@@ -1430,7 +1430,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		content.push('<div class="clearfix" style="padding-bottom: 3px;">');
 		content.push('<div class="selected-layer-close"><img src="content/images/close.svg" class="action img-16" data-action="remove"  /></div>');
 		content.push('<div class="selected-layer-up"><img src="content/images/move-up.svg" class="action img-16 action-disabled" data-action="up"  /></div>');
-		content.push('<div class="selected-layer-text">' + title + '</div>');
+		content.push('<div class="selected-layer-text" data-i18n-id="' + title.i18n + '">' + title.text + '</div>');
 		content.push('</div>');
 
 		content.push('<div class="clearfix">');
@@ -1470,16 +1470,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		this.trigger('layer:added', {id: id});
 	};
 
-    var resolveLayerTitleFromMetadata = function(_package, _resource, value) {
-        if((_package.resources.length === 1) &&
-           (_package.resources[0].metadata) &&
-           (!!_package.resources[0].metadata.extras.layer)) {
-            return _package.title
-        } else if(!!_resource.metadata.extras.layer) {
-            return _resource.name;
+    var resolveLayerTitleFromMetadata = function(resource, value) {
+        if(!!resource.metadata.extras.layer) {
+            return {
+                i18n: 'node.resource.' + resource.id,
+                text: resource.name
+            };
         }
 
-        return value;
+        return {
+            i18n: '',
+            text : value
+        };
     };
 
     PublicaMundi.Maps.LayerSelection = PublicaMundi.Class(PublicaMundi.Maps.Component, {
@@ -1607,18 +1609,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				return false;
 			}
 
-			var self = this, _resource, _package;
+			var self = this, resource;
 
 			var parts = id.split('_');
 			var layer = parts.splice(1).join('_');
 
-			var _resource = this.values.ckan.getResourceById(parts[0]);
+			var resource = this.values.ckan.getResourceById(parts[0]);
 
-			if(_resource) {
-				_package = this.values.ckan.getPackageById(_resource.package);
-				this.values.resources.setCatalogResourceMetadataOptions(_resource);
+			if(resource) {
+				this.values.resources.setCatalogResourceMetadataOptions(resource);
 
-				this.values.resources.getResourceMetadata(_resource.metadata.type, _resource.metadata.parameters).then(function(metadata) {
+				this.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
 					var title, legend;
 
 					for(var i=0; i<metadata.layers.length;i++) {
@@ -1629,7 +1630,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						}
 					}
 
-					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(_package, _resource, title), legend);
+					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(resource, title), legend);
 
                     return true;
 				});
@@ -1638,7 +1639,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			} else if(metadata) {
 				for(var i=0, count=metadata.layers.length; i<count; i++) {
 					if(metadata.layers[i].key == layer) {
-						_LayerSelectionAddItem.call(self, id, metadata.layers[i].title, metadata.layers[i].legend);
+						_LayerSelectionAddItem.call(self, id, { i18n : '', text : metadata.layers[i].title }, metadata.layers[i].legend);
 
 						return true;
 					}
@@ -1985,6 +1986,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     };
 
     var _ExportDialogActionExportHandler = function(e) {
+        var self = this;
+
         if(this.values.action.isBusy()) {
             this.values.dialog.hide();
             return;
@@ -2042,6 +2045,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 query.export({
                     context: this,
                     success: _DownloadExportFile,
+                    failure: function() {
+                        self.values.action.resumeUI();
+                    },
                     files: files
                 });
             }
@@ -3486,7 +3492,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                             self.trigger('resource:loaded', {
                                 id: 'remote_' + file.url,
-                                title: $('#' + self.values.element + '-title').val() || file.name,
+                                title: $('#' + self.values.element + '-title').val() || file.name.split('.')[0],
                                 format: format,
                                 name: file.name,
                                 type: file.type,
@@ -3532,7 +3538,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             reader.onload = function(e) {
                                 self.trigger('resource:loaded', {
                                     id: 'local_' + file.name,
-                                    title: $('#' + self.values.element + '-title').val() || file.name,
+                                    title: $('#' + self.values.element + '-title').val() || file.name.split('.')[0],
                                     format: format,
                                     name : file.name,
                                     type: file.type,
