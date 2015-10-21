@@ -1037,7 +1037,6 @@
                     var loader = function() {
                         if(index < config.layers.length) {
                             var layer = config.layers[index];
-                            var title = null;
                             index++;
 
                             members.ckan.loadPackageById(layer.package).then(function(_package) {
@@ -1045,10 +1044,7 @@
                                 if(resource) {
                                     resource = members.resources.setCatalogResourceMetadataOptions(resource);
 
-                                    if(!!resource.metadata.extras.layer) {
-                                        title = (_package.resources.length == 1 ? _package.title[PublicaMundi.i18n.getLocale()] : resource.name[PublicaMundi.i18n.getLocale()]);
-                                    }
-                                    members.resources.addResourceFromCatalog(members.map.control, resource, layer.opacity, layer.key, layer.title).then(loader);
+                                    members.resources.addResourceFromCatalog(members.map.control, resource, layer.opacity, layer.key).then(loader);
                                 }
                             }, function(error) {
                                 console.log('Failed to load resource ' + layer.resource + ' from package ' + layer.package);

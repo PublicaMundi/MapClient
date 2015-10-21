@@ -12,6 +12,7 @@ import geojson
 
 import numbers
 import os
+import datetime
 import tempfile
 import shutil
 import zipfile
@@ -557,8 +558,22 @@ class ApiController(BaseController):
             else:
                 response.headers['Content-Type'] = 'application/json; charset=utf-8'
 
+    #https://gist.github.com/seanh/93666
     def _format_filename(self, filename):
-        return filename[:MAX_FILENAME_LENGTH].replace(' ','_')
+        """Take a string and return a valid filename constructed from the string.
+    Uses a whitelist approach: any characters not present in valid_chars are
+    removed. Also spaces are replaced with underscores.
+
+    Note: this method may produce invalid filenames such as ``, `.` or `..`
+    When I use this method I prepend a date string like '2009_01_15_19_46_32_'
+    and append a file extension like '.txt', so I avoid the potential of using
+    an invalid filename.
+
+    """
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        filename = ''.join(c for c in filename if c in valid_chars)
+        filename = "{prefix:%Y%m%d_%H%M%S}_{suffix}".format(prefix = datetime.datetime.now(), suffix = filename[:MAX_FILENAME_LENGTH].replace(' ','_'))
+        return filename
 
     def _getFormatExtension(self, format):
         if format in FORMAT_SUPPORT_EXPORT:

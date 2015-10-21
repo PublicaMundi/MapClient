@@ -376,14 +376,16 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			return this.values.readers[type].getMetadata(parameters);
         },
-        addResourceFromCatalog: function (map, resource, opacity, key, title) {
+        addResourceFromCatalog: function (map, resource, opacity, key) {
             var self = this;
 
             if(this.values.layerCounter >= this.values.maxLayerCount) {
                 return null;
             }
 
-            opacity = opacity || 100.0;
+            if(opacity !== 0) {
+                opacity = opacity || 100.0;
+            }
             if(opacity < 0) {
                 opacity = 0.0;
             } else if(opacity > 100) {
@@ -409,7 +411,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     }
                 }
                 if(layer) {
-                    var __object = self.createLayer(map, metadata, resource.id + '_' + layer.key, title);
+                    var __object = self.createLayer(map, metadata, resource.id + '_' + layer.key);
 
                     if(__object) {
                         __object.setOpacity(opacity / 100.0);
@@ -463,11 +465,13 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
         getQueryableResources: function() {
             return this.values.queryable;
         },
-        createLayer: function (map, metadata, id, title) {
+        createLayer: function (map, metadata, id) {
             if(this.values.layerCounter >= this.values.maxLayerCount) {
                 return null;
             }
 
+            var exists = false;
+            var title = null;
 			var bbox = null;
 
 			var parts = id.split('_');
@@ -476,11 +480,16 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			for(var i=0; i<metadata.layers.length;i++) {
 				if(metadata.layers[i].key == layer) {
-					title = title || metadata.layers[i].title;
+					title = metadata.layers[i].title;
 					bbox = metadata.layers[i].bbox;
+                    exists = true;
 					break;
 				}
 			}
+
+            if(!exists) {
+                return null;
+            }
 
 			var __object = null;
 			for(var i=0; i < this.values.layers.length; i++) {
