@@ -63,6 +63,7 @@
     "control.parse.dialog.title" : "Insert coordinates",
     "control.parse.dialog.button.parse" : "Parse",
     "control.parse.dialog.button.cancel" : "Cancel",
+    "control.parse.dialog.button.clear" : "Clear",
     "control.parse.dialog.label.crs" : "Reference System",
     "control.parse.dialog.label.delimiter" : "Decimal separator",
     "control.parse.dialog.label.text" : "Coordinates",
@@ -99,6 +100,8 @@
     "control.set-position.dialog.label.x" : "X",
     "control.set-position.dialog.label.y" : "Y",
     "control.set-position.dialog.button.move" : "Move",
+
+    "action.clear.title" : "Clear map",
 
     "button.create" : "Create",
     "button.close" : "Close"

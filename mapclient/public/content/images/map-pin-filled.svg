@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="30px"
+   height="30px"
+   viewBox="-7.354 -2.5 30 30"
+   overflow="visible"
+   enable-background="new -7.354 -2.5 30 30"
+   xml:space="preserve"
+   id="svg3142"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="map-pin-filled.svg"><metadata
+     id="metadata3152"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="753"
+     inkscape:window-height="480"
+     id="namedview3150"
+     showgrid="false"
+     inkscape:zoom="7.8666667"
+     inkscape:cx="15"
+     inkscape:cy="15"
+     inkscape:window-x="1145"
+     inkscape:window-y="607"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg3142" /><defs
+     id="defs3144" /><path
+     d="M15.291,7.646C15.291,3.422,11.869,0,7.645,0C3.423,0,0,3.422,0,7.646c0,1.317,0.332,2.558,0.919,3.638L6.891,25  l1.096-2.011l2.453-4.494h-0.001l3.925-7.195C14.956,10.214,15.291,8.97,15.291,7.646z M12.358,10.205l-3.927,7.197l-1.311,2.405  l-4.109-9.434l-0.039-0.092l-0.047-0.086c-0.428-0.787-0.642-1.646-0.642-2.55c0-2.956,2.405-5.362,5.36-5.362  c2.957,0,5.362,2.406,5.362,5.362C13.007,8.555,12.788,9.416,12.358,10.205z"
+     style="fill:#31669f;fill-opacity:0.94117647"
+     id="path3146" /><circle
+     cx="7.645"
+     cy="7.666"
+     r="2.942"
+     id="circle3148"
+     style="fill:#31669f;fill-opacity:1" /></svg>
