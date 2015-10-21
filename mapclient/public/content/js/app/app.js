@@ -589,7 +589,7 @@
             mode: PublicaMundi.Maps.PermalinkTool.Mode.Embed
         });
 
-        members.tools.parse = new PublicaMundi.Maps.CoordinateParser({
+        members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
             element: 'action-parse',
             name: 'parse',
             image: 'content/images/coordinates-w.svg',
@@ -634,6 +634,9 @@
         members.actions.clear.on('action:execute', function(args) {
             for(var item in members.tools) {
                 members.tools[item].clear();
+            }
+            for(var item in members.actions) {
+                members.actions[item].clear();
             }
         });
 
