@@ -67,7 +67,26 @@
                             delay: {{config['dataapi.wps.delay']}}
                         }
                     },
-                    feedback : '{{config['mapclient.feedback.url']}}'
+                    feedback : {
+                        en: '{{config['mapclient.feedback.url.en']}}',
+                        el: '{{config['mapclient.feedback.url.el']}}'
+                    },
+                    servers: {
+                        osm: [
+                            'http://geodata2.vm.grnet.gr:8020/{z}/{x}/{y}.png',
+                            'http://geodata3.vm.grnet.gr:8020/{z}/{x}/{y}.png',
+                            'http://geodata4.vm.grnet.gr:8020/{z}/{x}/{y}.png',
+                            'http://geodata5.vm.grnet.gr:8020/{z}/{x}/{y}.png',
+                            'http://geodata6.vm.grnet.gr:8020/{z}/{x}/{y}.png'
+                        ],
+                        tilecache : [
+                            'http://geodata2.vm.grnet.gr:8020/tilecache/tilecache.cgi',
+                            'http://geodata3.vm.grnet.gr:8020/tilecache/tilecache.cgi',
+                            'http://geodata4.vm.grnet.gr:8020/tilecache/tilecache.cgi',
+                            'http://geodata5.vm.grnet.gr:8020/tilecache/tilecache.cgi',
+                            'http://geodata6.vm.grnet.gr:8020/tilecache/tilecache.cgi'
+                        ]
+                    }
                 }
             }
         };

@@ -53,11 +53,11 @@
 		jquery: {
 			deps : ['promise']
 		},
-		bootstrap : { 
-			deps : ['jquery'] 
+		bootstrap : {
+			deps : ['jquery']
 		},
-		bootstrap_select : { 
-			deps : ['bootstrap', 'jquery'] 
+		bootstrap_select : {
+			deps : ['bootstrap', 'jquery']
 		},
         typeahead: {
             deps: [
@@ -107,13 +107,13 @@
                 'jquery',
                 'bootstrap',
                 'bootstrap_select',
-                'jqueryui',                
+                'jqueryui',
                 'proj4',
                 'ol',
                 'URIjs/URI',
                 'shared',
                 'ckan',
-                'controls',                
+                'controls',
                 'wms',
                 'file',
                 'data_api',
