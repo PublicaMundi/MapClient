@@ -1783,8 +1783,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.event('measure:end');
 
             // Tooltip
-            var tooltip;
-            var tooltipElement;
+            this.values.tooltip;
+            this.values.tooltipElement;
 
             var formatMeasurement = function() {
                 if(!self.values.feature) {
@@ -1831,28 +1831,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.values.reset = function() {
                 self.values.overlay.getFeatures().clear();
 
-                if (tooltipElement) {
-                    tooltipElement.parentNode.removeChild(tooltipElement);
+                if ((self.values.tooltipElement) && (self.values.tooltipElement.parentNode)) {
+                    self.values.tooltipElement.parentNode.removeChild(self.values.tooltipElement);
                 }
-                if(tooltip) {
-                    self.values.map.removeOverlay(tooltip);
+                if(self.values.tooltip) {
+                    self.values.map.removeOverlay(self.values.tooltip);
                 }
             }
-
-            var createTooltip = function() {
-                self.values.reset();
-
-                tooltipElement = document.createElement('div');
-                tooltipElement.className = 'mt-tooltip mt-tooltip-measure';
-
-                tooltip = new ol.Overlay({
-                    element: tooltipElement,
-                    offset: [0, -15],
-                    positioning: 'bottom-center'
-                });
-
-                self.values.map.addOverlay(tooltip);
-            };
 
             this.values.handler = function(e) {
                 if (e.dragging) {
@@ -1869,8 +1854,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     } else {
                         tooltipCoord = geom.getLastCoordinate();
                     }
-                    tooltipElement.innerHTML = output;
-                    tooltip.setPosition(tooltipCoord);
+                    self.values.tooltipElement.innerHTML = output;
+                    self.values.tooltip.setPosition(tooltipCoord);
                 }
             };
 
@@ -1932,10 +1917,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
 
             this.values.interaction.on('drawstart', function (e) {
-                createTooltip();
+                self.clear();
                 self.values.feature = e.feature;
-
-                self.values.overlay.getFeatures().clear();
             });
 
             this.values.interaction.on('drawend', function (e) {
@@ -1945,9 +1928,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     self.values.feature = null;
                 }
 
-                tooltipElement.className = 'mt-tooltip mt-tooltip-static';
+                self.values.tooltipElement.className = 'mt-tooltip mt-tooltip-static';
                 self.values.feature = null;
-                tooltipElement = null;
+                self.values.tooltipElement = null;
 
                 self.trigger('measure:end', { feature: e.feature });
             });
@@ -1982,6 +1965,25 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         getMeasurement: function() {
             return this.values.measurement;
+        },
+        createTooltip: function() {
+            this.values.reset();
+
+            this.values.tooltipElement = document.createElement('div');
+            this.values.tooltipElement.className = 'mt-tooltip mt-tooltip-measure';
+
+            this.values.tooltip = new ol.Overlay({
+                element: this.values.tooltipElement,
+                offset: [0, -15],
+                positioning: 'bottom-center'
+            });
+
+            this.values.map.addOverlay(this.values.tooltip);
+        },
+        clear: function() {
+            this.createTooltip();
+
+            this.values.overlay.getFeatures().clear();
         }
     });
 
@@ -2292,6 +2294,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         getFeature: function() {
             return this.values.feature;
+        },
+        clear: function() {
+            this.values.overlay.getFeatures().clear();
+            this.values.feature = null;
         }
     });
 
@@ -2685,6 +2691,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.clearFeatureFocus();
             this.values.overlay.getFeatures().clear();
             this.values.features = new ol.Collection();
+        },
+        clear: function() {
+            this.clearSelection();
         }
     });
 
