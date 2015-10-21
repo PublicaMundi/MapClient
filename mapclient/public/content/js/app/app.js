@@ -252,12 +252,30 @@
 		var layer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
 
 		layers.push(layer);
+
+        /*
 		layers.push(new ol.layer.Tile({
 			source: new ol.source.XYZ({
 				attributions: [
 					ol.source.OSM.ATTRIBUTION
 				],
                 urls: members.config.servers.osm
+			}),
+			opacity: ($('#base-layer-opacity').val() / 100.0)
+		}));
+        */
+
+		layers.push(new ol.layer.Tile({
+			source: new ol.source.TileWMS({
+				attributions: [
+					ol.source.OSM.ATTRIBUTION
+				],
+                url: members.config.servers.osm,
+                params: {
+					'SERVICE': 'WMS',
+					'VERSION': '1.1.1',
+					'LAYERS': 'osm'
+				}
 			}),
 			opacity: ($('#base-layer-opacity').val() / 100.0)
 		}));
