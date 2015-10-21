@@ -589,7 +589,7 @@
             mode: PublicaMundi.Maps.PermalinkTool.Mode.Embed
         });
 
-        members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
+        members.tools.parse = new PublicaMundi.Maps.CoordinateParser({
             element: 'action-parse',
             name: 'parse',
             image: 'content/images/coordinates-w.svg',
@@ -619,6 +619,22 @@
             title: 'action.set-position.title',
             map: members.map.control,
             projection: ol.proj.get($('#pos_epsg option:selected').val())
+        });
+
+        members.actions.clear = new PublicaMundi.Maps.Action({
+            element: 'action-clear',
+            name: 'clear',
+            image: 'content/images/clear-w.svg',
+            title: 'action.clear.title',
+            visible: true,
+            enabled: true,
+            class: 'btn-danger'
+        });
+
+        members.actions.clear.on('action:execute', function(args) {
+            for(var item in members.tools) {
+                members.tools[item].clear();
+            }
         });
 
         // UI tools

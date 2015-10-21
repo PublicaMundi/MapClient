@@ -58,6 +58,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			this.trigger('hide');
 		},
         localizeUI: function(locale) {
+        },
+        clear: function() {
         }
     });
 
@@ -2947,7 +2949,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 name: null,
                 image: '',
                 title: null,
-                visible: false
+                visible: false,
+                class: 'btn-primary'
 			});
 
             if (typeof PublicaMundi.Maps.Component.prototype.initialize === 'function') {
@@ -2962,7 +2965,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             var self = this;
 
             var content = [];
-            content.push('<a data-action="' + this.values.name + '" class="tool-action btn btn-primary" data-i18n-id="' + this.values.title +
+            content.push('<a data-action="' + this.values.name + '" class="tool-action btn ' + this.values.class + '" data-i18n-id="' + this.values.title +
 					     '" data-i18n-type="title" title="' + ( PublicaMundi.i18n.getResource(this.values.title) || '') + '">');
             content.push('<img class="img-20" src="' + this.values.image + '">');
             content.push('</a>');
@@ -4027,14 +4030,20 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     }),
                     new ol.style.Style({
                         zIndex: Infinity,
+                        image: new ol.style.Icon({
+                            anchor: [15,28],
+                            anchorXUnits: 'pixels',
+                            anchorYUnits: 'pixels',
+                            src: 'content/images/map-pin-filled.svg'
+                        }),
                         text: new ol.style.Text({
                             textAlign: 'center',
                             font: '10pt Tahoma,Arial Normal',
                             text: feature.get('label') || '',
                             fill: new ol.style.Fill({color: 'black'}),
-                            stroke: new ol.style.Stroke({color: 'white', width: 1}),
+                            stroke: new ol.style.Stroke({color: 'white', width: 2}),
                             offsetX: 0,
-                            offsetY: 0
+                            offsetY: 20
                         })
                     })
                 ]
@@ -4056,6 +4065,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     parse: {
                         text: 'control.parse.dialog.button.parse',
                         style: 'primary'
+                    },
+                    clear : {
+                        text: 'control.parse.dialog.button.clear',
+                        style: 'default'
                     },
                     close : {
                         text: 'control.parse.dialog.button.cancel',
@@ -4114,8 +4127,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.dialog.on('dialog:action', function(args){
                 switch(args.action){
+                    case 'clear':
+                        self.clear();
+                        break;
                     case 'close':
-                        self.values.overlay.getFeatures().clear();
                         this.hide();
                         break;
                     case 'parse':
@@ -4139,8 +4154,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             self.values.overlay.getFeatures().clear();
                             self.values.features = new ol.Collection;
 
-                            var ring = []
-                            for(var c=0; c<transformed.length; c++) {
+                            var ring = [];
+                            for(var c=0; c<transformed.length-1; c++) {
                                 ring.push(transformed[c]);
 
                                 var point = new ol.geom.Point(transformed[c]);
@@ -4160,7 +4175,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 label: '',
                                 geometry: geom
                             });
-                            self.values.features.push(feature);
+                            self.values.features.insertAt(0, feature);
 
                             self.values.overlay.setFeatures(self.values.features);
 
@@ -4188,7 +4203,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         execute: function() {
 			this.values.dialog.show();
-		}
+		},
+        clear: function() {
+            this.values.overlay.getFeatures().clear();
+        }
     });
 
     return PublicaMundi;

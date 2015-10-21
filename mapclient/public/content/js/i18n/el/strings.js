@@ -63,6 +63,7 @@
     "control.parse.dialog.title" : "Εισαγωγή συντεταγμένων",
     "control.parse.dialog.button.parse" : "Ανάλυση κειμένου",
     "control.parse.dialog.button.cancel" : "Ακύρωση",
+    "control.parse.dialog.button.clear" : "Διαγραφή",
     "control.parse.dialog.label.crs" : "Σύστημα αναφοράς",
     "control.parse.dialog.label.delimiter" : "Διαχωριστικό δεκαδικών",
     "control.parse.dialog.label.text" : "Συντεταγμένες",
@@ -98,6 +99,8 @@
     "control.set-position.dialog.label.x" : "Χ",
     "control.set-position.dialog.label.y" : "Υ",
     "control.set-position.dialog.button.move" : "Ενημέρωση",
+
+    "action.clear.title" : "Καθαρισμός χάρτη",
 
     "button.create" : "Δημιουργία",
     "button.close" : "Κλείσιμο"
