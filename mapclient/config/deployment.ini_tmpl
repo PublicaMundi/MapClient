@@ -36,7 +36,8 @@ mapclient.url.catalog = http://web.dev.publicamundi.eu/
 mapclient.catalog.metadata.database = false
 mapclient.catalog.metadata.relative =
 mapclient.catalog.metadata.physical =
-mapclient.feedback.url =
+mapclient.feedback.url.el =
+mapclient.feedback.url.en =
 
 #Proxy
 

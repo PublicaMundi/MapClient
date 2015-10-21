@@ -971,6 +971,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 properties.loading = false;
                                 $(element).addClass('tree-node-collapse');
                                 $(parent).find('ul').first().fadeIn(250);
+                            }, function(reason) {
+                                $(element).attr('src', 'content/images/show.svg');
+                                $(element).removeClass('tree-node-ajax-loader');
+                                properties.loading = false;
                             });
 						}
 					}
@@ -1188,7 +1192,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         if(fireEvents!==false) {
                             self.trigger('layer:added', {sender: self, id: id});
                         }
-					});
+					}, function(reason) {
+                        properties.loading = false;
+                        $(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checkbox-empty.svg');
+                    });
 				}
 			}
 		},
@@ -1633,7 +1640,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(resource, title), legend);
 
                     return true;
-				});
+				}, function(reason) {
+                    return false;
+                });
 
 				return true;
 			} else if(metadata) {

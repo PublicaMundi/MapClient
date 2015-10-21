@@ -22,13 +22,13 @@
     members.config.path = members.config.path || '/';
 
     PublicaMundi.Data.configure({
-        proxy: PublicaMundi.getProxyUrl(module.config().proxy),
+        proxy: PublicaMundi.getProxyUrl(members.config.proxy),
         endpoint: members.config.path,
-        wps: module.config().api.wps
+        wps: members.config.api.wps
     });
 
     PublicaMundi.Data.WPS.configure({
-        debug: module.config().debug,
+        debug: members.config.debug,
         mappings : {
             'Buffer': {
                 id: 'ogr.Buffer',
@@ -137,16 +137,7 @@
 				});
 				break;
 			case 'ktimatologio':
-				/* http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx?
-				   SERVICE=WMS&VERSION=1.1.0&
-				   REQUEST=GetMap&
-				   FORMAT=image%2Fpng&
-				   TRANSPARENT=true&
-				   LAYERS=KTBASEMAP&
-				   WIDTH=256&HEIGHT=256&SRS=EPSG%3A900913&
-				   STYLES=&
-				   BBOX=2504688.542848654%2C4852834.0517692715%2C2661231.576776695%2C5009377.085697313
-			   */
+                /*
 				var params = {
 					'SERVICE': 'WMS',
 					'VERSION': '1.1.0',
@@ -164,6 +155,37 @@
 								  '<img src="content/images/ktimatologio-logo.png"/></a>'
 						})
 					]
+				});
+                */
+
+                var tileGrid = new ol.tilegrid.TileGrid({
+                        origin: [1948226, 4024868],
+                        extent: [1948226, 4024868, 4008846, 5208724],
+                        tileSize: 512,
+                        resolutions: [156543.03390000001, 78271.516950000005, 39135.758475000002, 19567.879237500001, 9783.9396187500006, 4891.9698093750003, 2445.9849046875001,
+                                      1222.9924523437501, 611.49622617187504, 305.74811308593752, 152.87405654296876, 76.43702827148438, 38.21851413574219, 19.109257067871095,
+                                      9.5546285339355475, 4.7773142669677737, 2.3886571334838869, 1.1943285667419434, 0.59716428337097172, 0.29858214168548586, 0.14929107084274293,
+                                      0.074645535421371464, 0.037322767710685732, 0.018661383855342866]
+                });
+
+				var source = new ol.source.TileWMS({
+					urls: members.config.servers.tilecache,
+					params: {
+                        VERSION: '1.1.0',
+                        LAYERS: 'ktimatologio',
+                        TRANSPARENT :true,
+                        WIDTH: 512,
+                        HEIGHT: 512
+                    },
+					projection: 'EPSG:900913',
+					attributions: [
+						new ol.Attribution({
+							html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
+								  'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
+								  '<img src="content/images/ktimatologio-logo.png"/></a>'
+						})
+					],
+                    tileGrid: tileGrid
 				});
 
 				var fn = source.tileUrlFunction;
@@ -221,7 +243,7 @@
             zoom: getDefaultZoomLevel(),
             minZoom: members.config.map.minZoom,
             maxZoom: members.config.map.maxZoom,
-            extent: [-20026376.39, -20048966.10, 20026376.39, 20048966.10]
+            extent: [-20037508.3392, -20048966.10, 20037508.3392, 20048966.10]
         });
 
         var layers = [];
@@ -231,10 +253,11 @@
 
 		layers.push(layer);
 		layers.push(new ol.layer.Tile({
-			source: new ol.source.OSM({
+			source: new ol.source.XYZ({
 				attributions: [
 					ol.source.OSM.ATTRIBUTION
-				]
+				],
+                urls: members.config.servers.osm
 			}),
 			opacity: ($('#base-layer-opacity').val() / 100.0)
 		}));
@@ -396,7 +419,7 @@
         // Resource manager
 		members.resources = new PublicaMundi.Maps.ResourceManager({
             path: members.config.path,
-			proxy: PublicaMundi.getProxyUrl(module.config().proxy),
+			proxy: PublicaMundi.getProxyUrl(members.config.proxy),
 			extent: members.config.map.extent,
             maxLayerCount: 5
 		});
@@ -505,7 +528,7 @@
 
         if(members.config.feedback) {
             $('.feedback-label').click(function() {
-                window.open(members.config.feedback);
+                window.open(members.config.feedback[PublicaMundi.i18n.getLocale()]);
             });
         }
 
@@ -1242,5 +1265,6 @@
         });
     };
 
+    window.members = members;
     return PublicaMundi;
 });

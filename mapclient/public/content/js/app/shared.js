@@ -417,6 +417,8 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                         __object.setOpacity(opacity / 100.0);
                     }
                 }
+            }, function(reason) {
+                console.log('Failed to add resource [' + resource.id + '] from the catalog');
             });
         },
         getResourceTypes: function () {
