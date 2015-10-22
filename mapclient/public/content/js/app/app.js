@@ -158,6 +158,7 @@
 				});
                 */
 
+                /*
                 var tileGrid = new ol.tilegrid.TileGrid({
                         origin: [1948226, 4024868],
                         extent: [1948226, 4024868, 4008846, 5208724],
@@ -211,6 +212,28 @@
 				layer = new ol.layer.Tile({
 					source: source
 				});
+                */
+
+                layer = new ol.layer.Tile({
+                    source: new ol.source.TileWMS({
+                        projection: 'EPSG:900913',
+                        attributions: [
+                            new ol.Attribution({
+                                html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
+                                      'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
+                                      '<img src="content/images/ktimatologio-logo.png"/></a>'
+                            })
+                        ],
+                        url: members.config.servers.tilecache,
+                        params: {
+                            'SERVICE': 'WMS',
+                            'VERSION': '1.1.0',
+                            'LAYERS': 'ktimatologio'
+                        }
+                    }),
+                    opacity: ($('#base-layer-opacity').val() / 100.0)
+                });
+
 				break;
 			default:
 				console.log('Base layer of type ' + type + ' is not supported.');
