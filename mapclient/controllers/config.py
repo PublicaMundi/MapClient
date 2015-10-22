@@ -125,10 +125,13 @@ class ConfigController(BaseController):
 
     def embed(self, id):
         try:
-            config = self._expand(id)
+            configuration = self._expand(id)
+
+            if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
+                c.google = config['mapclient.google.analytics']
 
             c.lib = config['lib'] if 'lib' in config else 'leaflet'
-            c.config = json.dumps(config)
+            c.config = json.dumps(configuration)
         except Exception as ex:
             log.error(ex)
 
