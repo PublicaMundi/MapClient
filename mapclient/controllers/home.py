@@ -26,8 +26,10 @@ class HomeController(BaseController):
 
         return False
 
-
     def index(self):
+        if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
+            c.google = config['mapclient.google.analytics']
+
         # Get metadata version
         c.metadata = {
             'version' : ''

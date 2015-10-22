@@ -39,6 +39,13 @@ mapclient.catalog.metadata.physical =
 mapclient.feedback.url.el =
 mapclient.feedback.url.en =
 
+mapclient.servers.osm =
+mapclient.servers.mapproxy =
+mapclient.servers.tilecache =
+
+# Google Analytics
+mapclient.google.analytics =
+
 #Proxy
 
 # Response size limit (in bytes)
