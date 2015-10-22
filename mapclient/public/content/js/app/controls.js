@@ -699,14 +699,28 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                             this.values.resources.setCatalogResourceMetadataOptions(resources[r]);
 
+                            var resourceId = resources[r].id ;
+                            var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
+
+                            // For filtered packages with a single resoucrce (CKAN catalog search) ...
+                            if((this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) &&
+                               (packages[p].resources.length == 1)){
+                                // If resource is already preloaded ...
+                                var resource = this.values.ckan.getResourceById(resourceId);
+                                if(resource) {
+                                    // use existing resource name
+                                    caption = resource.name[PublicaMundi.i18n.getLocale()];
+                                } else {
+                                    // or override resource name by package title
+                                    caption = packages[p].title[PublicaMundi.i18n.getLocale()];
+                                }
+                            }
+
                             if((resources[r].metadata) &&
                                (!!resources[r].metadata.extras.layer)) {
 
-                                var resourceId = resources[r].id ;
                                 var layerId = resourceId + '_' + resources[r].metadata.extras.layer;
                                 var selected = this.values.resources.isLayerSelected(layerId);
-
-                                var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
 
                                 var properties = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
@@ -735,10 +749,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             } else {
-                                var resourceId = resources[r].id ;
-
-                                var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
-
                                 var properties = {
                                     id: resourceId,
                                     expanded: false,
