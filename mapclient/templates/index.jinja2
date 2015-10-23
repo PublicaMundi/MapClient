@@ -72,9 +72,13 @@
                         el: '{{config['mapclient.feedback.url.el']}}'
                     },
                     servers: {
-                        osm: {{ config['mapclient.servers.osm'].split(',') }},
-                        mapproxy : {{ config['mapclient.servers.mapproxy'].split(',') }},
-                        tilecache: {{ config['mapclient.servers.tilecache'].split(',') }}
+                        osm: {{ c.servers.osm }},
+                        mapproxy : {{ c.servers.mapproxy }},
+                        tilecache: {{ c.servers.tilecache }}
+                    },
+                    layers: {
+                        osm: '{{ config['mapclient.base.layers.osm'] }}',
+                        ktimatologio: '{{ config['mapclient.base.layers.ktimatologio'] }}',
                     }
                 }
             }

@@ -39,8 +39,16 @@ mapclient.catalog.metadata.physical =
 mapclient.feedback.url.el =
 mapclient.feedback.url.en =
 
+# OSM layer name
+mapclient.base.layers.osm = osm
+# NCMA (EKXA) layer name (default layer name: KTBASEMAP)
+mapclient.base.layers.ktimatologio = ktimatologio
+
+# Custom OSM XYZ service
 mapclient.servers.osm =
+# Map Proxy service
 mapclient.servers.mapproxy =
+# Tilecache
 mapclient.servers.tilecache =
 
 # Google Analytics
