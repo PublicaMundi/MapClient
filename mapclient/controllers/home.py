@@ -27,6 +27,14 @@ class HomeController(BaseController):
         return False
 
     def index(self):
+        # Servers
+        c.servers = {
+            'mapproxy' : filter(None, [s.strip() for s in config['mapclient.servers.mapproxy'].split(',')]),
+            'tilecache' : filter(None, [s.strip() for s in config['mapclient.servers.tilecache'].split(',')]),
+            'osm' : filter(None, [s.strip() for s in config['mapclient.servers.osm'].split(',')])
+        }
+
+        # Google Analytics
         if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
             c.google = config['mapclient.google.analytics']
 
