@@ -24,22 +24,22 @@ class ProxyController(BaseController):
         if parts.port and not parts.port in [80, 8080]:
             log.warn('Port {port} in url {url} is not allowed.'.format(port = parts.port, url = urlparse.urlunparse(parts)))
             abort(409, detail = 'Invalid URL.')
-        
+
         if not parts.query:
             log.warn('Missing query string in url {url}.'.format(url = urlparse.urlunparse(parts)))
             abort(409, detail = 'Invalid URL.')
-        
+
         invalidQuery = False
         query = urlparse.parse_qs(parts.query)
-        
+
         for prop in query:
-            if not prop in ['service', 'request']:
+            if not prop in ['service', 'request', 'map']:
                 invalidQuery = True
                 log.warn('Query string parameter [{parameter}] is not supported.'.format(parameter = prop))
 
             if prop == 'service' and len(query[prop]) != 1:
                 invalidQuery = True
-                log.warn('Query string parameter [{parameter}] should have a single value.'.format(parameter = prop))               
+                log.warn('Query string parameter [{parameter}] should have a single value.'.format(parameter = prop))
 
             if prop == 'service' and query[prop][0].lower() != 'wms':
                 invalidQuery = True
@@ -52,11 +52,9 @@ class ProxyController(BaseController):
             if prop == 'request' and query[prop][0].lower() != 'getcapabilities':
                 invalidQuery = True
                 log.warn('Value {value} for query string parameter [{parameter}] is not supported.'.format(parameter = prop, value = query[prop]))
-            
+
         if invalidQuery:
             abort(409, detail = 'Invalid URL.')
-                
-        
 
     def _isUrlInWhiteList(self, parts):
         prefix = urlparse.urlunparse((parts[0], parts[1], parts[2], None, None, None, ))
@@ -134,4 +132,4 @@ class ProxyController(BaseController):
         except requests.exceptions.Timeout, error:
             details = 'Could not proxy resource because the connection timed out.'
             abort(504, detail=details)
-           
+

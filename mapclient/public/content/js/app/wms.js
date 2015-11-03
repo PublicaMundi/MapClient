@@ -65,6 +65,12 @@
                 service: 'WMS',
                 version: '1.3.0'
             };
+
+            var getCapabilitiesQuery  = {
+                request : 'GetCapabilities',
+                service : 'WMS'
+            };
+
             var layers = [];
 
             var parts = URI.parse(options.url) || {};
@@ -73,9 +79,11 @@
             for (var param in params) {
                 if ((param.toLowerCase() === 'version') && (params[param])) {
                     defaults[param] = params[param];
+                    getCapabilitiesQuery[param] = params[param];
                 }
                 if ((param.toLowerCase() === 'map') && (params[param])) {
                     defaults[param] = params[param];
+                    getCapabilitiesQuery[param] = params[param];
                 }
                 if ((param.toLowerCase() === 'layers') && (params[param])) {
                     defaults[param] = params[param];
@@ -103,7 +111,7 @@
 				hostname: parts.hostname,
 				port: (parts.port === '80' ? '' : parts.port),
 				path: parts.path,
-				query: URI.buildQuery({ request : 'GetCapabilities', service : 'WMS' })
+				query: URI.buildQuery(getCapabilitiesQuery)
 			});
 
             if (PublicaMundi.isProxyRequired(window.location.href, getCapabilitiesUrl)) {
@@ -222,7 +230,8 @@
         },
         create: function (map, metadata, layer, title) {
             var params = {
-                'LAYERS': layer
+                'LAYERS': layer,
+                tiled: true
             };
 
             for (var param in metadata.parameters) {
