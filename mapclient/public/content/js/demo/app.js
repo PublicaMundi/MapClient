@@ -329,19 +329,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 return;
             }
         }
+        if(Array.isArray(response.data[0])) {
+            $('#tabs').tabs('option', 'active', 1);
+        } else {
+            var format = new ol.format.GeoJSON();
+            var features = format.readFeatures(response.data[0], {
+                dataProjection: 'EPSG:3857',
+                featureProjection: 'EPSG:3857'
+            });
 
-        var format = new ol.format.GeoJSON();
-        var features = format.readFeatures(response.data[0], {
-            dataProjection: 'EPSG:3857',
-            featureProjection: 'EPSG:3857'
-        });
+            vectorSource.clear();
+            vectorSource.addFeatures(features);
 
-        vectorSource.clear();
-        vectorSource.addFeatures(features);
+            map.getView().fitExtent(vectorSource.getExtent(), map.getSize());
 
-        map.getView().fitExtent(vectorSource.getExtent(), map.getSize());
-
-        $('#tabs').tabs('option', 'active', 0);
+            $('#tabs').tabs('option', 'active', 0);
+        }
     };
 
     var onFailure = function(message, execution) {
