@@ -4,8 +4,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-from paste.deploy.converters import asbool
-
 from pylons import config, request, response, session, url, tmpl_context as c
 from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import rest

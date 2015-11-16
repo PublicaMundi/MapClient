@@ -1,4 +1,4 @@
-﻿define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
+﻿define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (module, $, ol, URI, API, PublicaMundi) {
     "use strict";
 
     var members = {
@@ -6,6 +6,7 @@
 			section: 'group'
 		},
         config: module.config(),
+        ckan: null,
         ckan: null,
         resources: null,
         map: {
@@ -21,13 +22,13 @@
 
     members.config.path = members.config.path || '/';
 
-    PublicaMundi.Data.configure({
+    API.Data.configure({
         proxy: PublicaMundi.getProxyUrl(members.config.proxy),
         endpoint: members.config.path,
         wps: members.config.api.wps
     });
 
-    PublicaMundi.Data.WPS.configure({
+    API.Data.WPS.configure({
         debug: members.config.debug,
         mappings : {
             'Buffer': {
@@ -161,7 +162,7 @@
                             new ol.Attribution({
                                 html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
                                       'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                      '<img src="content/images/ktimatologio-logo.png"/></a>'
+                                      '<img src="content/images/app/ktimatologio-logo.png"/></a>'
                             })
                         ],
                         tileGrid: tileGrid
@@ -199,7 +200,7 @@
                                 new ol.Attribution({
                                     html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
                                           'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                          '<img src="content/images/ktimatologio-logo.png"/></a>'
+                                          '<img src="content/images/app/ktimatologio-logo.png"/></a>'
                                 })
                             ],
                             url: members.config.servers.mapproxy,
@@ -226,7 +227,7 @@
                             new ol.Attribution({
                                 html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
                                       'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                      '<img src="content/images/ktimatologio-logo.png"/></a>'
+                                      '<img src="content/images/app/ktimatologio-logo.png"/></a>'
                             })
                         ]
                     });
@@ -440,7 +441,7 @@
 
         $('#map').offset({top : headerHeight , left : 0}).height(height - footerHeight + 10);
 
-        $('.resource-data-search').width(width - 933);
+        $('.resource-data-search').width(width - 893 + ($('#base-layer-label').is(':visible') ? 0 : 270));
 
         if($('#panel-left-splitter').is(":visible")) {
             $('#panel-left-splitter').css('left', $('#panel-left').width());
@@ -457,7 +458,7 @@
                         bottom: PublicaMundi.i18n.getResource('index.topics.position')[1],
                         right: PublicaMundi.i18n.getResource('index.topics.position')[0]
                     });
-                    $('.panel-left-label-image').attr('src', 'content/images/topics.svg');
+                    $('.panel-left-label-image').attr('src', 'content/images/app/topics.svg');
                     $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.topics')).css('padding', '4px 0 0 7px');
                     break;
                 case 'organization':
@@ -465,7 +466,7 @@
                         bottom: PublicaMundi.i18n.getResource('index.organizations.position')[1],
                         right: PublicaMundi.i18n.getResource('index.organizations.position')[0]
                     });
-                    $('.panel-left-label-image').attr('src', 'content/images/organization.svg');
+                    $('.panel-left-label-image').attr('src', 'content/images/app/organization.svg');
                     $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.organizations')).css('padding', '4px 0 0 7px');
                     break;
                 case 'search':
@@ -473,7 +474,7 @@
                         bottom: PublicaMundi.i18n.getResource('index.search.position')[1],
                         right: PublicaMundi.i18n.getResource('index.search.position')[0]
                     });
-                    $('.panel-left-label-image').attr('src', 'content/images/search.svg');
+                    $('.panel-left-label-image').attr('src', 'content/images/app/search.svg');
                     $('.panel-left-label-text').html(PublicaMundi.i18n.getResource('index.search')).css('padding', '0px 0 0 7px');
                     break;
             }
@@ -593,7 +594,7 @@
         members.actions.restoreZoomLevel = new PublicaMundi.Maps.Action({
             element: 'restore-zoom',
             name: 'restore-zoom',
-            image: 'content/images/restore-zoom-w.svg',
+            image: 'content/images/app/restore-zoom-w.svg',
             title: 'index.resotre-zoom',
             visible: true
         });
@@ -611,7 +612,7 @@
         members.actions.export = new PublicaMundi.Maps.Action({
             element: 'action-export',
             name: 'export',
-            image: 'content/images/download-w.svg',
+            image: 'content/images/app/download-w.svg',
             title: 'action.export.title',
             visible: false
         });
@@ -619,7 +620,7 @@
         members.actions.import = new PublicaMundi.Maps.ImportWmsTool({
             element: 'action-wms',
             name: 'wms',
-            image: 'content/images/add-layer-w.svg',
+            image: 'content/images/app/add-layer-w.svg',
             title: 'action.import-wms.title',
             map: members.map.control,
             resources: members.resources
@@ -634,7 +635,7 @@
         members.actions.upload = new PublicaMundi.Maps.UploadFileTool({
             element: 'action-upload',
             name: 'upload',
-            image: 'content/images/upload-w.svg',
+            image: 'content/images/app/upload-w.svg',
             title: 'action.upload-resource.title',
             map: members.map.control,
             resources: members.resources,
@@ -644,7 +645,7 @@
         members.actions.link = new PublicaMundi.Maps.PermalinkTool({
             element: 'action-link',
             name: 'link',
-            image: 'content/images/permalink-w.svg',
+            image: 'content/images/app/permalink-w.svg',
             title: 'action.create-link.title',
             map: members.map.control,
             resources: members.resources,
@@ -656,7 +657,7 @@
         members.actions.embed = new PublicaMundi.Maps.PermalinkTool({
             element: 'action-embed',
             name: 'embed',
-            image: 'content/images/embed-map-w.svg',
+            image: 'content/images/app/embed-map-w.svg',
             title: 'action.create-link-embed.title',
             map: members.map.control,
             resources: members.resources,
@@ -668,7 +669,7 @@
         members.actions.parse = new PublicaMundi.Maps.CoordinateParser({
             element: 'action-parse',
             name: 'parse',
-            image: 'content/images/coordinates-w.svg',
+            image: 'content/images/app/coordinates-w.svg',
             title: 'action.parse-coordinates.title',
             map: members.map.control,
             resources: members.resources
@@ -691,7 +692,7 @@
         members.actions.position = new PublicaMundi.Maps.PositionTool({
             element: 'action-position',
             name: 'position',
-            image: 'content/images/map-location-w.svg',
+            image: 'content/images/app/map-location-w.svg',
             title: 'action.set-position.title',
             map: members.map.control,
             projection: ol.proj.get($('#pos_epsg option:selected').val())
@@ -700,7 +701,7 @@
         members.actions.clear = new PublicaMundi.Maps.Action({
             element: 'action-clear',
             name: 'clear',
-            image: 'content/images/clear-w.svg',
+            image: 'content/images/app/clear-w.svg',
             title: 'action.clear.title',
             visible: true,
             enabled: true,
@@ -714,6 +715,9 @@
             for(var item in members.actions) {
                 members.actions[item].clear();
             }
+            for(var item in members.components) {
+                members.components[item].clear();
+            }
         });
 
         // UI tools
@@ -721,8 +725,8 @@
             element: 'tool-length',
             name: 'length',
             images: {
-                enabled: 'content/images/distance-w.svg',
-                disabled: 'content/images/distance.svg'
+                enabled: 'content/images/app/distance-w.svg',
+                disabled: 'content/images/app/distance.svg'
             },
             title: 'tool.length.title',
             map: members.map.control,
@@ -733,8 +737,8 @@
             element: 'tool-area',
             name: 'area',
             images: {
-                enabled: 'content/images/area-w.svg',
-                disabled: 'content/images/area.svg'
+                enabled: 'content/images/app/area-w.svg',
+                disabled: 'content/images/app/area.svg'
             },
             title: 'tool.area.title',
             map: members.map.control,
@@ -745,8 +749,8 @@
             element: 'tool-export',
             name: 'export',
             images: {
-                enabled: 'content/images/draw-polygon-w.svg',
-                disabled: 'content/images/draw-polygon.svg'
+                enabled: 'content/images/app/draw-polygon-w.svg',
+                disabled: 'content/images/app/draw-polygon.svg'
             },
             title: 'tool.export.title',
             map: members.map.control,
@@ -919,7 +923,7 @@
         var resetCatalogObjectInfo = function(args) {
             if(args.title) {
                 members.components.catalogInfoDialog.setTitle(args.title[PublicaMundi.i18n.getLocale()]);
-                members.components.catalogInfoDialog.setContent('<div style="width: 100%; text-align: center;"><img style="text-align: center;" src="content/images/ajax-loader-big.gif"></div>');
+                members.components.catalogInfoDialog.setContent('<div style="width: 100%; text-align: center;"><img style="text-align: center;" src="content/images/app/ajax-loader-big.gif"></div>');
                 members.components.catalogInfoDialog.show();
             }
         };

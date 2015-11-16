@@ -27,9 +27,9 @@
             'lib/ol3/ol.3.5.0'
         ],
         URIjs: 'lib/uri',
-        app: 'app/app',
+        app: 'app/client',
         controls: 'app/controls',
-        shared: 'app/shared',
+        shared: 'shared/shared',
         wms: 'app/wms',
         file: 'app/file',
         proj4: 'lib/proj4js/proj4',
@@ -105,7 +105,8 @@
             deps: [
                 'shared',
                 'typeahead',
-				'handlebars'
+				'handlebars',
+                'data_api'
             ]
         },
         app: {
@@ -194,15 +195,13 @@ requirejs.onResourceLoad = function (context, map, depArray) {
 	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (initialization.scriptCounter) / initialization.scriptTotal).toFixed(0) + '%'
 };
 
-define('main-mobile', function () {
+define('client-main-mobile', function () {
     "use strict";
 
     require(['jquery', 'app'], function ($, PublicaMundi) {
         $(function () {
             // Add code for application initialization here
             PublicaMundi.initialize();
-
-            window.PublicaMundi = PublicaMundi;
         });
     });
 });

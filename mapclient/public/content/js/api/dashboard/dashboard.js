@@ -1,5 +1,15 @@
-define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
+define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (module, $, ol, URI, API, PublicaMundi) {
     "use strict";
+
+    // Properties
+    var properties = {
+        resources: null,
+        layer: null,
+        map: {
+            query : null,
+            layer: null
+        }
+    };
 
     var queryIndex = 0;
 
@@ -9,7 +19,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         WPS: 'wps'
     };
 
-    var index = window.location.href.indexOf('demo/data-api.html');
+    var index = window.location.href.indexOf('api/dashboard');
     var relativePath = window.location.href.substr(0, index);
 
     // Data API configuration options
@@ -17,20 +27,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         debug: module.config().debug,
         endpoint: relativePath,
         proxy: relativePath + 'proxy/proxy_resource?url=',
-        alias: {
-            'cities' : '97569331-a2fb-45eb-92c9-064ef4f70d38',
-            'blocksKalamaria' : 'd0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6',
-            'roadsKalamaria': '9e5f0732-092b-4a36-9b2b-6cc3b3f78ab6',
-            'blueFlags2010' : 'ad815665-ec88-4e81-a27a-8d72cffa7dd2'
-        },
+        alias: module.config().api.alias,
         wps: {
             corsEnabled: false,
-            endpoint: 'http://zoo.dev.publicamundi.eu/cgi-bin/zoo_loader.cgi',
+            endpoint: module.config().api.wps,
             delay: 2000
         }
     };
 
-    PublicaMundi.Data.configure(options);
+    API.Data.configure(options);
 
     // Data API WPS extension configuration options
     var wpsOptions = {
@@ -86,19 +91,71 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     };
 
-    PublicaMundi.Data.WPS.configure(wpsOptions);
+    API.Data.WPS.configure(wpsOptions);
 
-    var suspendUI = function() {
+    var suspendActionUI = function() {
         $('.action-img-button').addClass('action-img-button-disabled').removeClass('action-img-button');
     };
 
-    var resumeUI = function() {
+    var resumeActionUI = function() {
         $('.action-img-button-disabled').addClass('action-img-button').removeClass('action-img-button-disabled');
     };
 
     var isBusy = function() {
         return $('.progress-loader').is(':visible');
     };
+
+    var createOSM = function() {
+        if(module.config().servers.osm.length > 0) {
+            // 1: Use custom XYZ source
+            return new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ],
+                    urls: module.config().servers.osm
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        } else if(module.config().servers.mapproxy.length > 0) {
+            // 2: User Map Proxy
+            return new ol.layer.Tile({
+                source: new ol.source.TileWMS({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ],
+                    url: module.config().servers.mapproxy,
+                    params: {
+                        'SERVICE': 'WMS',
+                        'VERSION': '1.1.1',
+                        'LAYERS': module.config().layers.osm
+                    }
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        } else {
+            // 3: Use default OSM tiles (not recommended)
+            // http://wiki.openstreetmap.org/wiki/Tile.openstreetmap.org/Usage_policy
+
+            return new ol.layer.Tile({
+                source: new ol.source.OSM ({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        }
+    };
+
+    properties.map.layer = new ol.Map({
+        layers: [createOSM()],
+        target: 'map-layer',
+        view: new ol.View({
+            center: [2448716, 4600000],
+            zoom: 9
+        })
+    });
 
     var queryEditor = CodeMirror.fromTextArea(document.getElementById('query'), {
         lineNumbers: true,
@@ -117,7 +174,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
     var outputEditor = CodeMirror.fromTextArea(document.getElementById('output'), {
         lineNumbers: true,
-        mode: 'text/javascript',
+        mode: 'application/json',
         matchBrackets: true,
         lineWrapping: true,
         tabSize: 8,
@@ -126,21 +183,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
     var jsonSyntaxEditor = CodeMirror.fromTextArea(document.getElementById('json-syntax'), {
         lineNumbers: true,
-        mode: 'text/javascript',
+        mode: 'application/json',
         matchBrackets: true,
         lineWrapping: true,
         tabSize: 8,
         readOnly: true
-    });
-
-    $.ajax({
-        url: '../content/js/demo/json-syntax.js',
-        context: this,
-        dataType: 'text'
-    }).done(function(data, textStatus, jqXHR) {
-        $('#json-syntax').val(data);
-        jsonSyntaxEditor.setValue($('#json-syntax').val());
-        jsonSyntaxEditor.refresh();
     });
 
     $('img.action-button').tooltip();
@@ -173,12 +220,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         $('#query_size, #query_time').hide();
         $('.progress-loader').show();
 
-        var query = new PublicaMundi.Data.Query();
+        var query = new API.Data.Query();
 
         query.getProcesses({
             success: function(data) {
                 $('#output').val(JSON.stringify(data, null, ' '));
-                $('#tabs').tabs('option', 'active', 1);
+                $('#examples-tabs').tabs('option', 'active', 1);
                 outputEditor.setValue($('#output').val());
 
                 var processes = data.Capabilities.ProcessOfferings.Process;
@@ -210,13 +257,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         $('#query_size, #query_time').hide();
         $('.progress-loader').show();
 
-        var query = new PublicaMundi.Data.Query();
+        var query = new API.Data.Query();
 
         query.describeProcess({
             id: $('#process_id').val(),
             success : function(data) {
                 $('#output').val(JSON.stringify(data, null, ' '));
-                $('#tabs').tabs('option', 'active', 1);
+                $('#examples-tabs').tabs('option', 'active', 1);
                 outputEditor.setValue($('#output').val());
             },
             complete: function() {
@@ -227,7 +274,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
     var resourceShow = function(data, execution) {
         $('#output').val(JSON.stringify(data, null, ' '));
-        $('#tabs').tabs('option', 'active', 1);
+        $('#examples-tabs').tabs('option', 'active', 1);
         outputEditor.setValue($('#output').val());
 
         renderExecutionStats(execution);
@@ -253,7 +300,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         $('#query_size, #query_time').hide();
         $('.progress-loader').show();
 
-        var query = new PublicaMundi.Data.Query();
+        var query = new API.Data.Query();
 
         query.getResources({
             context: this,
@@ -268,7 +315,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         renderExecutionStats(execution);
 
         $('#output').val(JSON.stringify(data, null, ' '));
-        $('#tabs').tabs('option', 'active', 1);
+        $('#examples-tabs').tabs('option', 'active', 1);
         outputEditor.setValue($('#output').val());
     };
 
@@ -276,7 +323,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         $('#query_size, #query_time').hide();
         $('.progress-loader').show();
 
-        var query = new PublicaMundi.Data.Query();
+        var query = new API.Data.Query();
 
         query.describeResource({
             id: $('#resource_id').val(),
@@ -311,7 +358,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             jQuery('#export-download-frame').remove();
             jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + relativePath + 'api/download/' + data.code + '"></iframe></div>');
         } else {
-            $('#tabs').tabs('option', 'active', 1);
+            $('#examples-tabs').tabs('option', 'active', 1);
         }
     }
 
@@ -325,12 +372,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
         if('success' in response) {
             if(!response.success) {
-                $('#tabs').tabs('option', 'active', 1);
+                $('#examples-tabs').tabs('option', 'active', 1);
                 return;
             }
         }
         if(Array.isArray(response.data[0])) {
-            $('#tabs').tabs('option', 'active', 1);
+            $('#examples-tabs').tabs('option', 'active', 1);
         } else {
             var format = new ol.format.GeoJSON();
             var features = format.readFeatures(response.data[0], {
@@ -341,9 +388,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             vectorSource.clear();
             vectorSource.addFeatures(features);
 
-            map.getView().fitExtent(vectorSource.getExtent(), map.getSize());
+            properties.map.query.getView().fitExtent(vectorSource.getExtent(), properties.map.query.getSize());
 
-            $('#tabs').tabs('option', 'active', 0);
+            $('#examples-tabs').tabs('option', 'active', 0);
         }
     };
 
@@ -359,7 +406,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
     var onComplete = function() {
         $('.progress-loader').hide();
 
-        resumeUI();
+        resumeActionUI();
     };
 
     var initializeExecution = function() {
@@ -381,7 +428,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         var mode = $('.query-mode-option-selected').data('mode');
         switch(mode) {
             case QueryMode.JSON:
-                var query = new PublicaMundi.Data.Query();
+                var query = new API.Data.Query();
 
                 query.parse(queryEditor.getValue(' '));
 
@@ -395,7 +442,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         });
                         break;
                     case 'export':
-                        query.format(PublicaMundi.Data.Format.ESRI).export({
+                        query.format(API.Data.Format.ESRI).export({
                             context: this,
                             success: downloadFile,
                             failure: onFailure,
@@ -408,7 +455,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if(typeof PublicaMundi.queries[queryIndex].method === 'function' ) {
                     try {
                         var dynamicFunction = null;
-                        eval('dynamicFunction = function(onSuccess, onFailure, onComplete) { ' + queryEditor.getValue() + '};');
+                        var dynamicFunctionBody =  queryEditor.getValue();
+
+                        dynamicFunctionBody = dynamicFunctionBody.split('PublicaMundi.Data').join('API.Data');
+
+                        eval('dynamicFunction = function(onSuccess, onFailure, onComplete) { ' + dynamicFunctionBody + '};');
                         if(typeof dynamicFunction === 'function') {
                             dynamicFunction.call(this, onSuccess, onFailure, onComplete);
                         }
@@ -421,7 +472,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if(typeof PublicaMundi.queries[queryIndex].process === 'function' ) {
                     try {
                         var dynamicFunction = null;
-                        eval('dynamicFunction = function(onSuccess, onFailure, onComplete) { ' + queryEditor.getValue() + '};');
+                        var dynamicFunctionBody =  queryEditor.getValue();
+
+                        dynamicFunctionBody = dynamicFunctionBody.split('PublicaMundi.Data').join('API.Data');
+
+                        eval('dynamicFunction = function(onSuccess, onFailure, onComplete) { ' + dynamicFunctionBody + '};');
                         if(typeof dynamicFunction === 'function') {
                             dynamicFunction.call(this, onSuccess, onFailure, onComplete);
                         }
@@ -456,7 +511,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             case QueryMode.JSON:
                 var text = JSON.stringify(PublicaMundi.queries[index].query, null, '  ')
 
-                var config = PublicaMundi.Data.getConfiguration();
+                var config = API.Data.getConfiguration();
 
                 if(config.alias) {
                     for(var prop in config.alias) {
@@ -506,7 +561,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if(isBusy()) {
             return;
         }
-        suspendUI();
+        suspendActionUI();
 
         var mode = $('.query-mode-option-selected').data('mode');
         if(mode == QueryMode.WPS) {
@@ -521,7 +576,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if(isBusy()) {
             return;
         }
-        suspendUI();
+        suspendActionUI();
 
         var mode = $('.query-mode-option-selected').data('mode');
         if(mode != QueryMode.JSON) {
@@ -536,7 +591,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         if(isBusy()) {
             return;
         }
-        suspendUI();
+        suspendActionUI();
 
         var mode = $('.query-mode-option-selected').data('mode');
         if(mode != QueryMode.WPS) {
@@ -566,29 +621,36 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
+    var timeout = null;
+
+    var toggleResourceTiles = function() {
+        if(timeout) {
+            clearTimeout(timeout);
+            timeout = null;
+        }
+        timeout = setTimeout(function() {
+            var term = $('#resource-filter').val();
+            if(term) {
+                $('.resource-title').each(function(index, element) {
+                    if($(this).html().indexOf(term) == -1) {
+                        $(this).parents('.resource-tile').hide();
+                    } else {
+                        $(this).parents('.resource-tile').show();
+                    }
+                });
+            } else {
+                $('.resource-tile').show();
+            }
+        }, 250);
+    };
+
+    $('#resource-filter').on('keydown', function(e) {
+        toggleResourceTiles();
+    });
 
     var vectorLayer = new ol.layer.Vector({
         source: vectorSource
     });
-
-    var layers = [
-        new ol.layer.Tile({
-            source: new ol.source.OSM()
-        }),
-        /*new ol.layer.Tile({
-            source: new ol.source.TileWMS({
-                url: 'http://geoserver.dev.publicamundi.eu:8080/geoserver/wms',
-                params: {
-                    'VERSION': '1.3.0',
-                    'LAYERS': 'publicamundi:d0e3e91c-33e0-426c-b4b3-b9e2bc78a7f6',
-
-                    projection: ol.proj.get('EPSG:900913')
-                }
-
-            })
-        }),*/
-        vectorLayer
-    ];
 
     var select = new ol.interaction.Select({
         condition: ol.events.condition.click
@@ -626,48 +688,26 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         }
     });
 
-    var map = new ol.Map({
-        layers: layers,
+    properties.map.query = new ol.Map({
+        layers: [createOSM(), new ol.layer.Vector({ source: vectorSource })],
         target: 'map',
         view: new ol.View({
-            center: [2555281.3085910575, 4950157.678740002],
-            zoom: 15
+            center: [2748716, 4600000],
+            zoom: 7
         })
     });
 
-    map.addInteraction(select);
+    properties.map.query.addInteraction(select);
 
-    window.map = map;
-    window.vector = vectorLayer;
-
-    window.outputEditor = outputEditor;
-
-    var resize = function() {
-        $('#accordion-container').height($(window).height()-120);
-        $('#accordion').accordion('refresh');
-
-        $('#tabs-container').height($(window).height()-121).width($(window).width() - 470);
-        $('#tabs').tabs( 'refresh' );
-
-        $('#map').height($(window).height()-180).width($(window).width() - 485);
-
-        map.updateSize();
-
-        $('#query-container .CodeMirror').height($(window).height()-311);
-        queryEditor.refresh();
-
-        $('#tabs-2 .CodeMirror').height($(window).height()-176).width($(window).width() - 482);
-        outputEditor.refresh();
-
-        $('#tabs-3 .CodeMirror').height($(window).height()-176).width($(window).width() - 482);
-        outputEditor.refresh();
-    }
-
-    $('#accordion').accordion({
+    $('#examples-accordion').accordion({
         heightStyle: 'fill'
     });
 
-    $('#tabs').tabs({
+    $('body').on('focus', '.resource-tile-table', function() {
+        $(this).select();
+    });
+
+    $('#examples-tabs').tabs({
         heightStyle: 'fill',
         activate: function( event, ui ) {
             switch(ui.newTab.index()) {
@@ -683,13 +723,259 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
     $('button.action').button();
 
-    resize();
-    $(window).resize(resize);
+    // Resource loading
+    var loadResourcesFromCatalog = function(forceLoad) {
+        if((!properties.resources) || (forceLoad)) {
+            $.ajax({
+                url: '../metadata/load', // 'http://geodata.gov.gr/maps/metadata/load'
+                context: this,
+                dataType: 'json'
+            }).done(function(data, textStatus, jqXHR) {
+                var content = [], catalog = module.config().catalog;
 
-    setTimeout(function () {
-        $('#block-ui').fadeOut(300).hide();
-    }, 1000);
+                properties.resources = data;
+
+                for(var i=0; i < data.packages.length; i++) {
+                    var p = data.packages[i];
+                    for(var j=0; j < p.resources.length; j++) {
+                        var r = p.resources[j];
+                        if(r.queryable) {
+                            content.push('<div class="resource-tile">');
+
+                            content.push('<div class="clearfix resource-label">Title</div>');
+                            content.push('<div class="clearfix resource-title resource-value">' + p.title.en + '</div>');
+                            content.push('<div class="clearfix resource-label">Resource Id</div>');
+                            content.push('<div class="clearfix resource-value">');
+                            content.push('<div class="clearfix resource-tile-map"><img src="../content/images/api/dashboard/layers.svg" data-package="' + p.id + '" data-resource="' + r.id + '" /></span></div>');
+                            content.push('<div class="clearfix resource-value-text"><input value="' + r.queryable.resource + '" class="resource-tile-table" /></div>');
+                            content.push('</div>');
+                            content.push('<div class="clearfix resource-label">SRID</div>');
+                            content.push('<div class="clearfix resource-value">' + r.queryable.srid + '</div>');
+
+                            var mapLink = '../?package=' + p.id + '&resource=' + r.id;
+                            var catalogLink = catalog + 'dataset/' + p.id;
+
+                            content.push('<div class="clearfix">');
+                            content.push('<a class="resource-tile-link" href="' + catalogLink + '" target="_blank">View in catalog</a>');
+                            content.push('<a class="resource-tile-link" href="' + mapLink+ '" target="_blank">View in maps</a>');
+                            content.push('</div>');
+
+                            content.push('</div>');
+                        }
+                    }
+                }
+                $('#resource-catalog-content').html(content.join(''));
+
+                toggleResourceTiles();
+
+                $('#resource-catalog-header').show();
+                $('#resource-catalog-content').fadeIn(250);
+            });
+        }
+    };
+
+    // Resource viewing
+    var viewResource = function(packageId, resourceId) {
+        var resources= properties.resources;
+        if(!resources) {
+            return;
+        }
+
+        var packageData = null, resourceData = null;
+
+        for(var i=0; i < resources.packages.length; i++) {
+            if(resources.packages[i].id == packageId) {
+                packageData = resources.packages[i];
+                break;
+            }
+        }
+
+        if(packageData) {
+            for(var i=0; i< packageData.resources.length; i++) {
+                if(packageData.resources[i].id == resourceId) {
+                    resourceData = packageData.resources[i];
+                    break;
+                }
+            }
+        }
+
+        if((!resourceData) || (!resourceData.wms_server) || (!resourceData.wms_layer)){
+            return;
+        }
+
+        var extent = [1948226, 4024868, 4008846, 5208724];
+
+        if(packageData.spatial) {
+            var source = new ol.source.GeoJSON({
+                object:{
+                    'type': 'FeatureCollection',
+                    'crs': {
+                        'type': 'name',
+                        'properties': {'name': 'EPSG:4326'}
+                    },
+                    'features': [{
+                        'type': 'Feature',
+                        'geometry': packageData.spatial
+                    }]
+                },
+                projection: 'EPSG:3857'
+            });
+            extent = source.getFeatures()[0].getGeometry().getExtent();
+        }
+
+
+        if(properties.layer) {
+            properties.map.layer.removeLayer(properties.layer);
+        }
+
+        properties.layer = new ol.layer.Tile({
+            source: new ol.source.TileWMS({
+                url: resourceData.wms_server,
+                params: {
+                    'VERSION': '1.3.0',
+                    'LAYERS': resourceData.wms_layer,
+                    projection: ol.proj.get('EPSG:900913')
+                }
+
+            })
+        });
+
+        properties.map.layer.addLayer(properties.layer);
+
+        if($('#map-dialog').is(':ui-dialog')) {
+            if(!$('#map-dialog').dialog('isOpen')) {
+                $('#map-dialog').dialog('open');
+            }
+            var view = properties.map.layer.getView();
+            var size = properties.map.layer.getSize();
+            view.fitExtent(extent, size);
+        } else {
+            $('#map-dialog').dialog({
+                title: 'Layer Preview',
+                width: 400,
+                height: 400,
+                position: { my: "right bottom", at: "right bottom", of: $('#page-resources') },
+                open: function() {
+                    $('#map-layer').height($('#map-dialog').height()-5).width($('#map-dialog').width() - 2);
+                    properties.map.layer.updateSize();
+
+                    var view = properties.map.layer.getView();
+                    var size = properties.map.layer.getSize();
+                    view.fitExtent(extent, size);
+                },
+                resize: function() {
+                    $('#map-layer').height($('#map-dialog').height()-5).width($('#map-dialog').width() - 2);
+                    properties.map.layer.updateSize();
+                }
+            });
+        }
+    };
+
+    $('body').on('click', '.resource-tile-map img', function() {
+        var p = $(this).data('package');
+        var r = $(this).data('resource');
+
+        //var url = '../?package=' + p + '&resource=' + r;
+        //window.open(url, '_blank');
+
+        viewResource(p, r);
+    });
+
+    // Page navigation
+    $('.section').click(function(e) {
+        // Get old/new pages
+        if($(this).hasClass('section-selected')) {
+            return;
+        }
+
+        suspendPageUI();
+
+        var selected = $(this).data('page');
+        var old = $('.section-selected').data('page');
+
+        // Update styling
+        $('.section-selected').removeClass('section-selected');
+        $(this).addClass('section-selected');
+
+        $('#' + old).hide();
+        $('#' + selected).show();
+
+        switch(selected) {
+            case 'page-resources':
+                loadResourcesFromCatalog();
+                break;
+        }
+
+        resize();
+        resumePageUI();
+    });
+
+    // Page layout
+    var suspendPageUI = function() {
+        $('#page-overlay').show();
+    };
+
+    var resumePageUI = function() {
+        $('#page-overlay').fadeOut(400);
+    };
+
+    var resize = function() {
+        var pageId = $('.section-selected').data('page');
+
+        var page = $('#' + pageId);
+
+        $('.page').height($(window).height()-75).width($(window).width() - 20);
+
+        switch(pageId) {
+            case 'page-syntax':
+                $('#page-syntax .CodeMirror').height($(page).height()).width($(page).width());
+                jsonSyntaxEditor.refresh();
+                break;
+            case 'page-resources':
+                $('#resource-catalog-content').height($(window).height()-115).width($(window).width() - 20);
+                break;
+            case 'page-examples':
+                $('#examples-accordion-container').height($(window).height()-90);
+                $('#examples-accordion').accordion('refresh');
+
+                $('#query-container .CodeMirror').height($(window).height()-291);
+                queryEditor.refresh();
+
+                $('#examples-tabs-container').height($(window).height()-91).width($(window).width() - 470);
+                $('#examples-tabs').tabs('refresh');
+
+                $('#map').height($(window).height()-150).width($(window).width() - 485);
+                properties.map.query.updateSize();
+
+
+                $('#examples-tabs-2 .CodeMirror').height($(window).height()-150).width($(window).width() - 482);
+                outputEditor.refresh();
+                break;
+        };
+    };
+
+    // Initialize
+    $(function() {
+        $(window).resize(resize);
+        resize();
+
+        // Load query syntax
+        $.ajax({
+            url: '../content/js/api/dashboard/json-syntax.js',
+            context: this,
+            dataType: 'text'
+        }).done(function(data, textStatus, jqXHR) {
+            // Update syntax
+            $('#json-syntax').val(data);
+            jsonSyntaxEditor.setValue($('#json-syntax').val());
+
+            // Display default page
+            $('#block-ui').fadeOut(500, function() {
+                $('#page-syntax').fadeIn(200);
+                jsonSyntaxEditor.refresh();
+            });
+        });
+    });
 
     return PublicaMundi;
 });
-

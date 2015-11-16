@@ -6,8 +6,14 @@
     height: 0;
 }
 
-@media screen and (max-height: 640px) {
-    .device {
+@media screen and (max-width: 1024px) {
+    .device1 {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 710px) {
+    .device2 {
         display: none !important;
     }
 }
@@ -467,7 +473,7 @@ ul {
 }
 
 .imis-logo {
-    background: rgba(123, 123, 255, 0) url("../../images/imis-logo.png") no-repeat scroll 0 0 / cover ;
+    background: rgba(123, 123, 255, 0) url("../../images/shared/imis-logo.png") no-repeat scroll 0 0 / cover ;
     display: block;
     float: left;
     height: 22px;

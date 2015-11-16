@@ -1,11 +1,11 @@
-define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
+define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (module, $, ol, URI, PublicaMundi, shared) {
     "use strict";
     
     // "{"type":"Point","coordinates":[2556034.848391745, 4949267.502643947]}"
     
-	PublicaMundi.queries = [
+	shared.queries = [
     {
-        description: 'Selects all cities with population greater than <b>10000</b>.</br></br>WPS process: <b>Voronoi</b>.',
+        description: 'Selects all cities with elevation greater than <b>100</b> meters.</br></br>WPS process: <b>Voronoi</b>.',
         query: {
             queue: [{
                 resources: [
@@ -18,14 +18,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     operator: 'GREATER',
                     arguments: [
                         {
-                            name: 'pop'
+                            name: 'h'
                         },
-                        10000
+                        100
                     ]
                 }],
                 sort: [
                     {
-                        name: 'pop',
+                        name: 'h',
                         desc: true
                     }
                 ],
@@ -38,8 +38,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			query.resource('cities', 
 						   'table1').
-				  greater({name : 'pop'}, 10000).
-				  orderBy('pop', true).
+				  greater({name : 'h'}, 100).
+				  orderBy('h', true).
 				  skip(20).
 				  take(50);
 
@@ -54,8 +54,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 			query.resource('cities', 
 						   'table1').
-				  greater({name : 'pop'}, 10000).
-				  orderBy('pop', true).
+				  greater({name : 'h'}, 100).
+				  orderBy('h', true).
 				  skip(20).
 				  take(50);
 
@@ -69,19 +69,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		description: 'Selects all city blocks that have area greater or equal to <b>15000</b> square meters.</br></br>WPS process chain: <b>ConvexHull</b>, <b>Buffer(50)</b>.',
 		query: {
             queue : [{
-                resources: ['blocksKalamaria'],
+                resources: ['blocks'],
                 fields: [{
-                    resource: 'blocksKalamaria',
+                    resource: 'blocks',
                     name: 'AROT'
                 }, {
-                    resource: 'blocksKalamaria',
+                    resource: 'blocks',
                     name: 'the_geom',
                     alias: 'polygon'
                 }],
                 filters: [{
                     operator: 'AREA',
                     arguments: [{
-                        resource: 'blocksKalamaria',
+                        resource: 'blocks',
                         name: 'the_geom'
                     },
                         "GREATER_OR_EQUAL",
@@ -94,11 +94,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		method: function(onSuccess, onFailure, onComplete) {
 			var query = new PublicaMundi.Data.Query();
 
-			query.resource('blocksKalamaria').
-				  field('blocksKalamaria', 'AROT').
-				  field('blocksKalamaria', 'the_geom', 'polygon').
+			query.resource('blocks').
+				  field('blocks', 'AROT').
+				  field('blocks', 'the_geom', 'polygon').
 				  areaGreaterOrEqual({
-					resource: 'blocksKalamaria', 
+					resource: 'blocks', 
 					name : 'the_geom'
 				  }, 15000.0).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -113,11 +113,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         process: function(onSuccess, onFailure, onComplete) {
 			var query = new PublicaMundi.Data.Query();
 
-			query.resource('blocksKalamaria').
-				  field('blocksKalamaria', 'AROT').
-				  field('blocksKalamaria', 'the_geom', 'polygon').
+			query.resource('blocks').
+				  field('blocks', 'AROT').
+				  field('blocks', 'the_geom', 'polygon').
 				  areaGreaterOrEqual({
-					resource: 'blocksKalamaria', 
+					resource: 'blocks', 
 					name : 'the_geom'
 				  }, 15000.0).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -129,42 +129,39 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             });
 		}
 	}, {
-		description: 'Selects fields from  datasets \'Urban and rural regions\' and \'Blue flag beaches (2010)\'. The population of every region must be less than <b>3000</b> and the distance between a region and a beach must be less than <b>5000</b>. Moreover, all results should be inside a specific region.</br></br>WPS process: <b>Voronoi</b>.',
+		description: 'Selects fields from  datasets \'Settlements\' and \'Blue flag beaches (2010)\'. The elevation of every settlement must be less than <b>1000</b> meters and the distance between a settlement and a beach must be less than <b>5000</b>. Moreover, all results should be inside a specific region.</br></br>WPS process: <b>Voronoi</b>.',
 		query: {
             queue: [{
                 "resources": [
                 "cities",
-                "blueFlags2010"
+                "flags"
                 ],
                 "fields": [
+                  "NAME_NOM",
+                  "NAME_GDIAM",
                   {
-                      "name": "name_eng"
+                      "name": "NAME_OTA"
                   }, {
-                      "name": "city_eng"
+                      "name": "NAME_OIK"
                   }, {
-                      "name": "nisos_eng"
-                  },
-                  "dimos_eng", {
-                      "name": "pop"
+                      "name": "h"
                   }, {
-                      "resource": "blueFlags2010",
+                      "resource": "flags",
                       "name": "NOMOS"
                   },
                   {
-                      "resource": "blueFlags2010",
+                      "resource": "flags",
                       "name": "the_geom"
-                  },
-                  "DESCRIPT",
-                  "REGION"
+                  }
                 ],
                 "filters": [
                   {
                       "operator": "LESS",
                       "arguments": [
                         {
-                            "name": "pop"
+                            "name": "h"
                         },
-                        3000
+                        1000
                       ]
                   }, {
                       "operator": "DISTANCE",
@@ -173,7 +170,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             "resource": "cities",
                             "name": "the_geom"
                         }, {
-                            "resource": "blueFlags2010",
+                            "resource": "flags",
                             "name": "the_geom"
                         },
                         "LESS",
@@ -185,7 +182,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                           {
                               "type": "Polygon", "coordinates": [[[2687295.037100175, 4520261.073751386], [2687295.037100175, 4368610.009633597], [2914771.6332768593, 4368610.009633597], [2914771.6332768593, 4520261.073751386], [2687295.037100175, 4520261.073751386]]]
                           }, {
-                              resource: 'blueFlags2010',
+                              resource: 'flags',
                               name: 'the_geom'
                           }]
                   }
@@ -209,22 +206,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			};
 
 			query.resource('cities').
-				  resource('blueFlags2010').
-				  field('name_eng').field('city_eng').
-				  field('nisos_eng').field('dimos_eng').
-				  field('pop').field('NOMOS').
-				  field('blueFlags2010', 'the_geom').
-				  field('DESCRIPT').field('REGION').
-				  less({ name : 'pop'}, 3000).
+				  resource('flags').
+				  field('NAME_NOM').field('NAME_GDIAM').
+				  field('NAME_OTA').field('NAME_OIK').
+				  field('h').field('NOMOS').
+				  field('flags', 'the_geom').
+				  less({ name : 'h'}, 1000).
 				  distanceLess({
 					resource: 'cities', 
 					name : 'the_geom'
 				  }, {
-					resource: 'blueFlags2010', 
+					resource: 'flags', 
 					name : 'the_geom'
 				  }, 5000).
 				  contains( polygon, {
-					  resource: 'blueFlags2010',
+					  resource: 'flags',
 					  name: 'the_geom'
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -251,22 +247,21 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			};
 
 			query.resource('cities').
-				  resource('blueFlags2010').
-				  field('name_eng').field('city_eng').
-				  field('nisos_eng').field('dimos_eng').
-				  field('pop').field('NOMOS').
-				  field('blueFlags2010', 'the_geom').
-				  field('DESCRIPT').field('REGION').
-				  less({ name : 'pop'}, 3000).
+				  resource('flags').
+				  field('NAME_NOM').field('NAME_GDIAM').
+				  field('NAME_OTA').field('NAME_OIK').
+				  field('h').field('NOMOS').
+				  field('flags', 'the_geom').
+				  less({ name : 'h'}, 1000).
 				  distanceLess({
 					resource: 'cities', 
 					name : 'the_geom'
 				  }, {
-					resource: 'blueFlags2010', 
+					resource: 'flags', 
 					name : 'the_geom'
 				  }, 5000).
 				  contains( polygon, {
-					  resource: 'blueFlags2010',
+					  resource: 'flags',
 					  name: 'the_geom'
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -282,7 +277,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		query: {
             queue: [{
                 "resources": [
-                  "roadsKalamaria"
+                  "roads"
                 ],
                 "fields": [
                   "NAME_LABEL", "the_geom"
@@ -343,10 +338,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					]
 			};
 
-			query.resource('roadsKalamaria').
+			query.resource('roads').
 				  field('NAME_LABEL').field('the_geom').
 				  contains( polygon, {
-					  resource: 'roadsKalamaria',
+					  resource: 'roads',
 					  name: 'the_geom'
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -373,10 +368,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					]
 			};
 
-			query.resource('roadsKalamaria').
+			query.resource('roads').
 				  field('NAME_LABEL').field('the_geom').
 				  contains( polygon, {
-					  resource: 'roadsKalamaria',
+					  resource: 'roads',
 					  name: 'the_geom'
 				  }).
 				  format(PublicaMundi.Data.Format.GeoJSON);
@@ -389,5 +384,5 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		}
 	}];
 
-	return PublicaMundi;
+	return shared;
 });

@@ -2,10 +2,14 @@
 
 import logging
 
-from pylons import config, request, response, session
+log = logging.getLogger(__name__)
+
+from paste.deploy.converters import asbool
+
+from pylons import config, request, response, session, tmpl_context as c
 from pylons.controllers.util import abort
 
-from mapclient.lib.base import BaseController
+from mapclient.lib.base import BaseController, render
 
 import json
 import geojson
@@ -22,8 +26,6 @@ import time
 
 from mapclient.lib.ogr2ogr import main as ogr_export
 from publicamundi.data.api import *
-
-log = logging.getLogger(__name__)
 
 # Session metadata key
 SESSION_METADATA_KEY = 'DATA_API_348A4EBF-0CDE-4EFB-BC42-D16F3D8FE250'
@@ -80,6 +82,59 @@ class ApiController(BaseController):
 
     tempfile.tempdir = config['upload.path']
 
+    def dashboard(self):
+        if not 'mapclient.enable.api.dashboard' in config or not asbool(config['mapclient.enable.api.dashboard']) == True:
+            abort(404, 'Data API dashboard is not enabled.')
+
+        # Servers
+        c.servers = {
+            'mapproxy' : filter(None, [s.strip() for s in config['mapclient.servers.mapproxy'].split(',')]),
+            'osm' : filter(None, [s.strip() for s in config['mapclient.servers.osm'].split(',')])
+        }
+
+        # Data API configuration
+        c.api = {}
+
+        # Resource alias
+        resource_list = None
+        alias_list = None
+
+        if 'mapclient.enable.api.dashboard.queries.resource' in config and not config['mapclient.enable.api.dashboard.queries.resource'] is None:
+            resource_list = filter(None, [s.strip() for s in config['mapclient.enable.api.dashboard.queries.resource'].split(',')])
+
+        if 'mapclient.enable.api.dashboard.queries.alias' in config and not config['mapclient.enable.api.dashboard.queries.alias'] is None:
+            alias_list = filter(None, [s.strip() for s in config['mapclient.enable.api.dashboard.queries.alias'].split(',')])
+
+        if not resource_list is None and not alias_list is None:
+            if len(resource_list) > 0 and len(resource_list) == len(alias_list):
+                c.api['alias'] = dict(zip(alias_list, resource_list))
+
+        # WPS endpoint
+        c.api['wps'] = config['mapclient.enable.api.dashboard.wps.endpoint']
+
+        # Google Analytics
+        if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
+            c.google = config['mapclient.google.analytics']
+
+        return render('/api/dashboard.jinja2')
+
+    def examples(self):
+        if not 'mapclient.enable.api.examples' in config or not asbool(config['mapclient.enable.api.examples']) == True:
+            abort(404, 'Data API examples page is not enabled.')
+
+        # Servers
+        c.servers = {
+            'mapproxy' : filter(None, [s.strip() for s in config['mapclient.servers.mapproxy'].split(',')]),
+            'tilecache' : filter(None, [s.strip() for s in config['mapclient.servers.tilecache'].split(',')]),
+            'osm' : filter(None, [s.strip() for s in config['mapclient.servers.osm'].split(',')])
+        }
+
+        # Google Analytics
+        if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
+            c.google = config['mapclient.google.analytics']
+
+        return render('/api/examples.jinja2')
+
     def resource_show(self):
         # Get configuration
         configuration = self._get_configuration()
@@ -89,7 +144,7 @@ class ApiController(BaseController):
 
         try:
             query_executor = QueryExecutor();
-            resources = query_executor.getResources(configuration)
+            resources = query_executor.get_resources(configuration)
 
             result = {
                 "success" : True,
@@ -122,7 +177,7 @@ class ApiController(BaseController):
                 }
             else:
                 query_executor = QueryExecutor();
-                fields = query_executor.describeResource(configuration, None, id)
+                fields = query_executor.describe_resource(configuration, id)
 
                 result = {
                     "success" : True,

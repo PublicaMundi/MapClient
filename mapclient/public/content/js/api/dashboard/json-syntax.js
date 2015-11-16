@@ -1,4 +1,4 @@
-var query = {
+{
     // File names for exporting layers
     files: [],
     // Output CRS
