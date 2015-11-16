@@ -39,6 +39,14 @@ mapclient.catalog.metadata.physical =
 mapclient.feedback.url.el =
 mapclient.feedback.url.en =
 
+# Map Client - Sample views
+mapclient.enable.api.dashboard = true
+mapclient.enable.api.dashboard.wps.endpoint =
+mapclient.enable.api.dashboard.queries.resources =
+mapclient.enable.api.dashboard.queries.alias =
+
+mapclient.enable.api.examples = false
+
 # OSM layer name
 mapclient.base.layers.osm = osm
 # NCMA (EKXA) layer name (default layer name: KTBASEMAP)

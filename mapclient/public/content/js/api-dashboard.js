@@ -18,11 +18,11 @@
             'lib/ol3/ol.3.4.0'
         ],
         URIjs: 'lib/uri',
-        shared: 'app/shared',
+        shared: 'shared/shared',
 		data_api: 'lib/data-api/data',
         data_api_wps: 'lib/data-api/extensions/wps',
-		queries: 'demo/data-api-queries',
-        app: 'demo/app',
+		queries: 'api/dashboard/queries',
+        app: 'api/dashboard/dashboard',
         // WPS support
         hogan: 'lib/hogan/hogan-3.0.2.min',
         xml2json: 'lib/x2js/xml2json.min',
@@ -99,13 +99,11 @@
 	}
 });
 
-define(function () {
+define('api-dashboard', function () {
     "use strict";
 
     require(['jquery', 'app'], function ($, PublicaMundi) {
-        $(function () {
-            window.PublicaMundi = PublicaMundi;
-        });
+
     });
 });
 

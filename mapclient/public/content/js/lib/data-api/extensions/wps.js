@@ -431,12 +431,10 @@
         };
 
         return PublicaMundi;
-    }
-
-
+    };
 
     if((define) && (define.amd)) {
-        define(['shared', 'zoo', 'wpsPayload'], factory);
+        define(['data_api', 'zoo', 'wpsPayload'], factory);
     } else {
         factory(PublicaMundi, ZooProcess, wpsPayload);
     }

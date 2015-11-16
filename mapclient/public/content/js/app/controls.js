@@ -1,4 +1,4 @@
-define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, ol, URI, PublicaMundi) {
+define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (module, $, ol, URI, API, PublicaMundi) {
     "use strict";
 
     var sortByProperty = function(prop, locale) {
@@ -198,7 +198,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 }
 
                 if(options.hasInformation) {
-                    content.push('<div class="node-right tree-info"><img src="content/images/info.svg" class="img-16" /></div>');
+                    content.push('<div class="node-right tree-info"><img src="content/images/app/info.svg" class="img-16" /></div>');
                 }
 
                 if(options.i18n) {
@@ -255,7 +255,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: nodes[i].id,
-                            image: 'content/images/show.svg',
+                            image: 'content/images/app/show.svg',
                             isLeaf: false,
                             caption: caption,
                             hasInformation: false,
@@ -303,7 +303,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                             var options = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
-                                image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                                image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                 isLeaf: true,
                                 caption: caption,
                                 hasInformation: (_package.resources.length === 1),
@@ -327,7 +327,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                             var options = {
                                 id: resource.id,
-                                image: 'content/images/show.svg',
+                                image: 'content/images/app/show.svg',
                                 isLeaf: false,
                                 caption: caption,
                                 hasInformation: (_package.resources.length === 1),
@@ -389,7 +389,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: groups[i].id,
-                            image: 'content/images/show.svg',
+                            image: 'content/images/app/show.svg',
                             isLeaf: false,
                             caption: caption,
                             hasInformation: (groups[i].info) ||
@@ -446,7 +446,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: organizations[i].id,
-                            image: 'content/images/show.svg',
+                            image: 'content/images/app/show.svg',
                             isLeaf: false,
                             caption: caption,
                             hasInformation: (organizations[i].info) ||
@@ -501,7 +501,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				if(group_packages.length === 0) {
                     var handler = $(parent).find('img.tree-toggle').first();
 					$(handler).addClass('disabled');
-					$(handler).attr('src', 'content/images/empty.svg');
+					$(handler).attr('src', 'content/images/app/empty.svg');
 					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				} else {
 					var children = $('<ul class="tree-node" style="display: none;"></ul>');
@@ -525,7 +525,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: group_organizations[i].id,
-                            image: 'content/images/show.svg',
+                            image: 'content/images/app/show.svg',
                             isLeaf: false,
                             caption: caption,
                             hasInformation: (group_organizations[i].info) ||
@@ -561,7 +561,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 				if(organization_packages.length === 0) {
 					var handler = $(parent).find('img.tree-toggle').first();
 					$(handler).addClass('disabled');
-					$(handler).attr('src', 'content/images/empty.svg');
+					$(handler).attr('src', 'content/images/app/empty.svg');
 					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				} else {
 					var children = $('<ul class="tree-node" style="display: none;"></ul>');
@@ -600,7 +600,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                                 var options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
-                                    image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                                    image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                     isLeaf: true,
                                     caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
@@ -629,7 +629,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                                 var options = {
                                     id: resourceId,
-                                    image: 'content/images/show.svg',
+                                    image: 'content/images/app/show.svg',
                                     isLeaf: false,
                                     caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes)),
@@ -655,7 +655,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                                 var options = {
                                     id: organization_packages[j].id,
-                                    image: 'content/images/show.svg',
+                                    image: 'content/images/app/show.svg',
                                     isLeaf: false,
                                     caption: caption,
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
@@ -739,7 +739,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                                 var options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
-                                    image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                                    image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                     isLeaf: true,
                                     caption: caption,
                                     hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
@@ -764,7 +764,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                                 var options = {
                                     id: resourceId,
-                                    image: 'content/images/show.svg',
+                                    image: 'content/images/app/show.svg',
                                     isLeaf: false,
                                     caption: caption,
                                     hasInformation: ((!!(packages[p].info)) && (packages[p].resources.length == 1)),
@@ -781,7 +781,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 if(total_resources === 0) {
 					var handler = $(parent).find('img.tree-toggle').first();
 					$(handler).addClass('disabled');
-					$(handler).attr('src', 'content/images/empty.svg');
+					$(handler).attr('src', 'content/images/app/empty.svg');
 					$(parent).find('.tree-text').first().addClass('tree-text-disabled');
 				}
 
@@ -821,7 +821,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: layerId.replace(/[^\w\s]/gi, ''),
-                            image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                            image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                             isLeaf: true,
                             caption: caption,
                             hasInformation: false,
@@ -841,7 +841,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                         var options = {
                             id: resource.id,
-                            image: 'content/images/show.svg',
+                            image: 'content/images/app/show.svg',
                             isLeaf: false,
                             caption: caption,
                             hasInformation: false,
@@ -883,7 +883,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
                     var options = {
                         id: layerId.replace(/[^\w\s]/gi, ''),
-                        image: (selected ? 'content/images/checkbox-checked.svg' : 'content/images/checkbox-empty.svg'),
+                        image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                         isLeaf: true,
                         caption: caption,
                         hasInformation: false
@@ -966,14 +966,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						} else if (type === 'resource') {
                             var resource = self.values.ckan.getResourceById(properties.id);
 
-                            $(this).attr('src', 'content/images/ajax-loader.gif');
+                            $(this).attr('src', 'content/images/app/ajax-loader.gif');
                             $(this).addClass('tree-node-ajax-loader');
                             properties.loading = true;
 
                             self.values.resources.setCatalogResourceMetadataOptions(resource);
 
                             self.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
-                                $(element).attr('src', 'content/images/show.svg');
+                                $(element).attr('src', 'content/images/app/show.svg');
                                 $(element).removeClass('tree-node-ajax-loader');
 
                                 renderResourceLayers.call(self, parent, id, metadata.layers);
@@ -984,7 +984,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                                 $(element).addClass('tree-node-collapse');
                                 $(parent).find('ul').first().fadeIn(250);
                             }, function(reason) {
-                                $(element).attr('src', 'content/images/show.svg');
+                                $(element).attr('src', 'content/images/app/show.svg');
                                 $(element).removeClass('tree-node-ajax-loader');
                                 properties.loading = false;
                             });
@@ -1186,7 +1186,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
 				if((this.values.resources.isLayerSelected(id)) || (this.values.resources.getLayerCount() < this.values.resources.getMaxLayerCount())) {
 					properties.loading = true;
-					$(handler).attr('src', 'content/images/ajax-loader.gif').addClass('tree-node-ajax-loader');
+					$(handler).attr('src', 'content/images/app/ajax-loader.gif').addClass('tree-node-ajax-loader');
 
 					this.values.resources.setCatalogResourceMetadataOptions(resource);
 
@@ -1194,7 +1194,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 						properties.loading = false;
                         properties.selected = true;
 
-						$(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checkbox-checked.svg');
+						$(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/app/checkbox-checked.svg');
 
                         if(!self.values.resources.isLayerSelected(id)) {
                             var title = PublicaMundi.i18n.getResource(properties.i18n, properties.caption);
@@ -1206,7 +1206,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                         }
 					}, function(reason) {
                         properties.loading = false;
-                        $(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/checkbox-empty.svg');
+                        $(handler).removeClass('tree-node-ajax-loader').attr('src', 'content/images/app/checkbox-empty.svg');
                     });
 				}
 			}
@@ -1230,7 +1230,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 					}
 
 					properties.selected = false;
-					$(handler).attr('src', 'content/images/checkbox-empty.svg');
+					$(handler).attr('src', 'content/images/app/checkbox-empty.svg');
 				}
 				if(this.values.resources.destroyLayer(this.values.map, id)) {
                     if(fireEvents!==false) {
@@ -1273,19 +1273,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                     content.push('<div class="clearfix">');
                     content.push('<div style="float: left; padding-right: 10px;"  id="' + this.values.element + '-box-draw">');
                     content.push('<a id="' + this.values.element + '-box-draw-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.draw" ' +
-                                 'data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.draw') + '"><img src="content/images/draw-square-w.svg" class="img-20" /></a>');
+                                 'data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.draw') + '"><img src="content/images/app/draw-square-w.svg" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-remove">');
-                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.remove" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.remove') + '"><img src="content/images/reject-w.svg" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-remove-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.remove" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.remove') + '"><img src="content/images/app/reject-w.svg" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-apply">');
-                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" data-i18n-id="control.tree.search.button.apply" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.apply') + '"><img src="content/images/accept-w.svg" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-apply-btn" class="btn btn-success" data-placement="bottom" data-i18n-id="control.tree.search.button.apply" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.apply') + '"><img src="content/images/app/accept-w.svg" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px; display: none;" id="' + this.values.element + '-box-cancel">');
-                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.discard" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.discard') + '"><img src="content/images/reject-w.svg" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-box-cancel-btn" class="btn btn-danger" data-placement="bottom" data-i18n-id="control.tree.search.button.discard" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.discard') + '"><img src="content/images/app/reject-w.svg" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('<div style="float: left; padding-right: 10px;" id="' + this.values.element + '-search">');
-                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.search" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.search') + '"><img src="content/images/search-w.svg" class="img-20" /></a>');
+                    content.push('<a id="' + this.values.element + '-search-btn" class="btn btn-primary" data-placement="bottom" data-i18n-id="control.tree.search.button.search" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('control.tree.search.button.search') + '"><img src="content/images/app/search-w.svg" class="img-20" /></a>');
                     content.push('</div>');
                     content.push('</div>');
 
@@ -1447,15 +1447,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 		content.push('<div style="margin-left: 25px;">');
 
 		content.push('<div class="clearfix" style="padding-bottom: 3px;">');
-		content.push('<div class="selected-layer-close"><img src="content/images/close.svg" class="action img-16" data-action="remove"  /></div>');
-		content.push('<div class="selected-layer-up"><img src="content/images/move-up.svg" class="action img-16 action-disabled" data-action="up"  /></div>');
+		content.push('<div class="selected-layer-close"><img src="content/images/app/close.svg" class="action img-16" data-action="remove"  /></div>');
+		content.push('<div class="selected-layer-up"><img src="content/images/app/move-up.svg" class="action img-16 action-disabled" data-action="up"  /></div>');
 		content.push('<div class="selected-layer-text" data-i18n-id="' + title.i18n + '">' + title.text + '</div>');
 		content.push('</div>');
 
 		content.push('<div class="clearfix">');
-		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('index.title.layer-opacity') + '" ><img src="content/images/opacity.svg" class="img-16" /></div>');
+		content.push('<div class="selected-layer-opacity-label" data-i18n-id="index.title.layer-opacity" data-i18n-type="title" title="' + PublicaMundi.i18n.getResource('index.title.layer-opacity') + '" ><img src="content/images/app/opacity.svg" class="img-16" /></div>');
 		content.push('<div class="selected-layer-opacity-slider"><input type="range" min="0" max="100" value="' + (layer.getOpacity()*100).toFixed(0) + '"></div>');
-		content.push('<div class="selected-layer-down"><img src="content/images/move-down.svg" class="action img-16 action-disabled" data-action="down"  /></div>');
+		content.push('<div class="selected-layer-down"><img src="content/images/app/move-down.svg" class="action img-16 action-disabled" data-action="down"  /></div>');
 		content.push('</div>');
 
 		content.push('</div>');
@@ -2105,7 +2105,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.values.crs = PublicaMundi.Maps.CRS.Mercator;
 
-            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            this.values.query = new API.Data.Query(this.values.endpoint);
 
             this.values.formats = [{
                 value: 'ESRI Shapefile',
@@ -2365,7 +2365,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             this.suspendUI();
 
             var query = this.values.query;
-            query.reset().format(PublicaMundi.Data.Format.GeoJSON)
+            query.reset().format(API.Data.Format.GeoJSON)
 
             for(var i=0; i<quyarable.length; i++) {
                 query.resource(quyarable[i].table).
@@ -2449,7 +2449,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
             this.event('selection:changed');
 
-            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            this.values.query = new API.Data.Query(this.values.endpoint);
             this.values.features = new ol.Collection;
             this.values.focus = null;
 
@@ -2540,7 +2540,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         suspendUI: function() {
             if(!$('#' + this.values.element).hasClass('busy')) {
-                $('#' + this.values.element).addClass('tool-wapper-action busy').append('<div class="action-executing"><img style="" src="content/images/ajax-loader.gif"></div>');
+                $('#' + this.values.element).addClass('tool-wapper-action busy').append('<div class="action-executing"><img style="" src="content/images/app/ajax-loader.gif"></div>');
             }
         },
         resumeUI: function() {
@@ -2601,9 +2601,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
             content.push('</div>');
             content.push('<div style="float: left;" data-i18n-id="tool.select.dialog.title">' + PublicaMundi.i18n.getResource('tool.select.dialog.title') + '</div>');
             if(features.length > 1) {
-                content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-20" src="content/images/next.svg"></div>');
+                content.push('<div style="float: right;"><img id="' + this.values.element + '-next" class="img-20" src="content/images/app/next.svg"></div>');
                 content.push('<div style="float: right; font-size: 0.9em; padding-top: 2px;">' + (index + 1 ) + '</div>');
-                content.push('<div style="float: right;"><img id="' + this.values.element + '-prev" class="img-20" src="content/images/previous.svg"></div>');
+                content.push('<div style="float: right;"><img id="' + this.values.element + '-prev" class="img-20" src="content/images/app/previous.svg"></div>');
             }
             content.push('</div>');
 
@@ -2957,6 +2957,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 			this.values.selection = null;
 			this.values.feature = null;
 			this.values.tooltip = null;
+        },
+        clear: function() {
+            this.removeTooltip();
         }
     });
 
@@ -3009,7 +3012,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
         },
         suspendUI: function() {
             if(!$('#' + this.values.element).hasClass('busy')) {
-                $('#' + this.values.element).addClass('busy').append('<div class="action-executing"><img style="" src="content/images/ajax-loader.gif"></div>');
+                $('#' + this.values.element).addClass('busy').append('<div class="action-executing"><img style="" src="content/images/app/ajax-loader.gif"></div>');
             }
         },
         resumeUI: function() {
@@ -3221,7 +3224,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
 
         query.reset();
         query.resource(this.values.table).
-            format(PublicaMundi.Data.Format.JSON).
+            format(API.Data.Format.JSON).
             skip(this.values.page.index * this.values.page.size).
             take(this.values.page.size + 1).
             execute(_DialogTableBrowserRenderTable, this);
@@ -3241,7 +3244,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                 PublicaMundi.Maps.Dialog.prototype.initialize.apply(this, arguments);
             }
 
-            this.values.query = new PublicaMundi.Data.Query(this.values.endpoint);
+            this.values.query = new API.Data.Query(this.values.endpoint);
             this.values.page = {
                 index : 0,
                 size: 10,
@@ -4053,7 +4056,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'shared'], function (module, $, o
                             anchor: [15,28],
                             anchorXUnits: 'pixels',
                             anchorYUnits: 'pixels',
-                            src: 'content/images/map-pin-filled.svg'
+                            src: 'content/images/app/map-pin-filled.svg'
                         }),
                         text: new ol.style.Text({
                             textAlign: 'center',

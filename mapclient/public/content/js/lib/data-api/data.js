@@ -1,19 +1,23 @@
 (function() {
-    var factory = function ($, PublicaMundi) {
+    var factory = function ($, global) {
         "use strict";
 
         // Create namespaces
-        if(typeof PublicaMundi.Data === 'undefined') {
-                PublicaMundi.Data = {
-                __namespace: 'PublicaMundi.Data'
+        var PublicaMundi = global;
+
+        if(typeof PublicaMundi === 'undefined') {
+            PublicaMundi = {
+                __namespace: 'PublicaMundi'
             };
         }
 
-        if(typeof PublicaMundi.Data.CRS === 'undefined') {
-                PublicaMundi.Data.CRS = {
-                __namespace: 'PublicaMundi.Data.CRS'
-            };
-        }
+        PublicaMundi.Data = {
+            __namespace: 'PublicaMundi.Data'
+        };
+
+        PublicaMundi.Data.CRS = {
+            __namespace: 'PublicaMundi.Data.CRS'
+        };
 
         // Create constants
         PublicaMundi.Data.CRS.Google = 'EPSG:900913';
@@ -161,7 +165,7 @@
                     }
                     return obj;
                 case 'string':
-                    var obj = {
+                    return obj = {
                         name: arg
                     };
                 default:
@@ -227,9 +231,7 @@
             } else {
                 this.endpoint = configuration.endpoint;
             }
-            if(!this.endpoint) {
-                throw new PublicaMundi.Data.SyntaxException('Service endpoint is not set.');
-            }
+            this.endpoint = this.endpoint || '';
 
             this.callbacks = {
                 success : null,
@@ -996,12 +998,12 @@
         };
 
         return PublicaMundi;
-    }
+    };
 
-    if((define) && (define.amd)) {
-        define(['jquery', 'shared'], factory);
+    if((typeof define != 'undefined') && (define.amd)) {
+        define(['jquery'], factory);
     } else {
-        if(!PublicaMundi) {
+        if(typeof PublicaMundi === 'undefined') {
             PublicaMundi = {
                 __namespace: 'PublicaMundi'
             };

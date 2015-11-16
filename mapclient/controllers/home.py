@@ -55,7 +55,7 @@ class HomeController(BaseController):
            c.exportDisabledFormats =  filter(None, config['dataapi.export.formats.disabled'].split(','))
 
         if self._isMobileOrTablet() == False:
-            c.main = 'main.js'
+            c.main = 'client-main.js'
         else:
-            c.main = 'main-mobile.js'
+            c.main = 'client-main-mobile.js'
         return render('/index.jinja2')

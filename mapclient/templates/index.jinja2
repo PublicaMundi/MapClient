@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="content/css/app/default.css" />
 
     <title>GEODATA.gov.gr - Maps</title>
-    <link rel="shortcut icon" href="content/images/icons/geodatagovgr.ico" />
+    <link rel="shortcut icon" href="content/images/shared/geodatagovgr.ico" />
     <script type="text/javascript">
         var ﻿require = {
             config: {
@@ -112,7 +112,7 @@
     <div id="block-ui">
         <div id="loader-icon">
 			<div>
-				<img src="content/images/geodata-biglogo.png" alt="" />
+				<img src="content/images/shared/geodata-logo.png" alt="" />
 				<div id="loading-text" class="loading-text">
 					Loading Scripts ... 0%
 				</div>
@@ -124,7 +124,7 @@
 		<div class="header container" style="width: 100%;">
                 <div style="float: left;">
                     <a class="navbar-brand geodata-brand" href="{{config['mapclient.url.catalog']}}" target="_blank">
-                        <img src="content/images/geodata-biglogo.png" alt="GeoData.gov.gr" class="logo-header">
+                        <img src="content/images/shared/geodata-logo.png" alt="GeoData.gov.gr" class="logo-header">
                     </a>
                 </div>
 				<div style="float: right; padding: 8px 0px 0px 15px;">
@@ -133,14 +133,14 @@
                         <option value="en">English</option>
 					</select>
 				</div>
-				<div class="device" style="float: right; padding-top: 15px;" >
+				<div class="device2" style="float: right; padding-top: 15px;" >
 					<input id="base-layer-opacity" name="base-layer-opacity" min="0" max="100" value="100" type="range" style="width: 150px;" class="help" data-help-resource="help.opacity">
 				</div>
-				<div class="device img-text" style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.opacity" autocomplete="off">
+				<div class="device2 img-text" style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.opacity" autocomplete="off">
 					Διαφάνεια
 				</div>
-				<div class="device" style="float: right; padding-top: 8px; padding-right: 6px;">
-					<select name="base_layer" id="base_layer" data-width="250px" autocomplete="off">
+				<div class="device1" style="float: right; padding-top: 8px; padding-right: 6px;">
+					<select name="base_layer" id="base_layer" data-width="210px" autocomplete="off">
 						<option data-i18n-id="index.layer.ktimatologio"
                                 data-key=""
 								data-type="ktimatologio"
@@ -184,10 +184,10 @@
 								value="stamen-watercolor">Stamen - Watercolor</option>
 					</select>
 				</div>
-				<div class="device img-text"  style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.base-layer">
+				<div id="base-layer-label" class="device1 img-text"  style="float: right; padding-top: 14px; padding-right: 6px; font-weight: bold;" data-i18n-id="index.title.base-layer">
                     Υπόβαθρο
 				</div>
-				<div class="device clearfix resource-data-search" style="padding:  9px 9px 0px 0px; margin: 0px 650px 0px 275px; max-width: 500px">
+				<div class="device2 clearfix resource-data-search" style="padding:  9px 9px 0px 0px; margin: 0px 650px 0px 275px; max-width: 500px">
 					<input id="location-search" class="form-control input-md" type="text" data-i18n-id="index.input.search.location"
 					data-i18n-type="attribute" data-i18n-name="placeholder" placeholder="Αναζήτηση ..." autocomplete="off"></input>
 				</div>
@@ -195,20 +195,20 @@
 	</nav>
 	<div id="panel-left" class="panel-left panel-left-visible">
 		<div class="panel-left-handler">
-			<img src="content/images/expand.svg" alt=""/>
+			<img src="content/images/app/expand.svg" alt=""/>
 		</div>
 		<div id="panel-content-left" class="panel-content">
 			<div id="layer-tree-header" class="clearfix layer-tree-header">
 				<div style="float: left;">
-					<img class="inactive"id="group" style="" src="content/images/topics.svg" alt="" data-selected="true"/>
+					<img class="inactive"id="group" style="" src="content/images/app/topics.svg" alt="" data-selected="true"/>
 				</div>
 				<div id="group-label" style="float: left; padding: 7px 5px 0px 5px;" class="section-label" data-i18n-id="index.topics">Θεματικές Ενότητες</div>
 				<div style="float: left;">
-					<img class="active" id="organization" src="content/images/organization.svg" alt="" data-selected="false"/>
+					<img class="active" id="organization" src="content/images/app/organization.svg" alt="" data-selected="false"/>
 				</div>
 				<div id="organization-label" style="float: left; padding: 7px 5px 0px 5px;" class="section-label section-label-hidden" data-i18n-id="index.organizations">Οργανισμοί</div>
 				<div style="float: left;">
-					<img class="active" id="search" src="content/images/search.svg" alt="" data-selected="false"/>
+					<img class="active" id="search" src="content/images/app/search.svg" alt="" data-selected="false"/>
 				</div>
 				<div id="search-label" style="float: left; padding: 7px 5px 0px 5px;" class="section-label section-label-hidden" data-i18n-id="index.search">Αναζήτηση</div>
 			</div>
@@ -229,13 +229,13 @@
             <div id="layer-tree-search" class="clearfix layer-tree-search"></div>
 
 			<div id="layer-selection-header" class="clearfix layer-selection-header">
-				<img src="content/images/layers.svg" alt="" class="img-25" /><span style="padding-left: 7px;" data-i18n-id="index.selected-layers">Επιλογές</span>
+				<img src="content/images/app/layers.svg" alt="" class="img-25" /><span style="padding-left: 7px;" data-i18n-id="index.selected-layers">Επιλογές</span>
 			</div>
 
 			<div id="layer-selection" class="clearfix layer-selection"></div>
 		</div>
         <div class="panel-left-label" style="width: 200px;">
-			<img src="content/images/layers.svg" alt="" class="img-25 panel-left-label-image" /><div class="device panel-left-label-text" data-i18n-id="index.catalog">Κατάλογος</div>
+			<img src="content/images/app/layers.svg" alt="" class="img-25 panel-left-label-image" /><div class="device1 panel-left-label-text" data-i18n-id="index.catalog">Κατάλογος</div>
 		</div>
 	</div>
     <div id="panel-left-splitter" class="panel-left-splitter">
@@ -243,11 +243,11 @@
     </div>
 	<footer class="footer">
         <div style="position: absolute; left: 50%; margin-left: -90px; padding-top: 10px;">
-            <a href="http://www.imis.athena-innovation.gr/" target="_blank"><div class="imis-logo"></div></a><div data-i18n-id="index.feedback" class="device feedback-label">Αφήστε τα σχόλιά σας</div>
+            <a href="http://www.imis.athena-innovation.gr/" target="_blank"><div class="imis-logo"></div></a><div data-i18n-id="index.feedback" class="device2 feedback-label">Αφήστε τα σχόλιά σας</div>
         </div>
         <div class="mouse-pos">
             <div style="float: left; padding-top: 5px;">
-                <img class="img-text" src="content/images/map-pin.svg" alt="" data-placement="bottom" data-i18n-id="index.title.position" data-i18n-type="title" title="Θέση" />
+                <img class="img-text" src="content/images/app/map-pin.svg" alt="" data-placement="bottom" data-i18n-id="index.title.position" data-i18n-type="title" title="Θέση" />
             </div>
         </div>
         <div class="combo-crs" style="width: 140px;">
@@ -259,46 +259,46 @@
             </select>
         </div>
         <div class="img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.crs" data-i18n-type="title" title="Σύστημα αναφοράς">
-            <img src="content/images/coordination-system.svg" alt="" />
+            <img src="content/images/app/coordination-system.svg" alt="" />
         </div>
-        <div id="scale-line" class="device" style="float: right; padding: 18px 10px 0px 2px;">
+        <div id="scale-line" class="device1" style="float: right; padding: 18px 10px 0px 2px;">
         </div>
-        <div class="device img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.scale" data-i18n-type="title" title="Κλίμακα χάρτη">
-            <img src="content/images/scale.svg" alt="" />
+        <div class="device1 img-text" style="float: right; padding-top: 5px; padding-left: 2px;" data-placement="bottom" data-i18n-id="index.title.scale" data-i18n-type="title" title="Κλίμακα χάρτη">
+            <img src="content/images/app/scale.svg" alt="" />
         </div>
 	</footer>
 
     <div class="dialog-container"></div>
 
     <div class="clearfix tools-container-placholder">
-        <img src="content/images/tools.svg" class="img-20" alt=""/>
+        <img src="content/images/app/tools.svg" class="img-20" alt=""/>
     </div>
     <div class="clearfix tools-container">
         <div id="tools-header" class="clearfix tools-header">
             <div class="tools-header-label">
-                <img src="content/images/tools.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
+                <img src="content/images/app/tools.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tools">Εργαλεία</span>
             </div>
             <div class="tools-header-handler">
-                <img src="content/images/close.svg" alt="">
+                <img src="content/images/app/close.svg" alt="">
             </div>
         </div>
         <div class="tools-content">
             <div id="tools" class="clearfix tools">
-                <div class="device tool-wrapper" id="tool-length"></div>
-                <div class="device tool-wrapper" id="tool-area"></div>
-                <div class="device tool-wrapper" id="tool-export"></div>
+                <div class="device1 tool-wrapper" id="tool-length"></div>
+                <div class="device1 tool-wrapper" id="tool-area"></div>
+                <div class="device1 tool-wrapper" id="tool-export"></div>
                 <div class="tool-wrapper" id="action-wms"></div>
-                <div class="device tool-wrapper" id="action-upload"></div>
+                <div class="device1 tool-wrapper" id="action-upload"></div>
                 <div class="tool-wrapper" id="action-position"></div>
                 <div class="tool-wrapper" id="action-link"></div>
-                <div class="device tool-wrapper" id="action-embed"></div>
-                <div class="device tool-wrapper" id="action-parse"></div>
+                <div class="device1 tool-wrapper" id="action-embed"></div>
+                <div class="device1 tool-wrapper" id="action-parse"></div>
                 <div class="tool-wrapper" id="restore-zoom"></div>
                 <div class="tool-wrapper" style="float: right; margin-right: 3px;" id="action-clear"></div>
             </div>
             <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
                 <div class="tools-header-label">
-                    <img src="content/images/functions.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
+                    <img src="content/images/app/functions.svg" class="img-20" alt=""/><span style="padding-left: 7px;" data-i18n-id="index.tool-actions">Λειτουργίες</span>
                 </div>
             </div>
             <div id="tool-actions" class="clearfix tool-actions">
