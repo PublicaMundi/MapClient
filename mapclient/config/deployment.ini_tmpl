@@ -46,6 +46,8 @@ mapclient.enable.api.dashboard.queries.resources =
 mapclient.enable.api.dashboard.queries.alias =
 
 mapclient.enable.api.examples = false
+mapclient.enable.api.examples.queries.resource =
+mapclient.enable.api.examples.queries.alias =
 
 # OSM layer name
 mapclient.base.layers.osm = osm

@@ -1,4 +1,4 @@
-/* PublicaMundi Mapping API version 0.1.0 2015-11-05 */
+/* PublicaMundi Mapping API version 0.1.0 2015-11-17 */
 (function (window, PublicaMundi) {
 	"use strict";
 
@@ -767,13 +767,13 @@ ol.control.LayerSwitcher.forEachRecursive = function(lyr, fn) {
             
             var name = options.params.layers;
                  //var vectorSource = new ol.source.Vector({
-                 var vectorSource = new ol.source.ServerVector({
+                 var vectorSource = new ol.source.Vector({
                     format: format,
                     projection: projection,
                     //dataType: 'jsonp',
                      //strategy: ol.loadingstrategy.bbox,
                     //strategy: ol.loadingstrategy.tile(new ol.tilegrid.createXYZ({
-                    strategy: ol.loadingstrategy.createTile(new ol.tilegrid.XYZ({
+                    strategy: ol.loadingstrategy.tile(new ol.tilegrid.XYZ({
                         //maxZoom: 19,
                         //minZoom: 8
                     })),
@@ -966,9 +966,11 @@ ol.control.LayerSwitcher.forEachRecursive = function(lyr, fn) {
             this._layer = new ol.layer.Vector({
                 title: options.title,
                 visible: options.visible,
-                source: new ol.source.KML({
-                    extractStyles: false,
+                source: new ol.source.Vector({
                     projection: options.projection,
+                    format: new ol.format.KML({
+                        extractStyles: false
+                    }),
                     url: options.url
                 }),
                 style: style,

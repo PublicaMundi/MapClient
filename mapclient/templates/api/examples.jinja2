@@ -5,67 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>GEODATA.gov.gr - Data API Example</title>
-    <link rel="shortcut icon" href="../content/images/icons/geodatagovgr.ico" />
+    <title>GEODATA.gov.gr - Data/Mapping API Example</title>
+    
+    
+    <link rel="shortcut icon" href="../content/images/shared/geodatagovgr.ico" />
     <link rel="stylesheet" href="../content/css/lib/jquery-ui/current/jquery-ui.min.css">
     <link rel="stylesheet" href="../content/css/lib/bootstrap/current/css/bootstrap.min.css">
-    <style>
-        body {
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            padding-right: 4px;
-            padding-left: 4px;
-            margin-right: 0px;
-            margin-left: 0px;
-        }
-        .geodata-brand {
-            padding: 13px !important;
-        }
-        .navbar-geodata {
-            background-color: white;
-            z-index: 1 !important;
-        }
-        .ui-autocomplete {
-            border-radius: 4px;
-            z-index: 2;
-            max-height: 200px;
-            overflow: auto;
-        }
-        .ui-menu-item {
-            border: none !important;
-            margin: 4px !important;
-        }
-        .ui-state-focus {
-            color: white !important;
-            background: #286090 !important;
-            margin: 4px !important;
-        }
-        .map {
-            margin-top: 50px;
-            width: 100vw;
-            height: 100vh;
-            padding: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="../content/css/api/examples/default.css">
     
-    <script type="text/javascript">
-        var ﻿require = {
-            config: {
-                app: {
-                    debug: {{config['mapclient.debug']}}
-                },
-                servers: {
-                    osm: {{ c.servers.osm }},
-                    mapproxy : {{ c.servers.mapproxy }},
-                    tilecache: {{ c.servers.tilecache }}
-                }
-            }
-        };
-    </script>
-
     <!-- Required by Data API client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
@@ -97,11 +44,14 @@
     <nav class="navbar navbar-default navbar-geodata navbar-fixed-top">
 		<div style="width: 100%;" class="header container">
                 <div style="float: left;">
-                    <a target="_blank" href="http://geodata.gov.gr/" class="navbar-brand geodata-brand">
-                        <img class="logo-header" alt="GeoData.gov.gr" src="../content/images/geodata-biglogo.png">
+                    <a target="_blank" href="{{ config['mapclient.url.catalog'] }}" class="navbar-brand geodata-brand">
+                        <img class="logo-header" alt="GeoData.gov.gr" src="../content/images/shared/geodata-logo.png">
                     </a>
                 </div>
-                <div style="float: right; width: 480px; margin-top: 7px;" class="input-group">
+                <div style="color: #555a64; float: left; font-family: Verdana,Arial,sans-serif; font-size: 1.7em; margin-top: 7px;">
+                Data / Mapping API Example
+                </div>
+                <div style="float: right; width: 280px; margin-top: 7px;" class="input-group">
                     <input type="text" class="form-control input-md" placeholder="Search location ..." id="location-filter-text" autocomplete="off" />
                         <span class="input-group-btn">
                             <button type="button" class="btn btn-default" id="location-filter-remove">
@@ -112,148 +62,22 @@
 		</div>
 	</nav>
     <div id="map" class="map"></div>
-</body>
-<script>
-    PublicaMundi.noConflict();
-
-    PublicaMundi.ready(function () {
-        // Initialize map
-        var options = {
-            target: 'map',
-            center: [2658716, 4600000],
-            zoom: 9,
-            minZoom: 2,
-            maxZoom: 18,
-            layers: [{
-                title: 'Open Street Maps',
-                type: PublicaMundi.LayerType.WMS,
-                url: 'http://node9.old.geodata.gov.gr:8080/service',
-                params: { 
-                    'layers' : 'osm'
-                }
-            }]
-        };
-
-        var map = PublicaMundi.map(options);
-
-        // Search
-        var clear = function() {
-            $('#location-filter-text').val('');
-            
-            if(state.layer) {
-                map.removeLayer(state.layer);
-            };
-            
-            state = {
-                layer: null,
-                selection: null,
-                results: null
-            };
-        };
-
-        $('#location-filter-remove').click(function() {
-            clear();
-        });
-
-        // Query and variables
-        var endpoint = 'http://geodata.gov.gr/maps/',               // Data API endpoint
-            settlement = 'f45c73bd-d733-4fe0-871b-49f270c56a75',    // Settlement resource of type 'table'
-            coast = '730ff252-8a59-44aa-a4dc-579492f25a20';         // Coasts resource of type 'table'
-
-        var query = new PublicaMundi.Data.Query(endpoint);
-
-        var state = {
-            layer: null,
-            selection: null,
-            results: null
-        };
-            
-
-        // Callbacks
-        var onSelectSuccess = function(result) {
-            state.result = result;
-
-            if(state.layer) {
-                map.removeLayer(state.layer);
-            };
-
-            if(state.result.success) {
-                featureLayer = map.geoJSON({
-                    data: state.result.data[0]
-                });
-            
-                map.setZoom(12);
-                map.setCenter();
-            }
-        };
-
-        var onSelectFailure = function(result) {
-        };
-
-        var showFeatures = function() {
-            query.reset().
-                resource(coast).
-                field('the_geom').field('PROVINCE').field('DESCRIPT').field('WATERNAME').
-                distance({  name : 'the_geom' }, state.selection.the_geom, 'distance').
-                distanceLessOrEqual({ name : 'the_geom'}, state.selection.the_geom, 5000).
-                orderBy('distance', true).
-                take(50).
-                skip(0).
-                setSuccess(onSelectSuccess).
-                setFailure(onSelectFailure).
-                execute();
-        };
-
-        // Search location
-        $( '#location-filter-text' ).autocomplete({
-            source: function( request, response ) {
-                // Success text search callback
-                var onSearchSuccess = function(result) {
-                    if(result.success) {
-                        response(result.data[0].map(function(currentValue, index, array) {
-                            return {
-                                label: currentValue.label,
-                                value: currentValue.label,
-                                record: currentValue
-                            };
-                        }));
-                    } else {
-                        response([]);
-                    }
-                };
-
-                // Failure text search callback
-                var onSearchFailure = function(result) {
-                    response([]);
-                };
-
-                // Search locations
-                query.reset().
-                    resource(settlement).resource(coast).
-                    field(settlement, 'the_geom').field(settlement, 'NAME_OIK', 'label').
-                    greaterOrEqual({ name: 'NAME_OIK' }, request.term).
-                    distanceLessOrEqual({ resource: settlement, name : 'the_geom'}, { resource: coast, name : 'the_geom'}, 5000).
-                    orderBy('label').
-                    format(PublicaMundi.Data.Format.JSON).
-                    take(20).
-                    skip(0).
-                    setSuccess(onSearchSuccess).
-                    setFailure(onSearchFailure).
-                    execute();
-			},
-            select: function( event, ui ) {
-                state.selection = ui.item.record;
-                
-                showFeatures();
+    <div id="popup"></div>
+    <!-- Intialization -->
+    <script type="text/javascript">
+        var config = {
+            servers: {
+                mapproxy : {{ c.servers.mapproxy }}
             },
-            minLength: 3,
-            _renderItem: function( ul, item ) {
-                return $( "<li>" )
-                    .attr( "data-value", item.value )
-                    .append( item.label )
-                    .appendTo( ul );
+            layers: {
+                osm: '{{ config['mapclient.base.layers.osm'] }}'
+            },
+            api: {
+                alias : {{ c.api.alias }}
             }
-        });
-    });
-</script>
+        };
+    </script>
+    <!-- Example code -->
+    <script src="../content/js/api/examples/client.js"></script>
+</body>
 </html>
