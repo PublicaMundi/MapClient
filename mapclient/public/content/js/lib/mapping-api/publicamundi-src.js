@@ -1,4 +1,4 @@
-/* PublicaMundi Mapping API version 0.1.0 2015-11-05 */
+/* PublicaMundi Mapping API version 0.1.0 2015-11-17 */
 /* Copyright 2013 William Summers, metaTribal LLC
  * adapted from https://developer.mozilla.org/en-US/docs/JXON
  *
@@ -687,7 +687,6 @@ else if (typeof define === "function" && define.amd) define(function() {return x
             options.projection = (PublicaMundi.isDefined(options.projection) ? options.projection : 'EPSG:3857');
             options.center = (PublicaMundi.isDefined(options.center)) ? options.center : [0, 0];
             options.zoom = (PublicaMundi.isDefined(options.zoom)) ? options.zoom : 2;
-
         },
         setExtent: function(extent) {
             return this;

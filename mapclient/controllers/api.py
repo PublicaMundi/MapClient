@@ -125,9 +125,27 @@ class ApiController(BaseController):
         # Servers
         c.servers = {
             'mapproxy' : filter(None, [s.strip() for s in config['mapclient.servers.mapproxy'].split(',')]),
-            'tilecache' : filter(None, [s.strip() for s in config['mapclient.servers.tilecache'].split(',')]),
             'osm' : filter(None, [s.strip() for s in config['mapclient.servers.osm'].split(',')])
         }
+
+        # Data API configuration
+        c.api = {
+            'alias': None
+        }
+
+        # Resource alias
+        resource_list = None
+        alias_list = None
+
+        if 'mapclient.enable.api.examples.queries.resource' in config and not config['mapclient.enable.api.examples.queries.resource'] is None:
+            resource_list = filter(None, [s.strip() for s in config['mapclient.enable.api.examples.queries.resource'].split(',')])
+
+        if 'mapclient.enable.api.examples.queries.alias' in config and not config['mapclient.enable.api.examples.queries.alias'] is None:
+            alias_list = filter(None, [s.strip() for s in config['mapclient.enable.api.examples.queries.alias'].split(',')])
+
+        if not resource_list is None and not alias_list is None:
+            if len(resource_list) > 0 and len(resource_list) == len(alias_list):
+                c.api['alias'] = dict(zip(alias_list, resource_list))
 
         # Google Analytics
         if 'mapclient.google.analytics' in config and config['mapclient.google.analytics']:
