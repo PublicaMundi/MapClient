@@ -76,6 +76,7 @@ class SearchController(BaseController):
             query = query.filter(Queryable.resource.in_(tuple(resources)))
             query = query.filter(Queryable.fields.any(Field.active == True))
             query = query.filter(Resource.visible == True)
+            query = query.filter(Queryable.active == True)
 
             queryables = query.all()
 
@@ -100,12 +101,13 @@ class SearchController(BaseController):
                 dynamic_table = None
                 dynamic_type = None
 
-                SearchController.__lock__.acquire()
-
                 if tablename in SearchController.__tables__:
                     dynamic_table = SearchController.__tables__[tablename]
                     dynamic_type = SearchController.__types__[typename]
                 else:
+                    # Get lock for updating dynamic tables/classes
+                    SearchController.__lock__.acquire()
+
                     dynamic_table = Table(q.table, metadata_ckan_data, Column(q.geometry_column, Geometry(q.srid)), autoload=True, autoload_with=engine_ckan_data)
 
                     SearchController.__tables__[tablename] = dynamic_table
@@ -145,10 +147,11 @@ class SearchController(BaseController):
 
                         SearchController.__types__[typename] = dynamic_type
 
-                SearchController.__lock__.release()
+                    # Release lock
+                    SearchController.__lock__.release()
 
 
-                filtered_fields = [str(f.name) for f in q.fields if f.active == True]
+                filtered_fields = [str(f.name) for f in q.fields if f.active == True and f.type == 'varchar']
 
                 filters = [getattr(dynamic_type, name).like(u'%' + term + u'%') for name in filtered_fields]
 
