@@ -2377,10 +2377,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         for(var i=0; i<layers.length; i++) {
             for(var j=0; j<resources.length; j++) {
                 if(layers[i].resource_id == resources[j].wms) {
-                    quyarable.push({
-                        table: resources[j].table,
-                        title: layers[i].title
-                    });
+                    quyarable.push(resources[j].table);
                     templates.push(resources[j].template);
                     break;
                 }
@@ -2400,11 +2397,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             query.reset().format(API.Data.Format.GeoJSON)
 
             for(var i=0; i<quyarable.length; i++) {
-                query.resource(quyarable[i].table).
+                query.resource(quyarable[i]).
                       distanceLessOrEqual(
                         point,
                         {
-                            resource: quyarable[i].table,
+                            resource: quyarable[i],
                             name : 'the_geom'
                         },
                         this.values.map.getView().getResolution() * this.values.buffer);

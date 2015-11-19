@@ -116,7 +116,7 @@ class MetadataController(BaseController):
                     if(resource.tree_node_caption_en != resource.description_en):
                         r['info'] = True
 
-                    if resource.queryableRef:
+                    if resource.queryableRef and resource.queryableRef.active == True:
                         r['queryable'] = {
                             'geometry' : resource.queryableRef.geometry_column,
                             'srid' : resource.queryableRef.srid,
