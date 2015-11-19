@@ -800,6 +800,12 @@
         // Layer manager
         members.resources.on('layer:created', function(args) {
 			members.components.layerSelection.add(args.id);
+
+            var parts = args.id.split('_');
+			var resource = parts[0];
+
+            members.components.layerTreeGroup.expand(resource);
+            members.components.layerTreeOrganization.expand(resource);
 		});
 
         // Left sliding panel
@@ -1198,7 +1204,7 @@
         members.ckan.loadPackageById(members.preview.package).then(function(data) {
 			var resource = members.ckan.getResourceById(members.preview.resource);
 			if(resource) {
-				members.resources.addResourceFromCatalog(members.map.control, resource);
+                members.resources.addResourceFromCatalog(members.map.control, resource);
 			}
 		}, function(error) {
 			console.log('Failed to load resource ' + members.preview.resource + ' from package ' + members.preview.package);
@@ -1364,6 +1370,5 @@
         });
     };
 
-    window.members = members;
     return PublicaMundi;
 });

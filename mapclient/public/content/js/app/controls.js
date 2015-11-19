@@ -1405,6 +1405,38 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 doFiltering();
             }
         },
+        expand: function(id) {
+            if(!this.values.ckan.isPreloadingEnabled()) {
+                return;
+            }
+
+            var node, nodes = [], data, selector, i, resource = this.values.ckan.getResourceById(id);
+
+            switch(this.values.mode) {
+                case PublicaMundi.Maps.LayerTreeViewMode.ByGroup:
+                    node = this.values.ckan.getNodeById(resource.node_id);
+
+                    while(node) {
+                        nodes.push(node.id);
+                        node = this.values.ckan.getNodeById(node.parent);
+                    }
+                    break;
+                case PublicaMundi.Maps.LayerTreeViewMode.ByOrganization:
+                    var p = this.values.ckan.getPackageById(resource.package);
+                    nodes.push(p.organization);
+                    break;
+            }
+
+            nodes = nodes.reverse();
+
+            for(i=0; i<nodes.length; i++) {
+                var selector = '#node-' + this.values.element + '-' + nodes[i];
+                var data = $(selector).data();
+                if(!data.expanded) {
+                    $(selector).find('.tree-text').first().click();
+                }
+            }
+        },
         localizeUI: function(locale) {
             switch(this.values.mode) {
                 case PublicaMundi.Maps.LayerTreeViewMode.ByGroup:
