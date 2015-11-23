@@ -492,3 +492,7 @@ img.action-button {
         z-index: 999999;
         overflow: hidden;    
     }
+
+#docs-frame{
+    border: none;
+}

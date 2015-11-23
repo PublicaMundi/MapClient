@@ -927,6 +927,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         $('.page').height($(window).height()-75).width($(window).width() - 20);
 
         switch(pageId) {
+            case 'page-docs':
+                $('#docs-frame').height($(page).height()).width($(page).width());
             case 'page-syntax':
                 $('#page-syntax .CodeMirror').height($(page).height()).width($(page).width());
                 jsonSyntaxEditor.refresh();
@@ -971,7 +973,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
             // Display default page
             $('#block-ui').fadeOut(500, function() {
-                $('#page-syntax').fadeIn(200);
+                $('#page-docs').fadeIn(200);
                 jsonSyntaxEditor.refresh();
             });
         });
