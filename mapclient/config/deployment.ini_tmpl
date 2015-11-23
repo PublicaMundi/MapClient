@@ -83,6 +83,7 @@ dataapi.cors.enabled = true
 dataapi.error.details = false
 
 dataapi.timeout = 30000
+dataapi.resource.max = 4
 
 dataapi.export.enabled = true
 dataapi.export.formats.disabled = GPKG

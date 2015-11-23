@@ -564,7 +564,8 @@ class ApiController(BaseController):
         return {
             CONFIG_SQL_CATALOG : config['dataapi.sqlalchemy.catalog'],
             CONFIG_SQL_DATA : config['dataapi.sqlalchemy.vectorstore'],
-            CONFIG_SQL_TIMEOUT : int(config['dataapi.timeout']) if 'dataapi.timeout' in config else 10000
+            CONFIG_SQL_TIMEOUT : int(config['dataapi.timeout']) if 'dataapi.timeout' in config else 10000,
+            CONFIG_MAX_RESOURCE: int(config['dataapi.resource.max']) if 'dataapi.resource.max' in config else 4
         }
 
     def _export_partial_result(self, text, path, filename, crs, export_format):
