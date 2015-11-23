@@ -118,7 +118,7 @@ class ApiController(BaseController):
 
         return render('/api/dashboard.jinja2')
 
-    def examples(self):
+    def demo(self):
         if not 'mapclient.enable.api.examples' in config or not asbool(config['mapclient.enable.api.examples']) == True:
             abort(404, 'Data API examples page is not enabled.')
 

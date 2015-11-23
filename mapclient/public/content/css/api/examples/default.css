@@ -56,3 +56,15 @@ body {
     height: 100vh;
     padding: 0;
 }
+
+.table-panel {
+    position: absolute;
+    width: 400px;
+    top: 120px;
+    left: 8px;
+    border: 1px solid #dadada;
+    max-height: 400px;
+    overflow: auto;
+    background: white;
+    padding: 4px;
+}
