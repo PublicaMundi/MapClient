@@ -41,7 +41,7 @@ CREATE TABLE public.link
 (
   url character varying(30),
   configuration text NOT NULL,
-  ip character varying(32),
+  ip character varying(45),
   index bigint NOT NULL DEFAULT nextval('link_index_seq'::regclass),
   CONSTRAINT pk_link PRIMARY KEY (index)
 )
