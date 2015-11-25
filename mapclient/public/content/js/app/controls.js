@@ -3700,19 +3700,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 }
             });
 
-            // http://stackoverflow.com/questions/891696/jquery-what-is-the-best-way-to-restrict-number-only-input-for-textboxes-all
-            $('#' + this.values.element + '-x, #' + this.values.element + '-y').keydown(function(e) {
-                var controlKeys = [8, 9, 13, 35, 36, 37, 39, 46];
-                if(controlKeys.indexOf(e.which) >= 0) {
-                    return;
-                }
-                var v = (this.value || '') + e.key;
-                if($.isNumeric(v) === false) {
-                    //chop off the last char entered
-                    e.preventDefault();
-                }
-            });
-
             $('#' + this.values.element + '-x, #' + this.values.element + '-y').change(function() {
                 var value = parseFloat(this.value)
 
