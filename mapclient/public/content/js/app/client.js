@@ -369,8 +369,9 @@
 
         $('#' + members.config.google.target).show();
 
-        //members.map.control.getLayers().item(0).setOpacity(0);
         $('.ol-attribution').addClass('ol-attribution-google');
+
+        updateDragZoomInteractionKinetic(true);
     };
 
     var disableGoogleMaps = function() {
@@ -380,14 +381,33 @@
         members.map.google.controls[google.maps.ControlPosition.TOP_LEFT].pop();
 
         $('#' + members.config.google.target).parent().append($olMapDiv);
-        //members.map.control.getLayers().item(0).setOpacity(1);
 
         var view = members.map.control.getView();
         view.un('change:center', syncGoogleCenter);
         view.un('change:resolution', syncGoogleResolution);
 
         $('.ol-attribution').removeClass('ol-attribution-google');
-   }
+
+        updateDragZoomInteractionKinetic(false);
+    }
+
+    var updateDragZoomInteractionKinetic = function(isGoogle) {
+        var dragPan, index = 0, interactions = members.map.control.getInteractions();
+        interactions.forEach(function(interaction) {
+            if (interaction instanceof ol.interaction.DragPan) {
+                if(isGoogle) {
+                    interactions.setAt(index, new ol.interaction.DragPan({
+                        kinetic: new ol.Kinetic(-1, 10, 200)
+                    }));
+                } else {
+                    interactions.setAt(index, new ol.interaction.DragPan({
+                        kinetic: new ol.Kinetic(-0.005, 0.05, 100)
+                    }));
+                }
+            }
+            index++;
+        }, this);
+    }
 
 	var createBaseLayer = function(type, set) {
 		var layer = null, prev_propeties = null;
