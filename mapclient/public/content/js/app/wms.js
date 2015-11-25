@@ -252,8 +252,6 @@
                 }),
             });
 
-			map.addLayer(__object);
-
 			return __object;
         }
     });

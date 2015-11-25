@@ -55,7 +55,6 @@
     "action.create-link.title" : "Copy link",
     "action.create-link-embed.title": "Embed map",
     "action.create-link.link.placeholder" : "",
-    "action.create-link.error.copy" : "Failed to copy link to clipboard. Please select & copy the link manually.",
     "action.create-link-embed.label.lib" : "Mapping Library",
     "action.create-link-embed.label.code" : "Code",
 
@@ -95,10 +94,10 @@
     "tool.select.title" : "Select object",
     "tool.select.dialog.title" : "Object properties",
 
-    "action.set-position.title" : "Set position",
-    "control.set-position.dialog.label.title" : "Set position",
-    "control.set-position.dialog.label.x" : "X",
-    "control.set-position.dialog.label.y" : "Y",
+    "action.set-position.title" : "Move to coordinates",
+    "control.set-position.dialog.label.crs" : "Reference System",
+    "control.set-position.dialog.label.x" : "Longitude",
+    "control.set-position.dialog.label.y" : "Latitude",
     "control.set-position.dialog.button.move" : "Move",
 
     "action.clear.title" : "Clear map",

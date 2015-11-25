@@ -7,11 +7,11 @@
 		},
         config: module.config(),
         ckan: null,
-        ckan: null,
         resources: null,
         map: {
+            config: null,
             control: null,
-            config: null
+            google: null
         },
         interactions: { },
         tools: { },
@@ -67,8 +67,8 @@
     var initializeParameters = function () {
         // Set default values
         members.config.geolocation = true;
-        members.config.map.minZoom = 7;
-        members.config.map.maxZoom = 19;
+        members.config.map.minZoom = members.config.map.minZoom || 7;
+        members.config.map.maxZoom = members.config.map.maxZoom || 19;
 
         // Get additional configuration from the query string
         var query = URI.parse(window.location.href).query;
@@ -113,13 +113,290 @@
         }
     };
 
+    var createOSM = function() {
+        if(members.config.servers.osm.length > 0) {
+            // 1: Use custom XYZ source
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: new ol.source.XYZ({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ],
+                    urls: members.config.servers.osm
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        } else if(members.config.servers.mapproxy.length > 0) {
+            // 2: User Map Proxy
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: new ol.source.TileWMS({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ],
+                    url: members.config.servers.mapproxy,
+                    params: {
+                        'SERVICE': 'WMS',
+                        'VERSION': '1.1.1',
+                        'LAYERS': members.config.layers.osm
+                    }
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        } else {
+            // 3: Use default OSM tiles (not recommended)
+            // http://wiki.openstreetmap.org/wiki/Tile.openstreetmap.org/Usage_policy
+
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: new ol.source.OSM ({
+                    attributions: [
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                }),
+                opacity: ($('#base-layer-opacity').val() / 100.0)
+            });
+        }
+
+        return null;
+    }
+
+    var createHellenicCadastreBaseLayer = function() {
+        if(members.config.servers.tilecache.length > 0) {
+            // 1: Use tilecache if available
+            var tileGrid = new ol.tilegrid.TileGrid({
+                    origin: [1948226, 4024868],
+                    extent: [1948226, 4024868, 4008846, 5208724],
+                    tileSize: 512,
+                    resolutions: [156543.03390000001, 78271.516950000005, 39135.758475000002, 19567.879237500001, 9783.9396187500006, 4891.9698093750003, 2445.9849046875001,
+                                  1222.9924523437501, 611.49622617187504, 305.74811308593752, 152.87405654296876, 76.43702827148438, 38.21851413574219, 19.109257067871095,
+                                  9.5546285339355475, 4.7773142669677737, 2.3886571334838869, 1.1943285667419434, 0.59716428337097172, 0.29858214168548586, 0.14929107084274293,
+                                  0.074645535421371464, 0.037322767710685732, 0.018661383855342866]
+            });
+
+            var source = new ol.source.TileWMS({
+                urls: members.config.servers.tilecache,
+                params: {
+                    VERSION: '1.1.0',
+                    LAYERS: members.config.layers.ktimatologio,
+                    TRANSPARENT :true
+                },
+                projection: 'EPSG:900913',
+                attributions: [
+                    new ol.Attribution({
+                        html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
+                              'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
+                              '<img src="content/images/app/ktimatologio-logo.png"/></a>'
+                    })
+                ],
+                tileGrid: tileGrid
+            });
+
+            var fn = source.tileUrlFunction;
+
+            source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
+                var url = fn(tileCoord, pixelRatio, projection);
+                var parts = URI.parse(url) || {};
+                var params = (parts.query ? URI.parseQuery(parts.query) : {});
+
+                params.SRS = 'EPSG:900913';
+
+                var fixedUrl = URI.build({
+                    protocol: (parts.protocol ? parts.protocol : 'http'),
+                    hostname: parts.hostname,
+                    port: (parts.port === '80' ? '' : parts.port),
+                    path: parts.path,
+                    query: URI.buildQuery(params)
+                });
+
+                return fixedUrl;
+            };
+
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: source
+            });
+        } else if(members.config.servers.mapproxy.length > 0) {
+            // 2: Use Map Proxy if available
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: new ol.source.TileWMS({
+                    projection: 'EPSG:900913',
+                    attributions: [
+                        new ol.Attribution({
+                            html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
+                                  'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
+                                  '<img src="content/images/app/ktimatologio-logo.png"/></a>'
+                        })
+                    ],
+                    url: members.config.servers.mapproxy,
+                    params: {
+                        'SERVICE': 'WMS',
+                        'VERSION': '1.1.0',
+                        'LAYERS': 'ktimatologio'
+                    }
+                })
+            });
+        } else {
+            // 3: Use default WMS
+            var params = {
+                'SERVICE': 'WMS',
+                'VERSION': '1.1.0',
+                'LAYERS': 'KTBASEMAP'
+            };
+
+            var source = new ol.source.TileWMS({
+                url: 'http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',
+                params: params,
+                projection: 'EPSG:900913',
+                attributions: [
+                    new ol.Attribution({
+                        html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
+                              'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
+                              '<img src="content/images/app/ktimatologio-logo.png"/></a>'
+                    })
+                ]
+            });
+
+            var fn = source.tileUrlFunction;
+
+            source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
+                var url = fn(tileCoord, pixelRatio, projection);
+                var parts = URI.parse(url) || {};
+                var params = (parts.query ? URI.parseQuery(parts.query) : {});
+
+                params.SRS = 'EPSG:900913';
+
+                var fixedUrl = URI.build({
+                    protocol: (parts.protocol ? parts.protocol : 'http'),
+                    hostname: parts.hostname,
+                    port: (parts.port === '80' ? '' : parts.port),
+                    path: parts.path,
+                    query: URI.buildQuery(params)
+                });
+
+                return fixedUrl;
+            };
+
+            return new ol.layer.Tile({
+                extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
+                source: source
+            });
+        }
+
+        return null;
+    };
+
+    var createTileGrid = function() {
+        var canvasFunction = function(extent, resolution, pixelRatio, size, projection) {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+
+            var canvasWidth = size[0], canvasHeight = size[1];
+            canvas.setAttribute('width', canvasWidth);
+            canvas.setAttribute('height', canvasHeight);
+
+            var map = members.map.control;
+            var canvasOrigin = map.getPixelFromCoordinate([extent[0], extent[3]]);
+
+            var img=$("#grid-tiles")[0];
+            var pat=context.createPattern(img,"repeat");
+            context.rect(canvasOrigin[0],canvasOrigin[1],canvasWidth - canvasOrigin[0],canvasHeight - canvasOrigin[1]);
+            context.fillStyle=pat;
+            context.fill();
+
+            var osmExtent = [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408];
+            var topLeft = map.getPixelFromCoordinate([osmExtent[0], osmExtent[3]]);
+            var bottomRight = map.getPixelFromCoordinate([osmExtent[2], osmExtent[1]]);
+
+            context.clearRect(topLeft[0]-canvasOrigin[0], topLeft[1]-canvasOrigin[1], bottomRight[0]-topLeft[0], bottomRight[1]-topLeft[1]);
+
+            return canvas;
+        };
+
+        return new ol.layer.Image({
+            source: new ol.source.ImageCanvas({
+                canvasFunction: canvasFunction,
+                projection: 'EPSG:3857'
+            })
+        });
+    };
+
+    var syncGoogleCenter = function() {
+        var view = members.map.control.getView();
+        var center = ol.proj.transform(view.getCenter(), 'EPSG:3857', 'EPSG:4326');
+        members.map.google.setCenter(new google.maps.LatLng(center[1], center[0]));
+    };
+
+    var syncGoogleResolution = function() {
+        var view = members.map.control.getView();
+        members.map.google.setZoom(view.getZoom());
+    };
+
+    var enableGoogleMaps = function(set) {
+        if(!members.map.google) {
+            members.map.google = new google.maps.Map(document.getElementById('gmap'), {
+                mapTypeId: google.maps.MapTypeId.SATELLITE,
+                disableDefaultUI: true,
+                keyboardShortcuts: false,
+                draggable: false,
+                disableDoubleClickZoom: true,
+                scrollwheel: false,
+                streetViewControl: false
+            });
+        }
+        var view = members.map.control.getView();
+
+        view.on('change:center', syncGoogleCenter);
+
+        view.on('change:resolution', syncGoogleResolution);
+
+        var $olMapDiv = $('#' + members.config.map.target);
+        $olMapDiv.remove();
+
+        view.setCenter(view.getCenter());
+        view.setZoom(view.getZoom());
+
+        members.map.google.controls[google.maps.ControlPosition.TOP_LEFT].push($olMapDiv[0]);
+
+        $('#' + members.config.google.target).show();
+
+        //members.map.control.getLayers().item(0).setOpacity(0);
+        $('.ol-attribution').addClass('ol-attribution-google');
+    };
+
+    var disableGoogleMaps = function() {
+        var $olMapDiv = $('#' + members.config.map.target);
+
+        $('#' + members.config.google.target).hide();
+        members.map.google.controls[google.maps.ControlPosition.TOP_LEFT].pop();
+
+        $('#' + members.config.google.target).parent().append($olMapDiv);
+        //members.map.control.getLayers().item(0).setOpacity(1);
+
+        var view = members.map.control.getView();
+        view.un('change:center', syncGoogleCenter);
+        view.un('change:resolution', syncGoogleResolution);
+
+        $('.ol-attribution').removeClass('ol-attribution-google');
+   }
+
 	var createBaseLayer = function(type, set) {
-		var layer = null;
+		var layer = null, prev_propeties = null;
+
+        prev_propeties = members.map.control.get('base_layer_properties');
+
+        members.map.control.set('base_layer_properties', {
+            type : type,
+            set : set,
+            exists: (type != 'google')
+        });
 
 		switch(type) {
 			case 'bing':
 				if(members.config.bing.key) {
 					layer = new ol.layer.Tile({
+                        extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
 						source: new ol.source.BingMaps({
 							key: members.config.bing.key,
 							imagerySet: set
@@ -129,142 +406,29 @@
 				break;
 			case 'stamen':
 				layer = new ol.layer.Tile({
+                    extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
 					source: new ol.source.Stamen({layer: set })
 				});
 				break;
 			case 'mapquest':
 				layer = new ol.layer.Tile({
+                    extent: [2137334.22323, 4117771.96011, 3332905.55435, 5150499.54408],
 					source: new ol.source.MapQuest({layer: set })
 				});
 				break;
 			case 'ktimatologio':
-                if(members.config.servers.tilecache.length > 0) {
-                    // 1: Use tilecache if available
-                    var tileGrid = new ol.tilegrid.TileGrid({
-                            origin: [1948226, 4024868],
-                            extent: [1948226, 4024868, 4008846, 5208724],
-                            tileSize: 512,
-                            resolutions: [156543.03390000001, 78271.516950000005, 39135.758475000002, 19567.879237500001, 9783.9396187500006, 4891.9698093750003, 2445.9849046875001,
-                                          1222.9924523437501, 611.49622617187504, 305.74811308593752, 152.87405654296876, 76.43702827148438, 38.21851413574219, 19.109257067871095,
-                                          9.5546285339355475, 4.7773142669677737, 2.3886571334838869, 1.1943285667419434, 0.59716428337097172, 0.29858214168548586, 0.14929107084274293,
-                                          0.074645535421371464, 0.037322767710685732, 0.018661383855342866]
-                    });
-
-                    var source = new ol.source.TileWMS({
-                        urls: members.config.servers.tilecache,
-                        params: {
-                            VERSION: '1.1.0',
-                            LAYERS: members.config.layers.ktimatologio,
-                            TRANSPARENT :true
-                        },
-                        projection: 'EPSG:900913',
-                        attributions: [
-                            new ol.Attribution({
-                                html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
-                                      'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                      '<img src="content/images/app/ktimatologio-logo.png"/></a>'
-                            })
-                        ],
-                        tileGrid: tileGrid
-                    });
-
-                    var fn = source.tileUrlFunction;
-
-                    source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
-                        var url = fn(tileCoord, pixelRatio, projection);
-                        var parts = URI.parse(url) || {};
-                        var params = (parts.query ? URI.parseQuery(parts.query) : {});
-
-                        params.SRS = 'EPSG:900913';
-
-                        var fixedUrl = URI.build({
-                            protocol: (parts.protocol ? parts.protocol : 'http'),
-                            hostname: parts.hostname,
-                            port: (parts.port === '80' ? '' : parts.port),
-                            path: parts.path,
-                            query: URI.buildQuery(params)
-                        });
-
-                        return fixedUrl;
-                    };
-
-                    layer = new ol.layer.Tile({
-                        source: source
-                    });
-                } else if(members.config.servers.mapproxy.length > 0) {
-                    // 2: Use Map Proxy if available
-                    layer = new ol.layer.Tile({
-                        source: new ol.source.TileWMS({
-                            projection: 'EPSG:900913',
-                            attributions: [
-                                new ol.Attribution({
-                                    html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
-                                          'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                          '<img src="content/images/app/ktimatologio-logo.png"/></a>'
-                                })
-                            ],
-                            url: members.config.servers.mapproxy,
-                            params: {
-                                'SERVICE': 'WMS',
-                                'VERSION': '1.1.0',
-                                'LAYERS': 'ktimatologio'
-                            }
-                        })
-                    });
-                } else {
-                    // 3: Use default WMS
-                    var params = {
-                        'SERVICE': 'WMS',
-                        'VERSION': '1.1.0',
-                        'LAYERS': 'KTBASEMAP'
-                    };
-
-                    var source = new ol.source.TileWMS({
-                        url: 'http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',
-                        params: params,
-                        projection: 'EPSG:900913',
-                        attributions: [
-                            new ol.Attribution({
-                                html: '<a href="' + PublicaMundi.i18n.getResource('attribution.ktimatologio.url') + '" ' +
-                                      'data-i18n-id="attribution.ktimatologio.url" data-i18n-type="attribute" data-i18n-name="href">' +
-                                      '<img src="content/images/app/ktimatologio-logo.png"/></a>'
-                            })
-                        ]
-                    });
-
-                    var fn = source.tileUrlFunction;
-
-                    source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
-                        var url = fn(tileCoord, pixelRatio, projection);
-                        var parts = URI.parse(url) || {};
-                        var params = (parts.query ? URI.parseQuery(parts.query) : {});
-
-                        params.SRS = 'EPSG:900913';
-
-                        var fixedUrl = URI.build({
-                            protocol: (parts.protocol ? parts.protocol : 'http'),
-                            hostname: parts.hostname,
-                            port: (parts.port === '80' ? '' : parts.port),
-                            path: parts.path,
-                            query: URI.buildQuery(params)
-                        });
-
-                        return fixedUrl;
-                    };
-
-                    layer = new ol.layer.Tile({
-                        source: source
-                    });
-                }
+                layer = createHellenicCadastreBaseLayer();
 				break;
+            case 'google':
+                enableGoogleMaps(set);
+                break;
 			default:
 				console.log('Base layer of type ' + type + ' is not supported.');
 		}
 
-        layer.publicamundi = {
-            'type' : type,
-            'set' : set
-        };
+        if((prev_propeties) && (prev_propeties.type == 'google')) {
+            disableGoogleMaps();
+        }
 
 		return layer;
 	};
@@ -282,6 +446,7 @@
     };
 
     var initializeMap = function () {
+        // View
         var view = new ol.View({
             projection: PublicaMundi.Maps.CRS.Mercator,
             center: members.config.map.center || [0, 0],
@@ -291,56 +456,8 @@
             extent: [-20037508.3392, -20048966.10, 20037508.3392, 20048966.10]
         });
 
-        var layers = [];
-
-		var selection = $('#base_layer option:selected')
-		var layer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
-
-		layers.push(layer);
-
-        if(members.config.servers.osm.length > 0) {
-            // 1: Use custom XYZ source
-            layers.push(new ol.layer.Tile({
-                source: new ol.source.XYZ({
-                    attributions: [
-                        ol.source.OSM.ATTRIBUTION
-                    ],
-                    urls: members.config.servers.osm
-                }),
-                opacity: ($('#base-layer-opacity').val() / 100.0)
-            }));
-        } else if(members.config.servers.mapproxy.length > 0) {
-            // 2: User Map Proxy
-            layers.push(new ol.layer.Tile({
-                source: new ol.source.TileWMS({
-                    attributions: [
-                        ol.source.OSM.ATTRIBUTION
-                    ],
-                    url: members.config.servers.mapproxy,
-                    params: {
-                        'SERVICE': 'WMS',
-                        'VERSION': '1.1.1',
-                        'LAYERS': members.config.layers.osm
-                    }
-                }),
-                opacity: ($('#base-layer-opacity').val() / 100.0)
-            }));
-        } else {
-            // 3: Use default OSM tiles (not recommended)
-            // http://wiki.openstreetmap.org/wiki/Tile.openstreetmap.org/Usage_policy
-
-            layers.push(new ol.layer.Tile({
-                source: new ol.source.OSM ({
-                    attributions: [
-                        ol.source.OSM.ATTRIBUTION
-                    ]
-                }),
-                opacity: ($('#base-layer-opacity').val() / 100.0)
-            }));
-        }
-
+        // Map Interactions
         var interactions = ol.interaction.defaults();
-
         interactions.removeAt(interactions.getLength() -1);
 
         members.interactions.zoom = new ol.interaction.DragZoom({
@@ -358,7 +475,8 @@
 
         interactions.push(members.interactions.zoom);
 
-        var controls = []; //ol.control.defaults();
+        // Map Controls
+        var controls = [];
         controls.push(new ol.control.Zoom({
 			zoomInTipLabel : '',
 			zoomOutTipLabel : ''
@@ -369,15 +487,30 @@
 			collapsible : false
 		}));
 
+        // Map
         members.map.control = new ol.Map({
             target: members.config.map.target,
             view: view,
             controls: controls,
             interactions: interactions,
-            ol3Logo: false,
-            layers: layers
+            ol3Logo: false
         });
 
+        // Map Base Layers
+        var layer;
+
+		var selection = $('#base_layer option:selected')
+
+		layer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
+        members.map.control.addLayer(layer);
+
+        layer = createOSM();
+        members.map.control.addLayer(layer);
+
+        layer = createTileGrid();
+        members.map.control.getLayers().insertAt(0, layer);
+
+        // Initialize View
         if (members.config.map.bbox) {
             var size = members.map.control.getSize();
             view.fitExtent(members.config.map.bbox, size);
@@ -391,7 +524,7 @@
             });
         }
 
-        //Mouse Position
+        // Map External Controls
         var mousePositionControl = new ol.control.MousePosition({
             coordinateFormat: function (coordinate) {
                 return ol.coordinate.format(coordinate, '{x} , {y}', 4);
@@ -402,6 +535,12 @@
         });
         members.map.control.addControl(mousePositionControl);
 
+		var scaleLineControl = new ol.control.ScaleLine({
+			target: document.getElementById('scale-line')
+		});
+		members.map.control.addControl(scaleLineControl);
+
+        // Custom controls
         $('#pos_epsg').selectpicker().change(function () {
             var projection = ol.proj.get($('#pos_epsg option:selected').val());
 
@@ -410,12 +549,6 @@
 
             $('[data-id="pos_epsg"]').blur();
         });
-
-		// Scale line control
-		var scaleLineControl = new ol.control.ScaleLine({
-			target: document.getElementById('scale-line')
-		});
-		members.map.control.addControl(scaleLineControl);
     };
 
     // TODO : Propagate resize events to controls
@@ -441,7 +574,7 @@
 
         $('#map').offset({top : headerHeight , left : 0}).height(height - footerHeight + 10);
 
-        $('.resource-data-search').width(width - 893 + ($('#base-layer-label').is(':visible') ? 0 : 270));
+        $('.resource-data-search').width(width - 930 + ($('#base-layer-label').is(':visible') ? 0 : 310));
 
         if($('#panel-left-splitter').is(":visible")) {
             $('#panel-left-splitter').css('left', $('#panel-left').width());
@@ -1073,20 +1206,26 @@
     var setBaseLayer = function(type, set, opacity) {
         opacity = (opacity === 0 ? opacity : opacity || 100);
 
-        var newBaseLayer = createBaseLayer(type, set);
+        var baseLayerProperties = members.map.control.get('base_layer_properties');
+        var oldBaseLayer = (baseLayerProperties.exists ? members.map.control.getLayers().item(1) : null);
 
-        var oldBaseLayer = members.map.control.getLayers().item(0);
-
-        var overlayBaseLayer = members.map.control.getLayers().item(1);
+        var overlayBaseLayer = members.map.control.getLayers().item((baseLayerProperties.exists ? 2 : 1));
         overlayBaseLayer.setOpacity(opacity / 100.0);
 
-        members.map.control.getLayers().insertAt(1, newBaseLayer);
+        var newBaseLayer = createBaseLayer(type, set);
 
-        setTimeout(function () {
-            members.map.control.getLayers().remove(oldBaseLayer);
-        }, 1000);
+        if(newBaseLayer) {
+            members.map.control.getLayers().insertAt((baseLayerProperties.exists ? 2 : 1), newBaseLayer);
+        }
+
+        if(oldBaseLayer) {
+            setTimeout(function () {
+                members.map.control.getLayers().remove(oldBaseLayer);
+            }, 500);
+        }
 
         $('#base-layer-opacity').val(opacity);
+
         $('#base_layer').val(type + '-' + set).selectpicker('refresh');
         $('.selectpicker').tooltip().tooltip('disable');
     };
@@ -1102,7 +1241,8 @@
         });
 
         $('#base-layer-opacity').change(function() {
-			members.map.control.getLayers().item(1).setOpacity($(this).val() / 100.0);
+            var baseLayerProperties = members.map.control.get('base_layer_properties');
+			members.map.control.getLayers().item((baseLayerProperties.exists ? 2 : 1)).setOpacity($(this).val() / 100.0);
 		});
     };
 

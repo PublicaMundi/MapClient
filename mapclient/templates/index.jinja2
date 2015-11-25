@@ -14,8 +14,9 @@
 
     <title>GEODATA.gov.gr - Maps</title>
     <link rel="shortcut icon" href="content/images/shared/geodatagovgr.ico" />
+    <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
     <script type="text/javascript">
-        var ﻿require = {
+        var require = {
             config: {
                 shared: {
                     debug: {{config['mapclient.debug']}},
@@ -28,15 +29,19 @@
                         path: '{{ h.url_for(controller='proxy', action='proxy_resource')}}',
                         param: 'url'
                     },
+                    google: {
+                        enabled: {{config['mapclient.base.layer.google.enabled']}},
+                        target: 'gmap'
+                    },
                     bing: {
-                        {% if 'mapclient.base.layer.key' in config %}
-                            key: '{{config['mapclient.base.layer.key']}}'
+                        {% if 'mapclient.base.layer.bing.key' in config %}
+                            key: '{{config['mapclient.base.layer.bing.key']}}'
                         {% else %}
                             key: null
                         {% endif %}
                     },
                     map: {
-                        target: 'map',
+                        target: 'olmap',
                         {% if 'mapclient.map.center' in config %}
                             center: [{{config['mapclient.map.center']}}],
                         {% else %}
@@ -47,7 +52,9 @@
                         {% else %}
                             zoom: 7
                         {% endif %},
-                        extent : [2091828, 4030970, 3362556, 5163926]
+                        extent : [2091828, 4030970, 3362556, 5163926],
+                        minZoom: 7,
+                        maxZoom: 19
                     },
                     ckan: {
                         endpoint: '{{config['mapclient.url.catalog']}}',
@@ -109,6 +116,9 @@
     {% endif %}
 </head>
 <body>
+    <div style="display: none;">
+        <img id="grid-tiles" src="content/images/shared/grid.png" />
+    </div>
     <div id="block-ui">
         <div id="loader-icon">
 			<div>
@@ -119,7 +129,10 @@
 			</div>
         </div>
     </div>
-    <div id="map"></div>
+    <div id="map">
+      <div id="gmap" style="width: 100%; height: 100%; display: none;"></div>
+      <div id="olmap" style="width: 100%; height: 100%;"></div>
+    </div>
 	<nav class="navbar navbar-default navbar-geodata navbar-fixed-top">
 		<div class="header container" style="width: 100%;">
                 <div style="float: left;">
@@ -140,7 +153,7 @@
 					Διαφάνεια
 				</div>
 				<div class="device1" style="float: right; padding-top: 8px; padding-right: 6px;">
-					<select name="base_layer" id="base_layer" data-width="210px" autocomplete="off">
+					<select name="base_layer" id="base_layer" data-width="245px" autocomplete="off">
 						<option data-i18n-id="index.layer.ktimatologio"
                                 data-key=""
 								data-type="ktimatologio"
@@ -160,7 +173,14 @@
 								data-set="hyb"
 								value="mapquest-hyb">Map Quest - Hybrid</option>
 						-->
-						{% if config['mapclient.base.layer.key'] != '' %}
+                        {% if config['mapclient.base.layer.google.enabled'] == 'true' %}
+						<option data-key=""
+								data-type="google"
+								data-set="SATELLITE"
+                                data-content="Google Maps Satellite<span class='experimental'>Experimental</span>"
+								value="google-SATELLITE">Google Maps</option>
+                        {% endif %}
+						{% if config['mapclient.base.layer.bing.key'] != '' %}
 						<option data-key="{{config['mapclient.base.layer.key']}}"
 								data-type="bing"
 								data-set="Aerial"
@@ -284,17 +304,23 @@
         </div>
         <div class="tools-content">
             <div id="tools" class="clearfix tools">
-                <div class="device1 tool-wrapper" id="tool-length"></div>
-                <div class="device1 tool-wrapper" id="tool-area"></div>
-                <div class="device1 tool-wrapper" id="tool-export"></div>
-                <div class="tool-wrapper" id="action-wms"></div>
-                <div class="device1 tool-wrapper" id="action-upload"></div>
-                <div class="tool-wrapper" id="action-position"></div>
-                <div class="tool-wrapper" id="action-link"></div>
-                <div class="device1 tool-wrapper" id="action-embed"></div>
-                <div class="device1 tool-wrapper" id="action-parse"></div>
-                <div class="tool-wrapper" id="restore-zoom"></div>
-                <div class="tool-wrapper" style="float: right; margin-right: 3px;" id="action-clear"></div>
+                <div class="clearfix">
+                    <div class="device1 tool-wrapper" id="tool-length"></div>
+                    <div class="device1 tool-wrapper" id="tool-area"></div>
+                    <div class="device1 tool-wrapper" id="tool-export"></div>
+                </div>
+                <div class="clearfix">
+                    <div class="tool-wrapper" id="action-position"></div>
+                    <div class="device1 tool-wrapper" id="action-parse"></div>
+                    <div class="device1 tool-wrapper" id="action-upload"></div>
+                    <div class="tool-wrapper" id="action-wms"></div>
+                </div>
+                <div class="clearfix">
+                    <div class="tool-wrapper" id="action-link"></div>
+                    <div class="device1 tool-wrapper" id="action-embed"></div>
+                    <div class="tool-wrapper" id="restore-zoom"></div>
+                    <div class="tool-wrapper" style="float: right; margin-right: 3px;" id="action-clear"></div>
+                </div>
             </div>
             <div id="tool-actions-header" class="clearfix tool-actions-header" style="display: none;">
                 <div class="tools-header-label">

@@ -1412,6 +1412,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
             var node, nodes = [], data, selector, i, resource = this.values.ckan.getResourceById(id);
 
+            if(!resource) {
+                return;
+            }
+
             switch(this.values.mode) {
                 case PublicaMundi.Maps.LayerTreeViewMode.ByGroup:
                     node = this.values.ckan.getNodeById(resource.node_id);
@@ -1861,8 +1865,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     var area = Math.abs(wgs84Sphere.geodesicArea(coordinates));
 
                     var output;
-                    if (area > 10000) {
-                        output = (Math.round(area / 1000000 * 100) / 100) + ' ' + 'km<sup>2</sup>';
+                    if (area > 1000000) {
+                        output = (Math.round(area / 1000000 * 1000) / 1000) + ' ' + 'km<sup>2</sup>';
                     } else {
                         output = (Math.round(area * 100) / 100) + ' ' + 'm<sup>2</sup>';
                     }
@@ -3657,7 +3661,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 title: 'action.set-position.title',
                 element: this.values.element + '-dialog',
                 visible: false,
-                width: 220,
+                width: 350,
                 height: 280,
                 autofit: true,
                 buttons: {
@@ -3674,13 +3678,18 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     var content = [];
 
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.x">' +
+                    content.push('<label for="' + self.values.element + '-crs" style="padding-right: 10px; width: 150px;" data-i18n-id="control.set-position.dialog.label.crs">' +
+                                 PublicaMundi.i18n.getResource('control.set-position.dialog.label.crs') + '</label>');
+                    content.push('<span id="' + self.values.element + '-crs" style="padding-right: 10px; width: 130px;">' + self.projectionToString() + '</span>');
+                    content.push('</div>');
+                    content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
+                    content.push('<label for="' + self.values.element + '-x" style="padding-right: 10px; width: 150px;" data-i18n-id="control.set-position.dialog.label.x">' +
                                  PublicaMundi.i18n.getResource('control.set-position.dialog.label.x') + '</label>');
                     content.push('<input id="' + self.values.element + '-x" class="form-control input-md" type="text" style="width: 150px;">');
                     content.push('</div>');
 
                     content.push('<div class="clearfix form-inline" style="padding-bottom: 10px;">');
-                    content.push('<label for="' + self.values.element + '-title" style="padding-right: 10px; width: 25px;" data-i18n-id="control.set-position.dialog.label.y">' +
+                    content.push('<label for="' + self.values.element + '-y" style="padding-right: 10px; width: 150px;" data-i18n-id="control.set-position.dialog.label.y">' +
                                  PublicaMundi.i18n.getResource('control.set-position.dialog.label.y') + '</label>');
                     content.push('<input id="' + self.values.element + '-y" class="form-control input-md" type="text" style="width: 150px;">');
                     content.push('</div>');
@@ -3692,11 +3701,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             });
 
             // http://stackoverflow.com/questions/891696/jquery-what-is-the-best-way-to-restrict-number-only-input-for-textboxes-all
-
             $('#' + this.values.element + '-x, #' + this.values.element + '-y').keydown(function(e) {
-                var controlKeys = [8, 9, 13, 35, 36, 37, 39];
+                var controlKeys = [8, 9, 13, 35, 36, 37, 39, 46];
                 if(controlKeys.indexOf(e.which) >= 0) {
-                    return ;
+                    return;
                 }
                 var v = (this.value || '') + e.key;
                 if($.isNumeric(v) === false) {
@@ -3706,8 +3714,46 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             });
 
             $('#' + this.values.element + '-x, #' + this.values.element + '-y').change(function() {
-                this.value = parseFloat(this.value).toFixed(4);
+                var value = parseFloat(this.value)
+
+                if(!isNaN(value)) {
+                    this.value = value.toFixed(4);
+                } else {
+                    this.value = ''
+                }
             });
+
+            // http://openlayers.org/en/v3.3.0/examples/vector-labels.js
+            var featureStyleFunction = function(feature, resolution) {
+                var geom = feature.getGeometry();
+
+                return [
+                    new ol.style.Style({
+                        zIndex: Infinity,
+                        image: new ol.style.Icon({
+                            anchor: [15,28],
+                            anchorXUnits: 'pixels',
+                            anchorYUnits: 'pixels',
+                            src: 'content/images/app/map-pin.svg'
+                        }),
+                        text: new ol.style.Text({
+                            textAlign: 'center',
+                            font: '10pt Tahoma,Arial Normal',
+                            text: feature.get('label') || '',
+                            fill: new ol.style.Fill({color: 'black'}),
+                            //stroke: new ol.style.Stroke({color: 'white', width: 1}),
+                            offsetX: 0,
+                            offsetY: 20
+                        })
+                    })
+                ]
+            };
+
+            this.values.overlay = new ol.FeatureOverlay({
+                style: featureStyleFunction
+            });
+
+            this.values.overlay.setMap(this.values.map);
 
             this.values.dialog.on('dialog:show', function(args) {
                 var center = self.values.map.getView().getCenter();
@@ -3722,8 +3768,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     switch(args.action){
                         case 'update':
                             var center = self.getPosition();
+
                             if(center) {
-                                center = ol.proj.transform(center, self.values.projection, 'EPSG:3857');
+                                self.addPinToPosition();
+
+                                center = ol.proj.transform(center, self.values.projection, PublicaMundi.Maps.CRS.Mercator);
                                 self.values.map.getView().setCenter(center);
                             }
                             break;
@@ -3737,6 +3786,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         },
         execute: function() {
 			this.values.dialog.show();
+            this.values.dialog.moveTo(310, 65);
 		},
         getPosition: function() {
             if(this.values.projection) {
@@ -3755,6 +3805,22 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 $('#' + this.values.element + '-y').val(position[1].toFixed(4));
             };
         },
+        projectionToString: function() {
+            var code = this.values.projection.getCode();
+
+            switch(code) {
+                case 'EPSG:3857':
+                    return 'Web Mercator';
+                case 'EPSG:4326':
+                    return 'WGS84';
+                case 'EPSG:2100':
+                    return 'ΕΓΣΑ87';
+                case 'EPSG:4258':
+                    return 'ETRS89';
+            };
+
+            return code;
+        },
         setProjection: function(projection) {
             var position = this.getPosition();
 
@@ -3764,6 +3830,31 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
                 this.setPosition(position);
             }
+
+            $('#' + this.values.element + '-crs').html(this.projectionToString());
+        },
+        clear: function() {
+            this.values.overlay.getFeatures().clear();
+        },
+        addPinToPosition: function() {
+            var position = this.getPosition();
+            var transformed = [position[0], position[1]];
+
+            if(this.values.projection.getCode() != PublicaMundi.Maps.CRS.Mercator) {
+                transformed = ol.proj.transform(position, this.values.projection , PublicaMundi.Maps.CRS.Mercator);
+            }
+
+            var point = new ol.geom.Point(transformed);
+
+            var label = ''; //position[0].toFixed(4) + ' , ' + position[1].toFixed(4) + ' (' + this.values.projection.getCode() + ')'
+
+            var feature = new ol.Feature({
+                name: 'point-' + this.values.overlay.getFeatures().getLength(),
+                label: label,
+                geometry: point
+            });
+
+            this.values.overlay.getFeatures().insertAt(0, feature);
         }
     });
 
@@ -3843,7 +3934,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             });
 
             $('#' + this.values.element + '-btn-copy').click(function() {
-                 $(this).blur();
+                $('#' + self.values.element + '-link').focus().select();
+                var copied = false;
+                try {
+                    copied = document.execCommand('copy');
+                } catch(err) {
+                    // suppress exception
+                }
             });
 
             this.values.dialog.on('dialog:action', function(args){
@@ -3857,15 +3954,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.render();
         },
         exportToJSON: function() {
-            var base = this.values.map.getLayers().getArray()[0];
-            var overlay = this.values.map.getLayers().getArray()[1];
+            var baseLayerProperties = this.values.map.get('base_layer_properties');
+
+            var overlay = this.values.map.getLayers().getArray()[(baseLayerProperties.exists ? 2 : 1)];
 
             var config = {
                 zoom: this.values.map.getView().getZoom(),
                 center: this.values.map.getView().getCenter(),
                 base : {
-                    type : (base ? base.publicamundi.type : null),
-                    set : (base ? base.publicamundi.set : null),
+                    type : baseLayerProperties.type,
+                    set : baseLayerProperties.set,
                     opacity : (overlay.getOpacity() * 100)
                 },
                 layers: [],
@@ -3925,24 +4023,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
                                 $('#' + self.values.element + '-link').val(link.toString());
 
-                                var copied = false;
-                                try {
-                                    copied = document.execCommand('copy');
-                                } catch(err) {
-                                    // suppress exception
-                                }
-                                if(!copied) {
-                                    $('#' + self.values.element + '-btn-copy').addClass('disabled');
+                                self.values.dialog.show();
 
-                                    $('#' + self.values.element + '-error').html(PublicaMundi.i18n.getResource('action.create-link.error.copy'));
-                                    $('#' + self.values.element + '-error').show();
-                                }
+                                $('#' + self.values.element + '-link').focus().select();
                             }
-
-                            self.values.dialog.show();
-
-                            $('#' + self.values.element + '-link').focus();
-                            $('#' + self.values.element + '-link').select();
 
                             resolve(response);
                         };
@@ -4061,8 +4145,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 PublicaMundi.Maps.Action.prototype.initialize.apply(this, arguments);
             }
 
-            this.values.buffer = this.values.buffer || 3;
-
             this.event('parse:completed');
 
             // http://openlayers.org/en/v3.3.0/examples/vector-labels.js
@@ -4103,6 +4185,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.values.overlay = new ol.FeatureOverlay({
                 style: featureStyleFunction
             });
+
             this.values.overlay.setMap(this.values.map);
 
             this.values.dialog = new PublicaMundi.Maps.Dialog({

@@ -93,7 +93,10 @@ dataapi.wps.delay = 2000
 dataapi.wps.corsEnabled = false
 
 # Bing Maps application key
-mapclient.base.layer.key =
+mapclient.base.layer.bing.key =
+
+# Google Maps support
+mapclient.base.layer.google.enabled = false
 
 # Map center expected to be in the form of X, Y (CRS 3857 / Google 900913)
 mapclient.map.center = 2448716, 4600000

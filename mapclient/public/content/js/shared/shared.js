@@ -508,6 +508,8 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
                 __object = factory.create(map, metadata, layer, title)
 
+                map.getLayers().insertAt(map.getLayers().getLength(), __object);
+
 				this.values.layers.push({
 					id: id,
 					layer : __object,
@@ -628,8 +630,10 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			var layers = map.getLayers().getArray();
 			var currentIndex = -1;
+            var baseLayerProperties = map.get('base_layer_properties');
+            var startIndex = (baseLayerProperties.exists ? 3 : 2);
 
-            for (var i = 2; i < layers.length; i++) {
+            for (var i = startIndex; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
@@ -661,15 +665,17 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 
 			var layers = map.getLayers().getArray();
 			var currentIndex = -1;
+            var baseLayerProperties = map.get('base_layer_properties');
+            var startIndex = (baseLayerProperties.exists ? 3 : 2);
 
-            for (var i = 2; i < layers.length; i++) {
+            for (var i = startIndex; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
                 }
             }
 
-            if((__object) && ((currentIndex-1) > 1)) {
+            if((__object) && ((currentIndex-1) > (startIndex-1))) {
                 var layer = map.getLayers().removeAt(currentIndex);
                 map.getLayers().insertAt(currentIndex-1, layer);
 
@@ -682,22 +688,6 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 		},
         getMaxLayerCount: function() {
             return this.values.maxLayerCount;
-        }
-    });
-
-    PublicaMundi.Maps.UI.View = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
-        initialize: function (options) {
-            if (typeof PublicaMundi.Maps.Observable.prototype.initialize === 'function') {
-                PublicaMundi.Maps.Observable.prototype.initialize.apply(this, arguments);
-            }
-
-            PublicaMundi.extend(this.values, options);
-        },
-        render: function (target) {
-
-        },
-        show: function () {
-
         }
     });
 

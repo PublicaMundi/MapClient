@@ -55,7 +55,6 @@
     "action.create-link.title" : "Αντιγραφή συνδέσμου",
     "action.create-link-embed.title" : "Ενσωμάτωση χάρτη σε web site",
     "action.create-link.link.placeholder" : "",
-    "action.create-link.error.copy" : "Η αυτόματη αντιγραφή του συνδέσμου απέτυχε. Παρακαλώ επιλέξτε και αντιγράψτε το σύνδεσμο.",
     "action.create-link-embed.label.lib" : "Βιβλιοθήκη",
     "action.create-link-embed.label.code" : "Κώδικας",
 
@@ -95,9 +94,10 @@
     "tool.select.title" : "Επιλογή αντικειμένου",
     "tool.select.dialog.title" : "Στοιχεία αντικειμένου",
 
-    "action.set-position.title" : "Ορισμός θέσης",
-    "control.set-position.dialog.label.x" : "Χ",
-    "control.set-position.dialog.label.y" : "Υ",
+    "action.set-position.title" : "Μετακίνηση σε συντεταγμένες",
+    "control.set-position.dialog.label.crs" : "Σύστημα συντεταγμένων",
+    "control.set-position.dialog.label.x" : "Γεωγραφικό μήκος",
+    "control.set-position.dialog.label.y" : "Γεωγραφικό πλάτος",
     "control.set-position.dialog.button.move" : "Ενημέρωση",
 
     "action.clear.title" : "Καθαρισμός χάρτη",
