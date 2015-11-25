@@ -297,7 +297,12 @@
             canvas.setAttribute('height', canvasHeight);
 
             var map = members.map.control;
+            var mapExtent = map.getView().calculateExtent(map.getSize());
+            var mapOrigin = map.getPixelFromCoordinate([mapExtent[0], mapExtent[3]]);
+
             var canvasOrigin = map.getPixelFromCoordinate([extent[0], extent[3]]);
+
+            var delta = [mapOrigin[0]-canvasOrigin[0], mapOrigin[1]-canvasOrigin[1]]
 
             var img=$("#grid-tiles")[0];
             var pat=context.createPattern(img,"repeat");
@@ -309,7 +314,10 @@
             var topLeft = map.getPixelFromCoordinate([osmExtent[0], osmExtent[3]]);
             var bottomRight = map.getPixelFromCoordinate([osmExtent[2], osmExtent[1]]);
 
-            context.clearRect(topLeft[0]-canvasOrigin[0], topLeft[1]-canvasOrigin[1], bottomRight[0]-topLeft[0], bottomRight[1]-topLeft[1]);
+            context.clearRect((topLeft[0] + delta[0])*pixelRatio,
+                              (topLeft[1] + delta[1])*pixelRatio,
+                              (bottomRight[0]-topLeft[0])*pixelRatio,
+                              (bottomRight[1]-topLeft[1])*pixelRatio);
 
             return canvas;
         };
