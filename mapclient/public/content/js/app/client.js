@@ -23,45 +23,8 @@
     members.config.path = members.config.path || '/';
 
     API.Data.configure({
-        proxy: PublicaMundi.getProxyUrl(members.config.proxy),
-        endpoint: members.config.path,
-        wps: members.config.api.wps
-    });
-
-    API.Data.WPS.configure({
         debug: members.config.debug,
-        mappings : {
-            'Buffer': {
-                id: 'ogr.Buffer',
-                params: [{
-                    name: 'InputPolygon',
-                    type: 'complex',
-                    mimeType: 'text/xml'
-                }, {
-                    name :'BufferDistance',
-                    type: 'literal'
-                }],
-                result: 'Result'
-            },
-            'Voronoi': {
-                id: 'cgal.Voronoi',
-                params: [{
-                    name : 'InputPoints',
-                    type: 'complex',
-                    mimeType: 'text/xml'
-                }],
-                result: 'Result'
-            },
-            'Centroid': {
-                id: 'ogr.Centroid',
-                params: [{
-                    name : 'InputPolygon',
-                    type: 'complex',
-                    mimeType: 'text/xml'
-                }],
-                result: 'Result'
-            }
-        }
+        endpoint: members.config.path
     });
 
     var initializeParameters = function () {

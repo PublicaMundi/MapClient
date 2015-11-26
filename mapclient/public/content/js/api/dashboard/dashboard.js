@@ -26,19 +26,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     var options = {
         debug: module.config().debug,
         endpoint: relativePath,
-        proxy: relativePath + 'proxy/proxy_resource?url=',
-        alias: module.config().api.alias,
-        wps: {
-            corsEnabled: false,
-            endpoint: module.config().api.wps,
-            delay: 2000
-        }
+        alias: module.config().api.alias
     };
 
     API.Data.configure(options);
 
     // Data API WPS extension configuration options
     var wpsOptions = {
+        endpoint: module.config().api.wps,
+        corsEnabled: false,
+        proxy: relativePath + 'proxy/proxy_resource?url=',
+        delay: 2000,
         mappings : {
             'Buffer': {
                 id: 'ogr.Buffer',
@@ -973,6 +971,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
             // Display default page
             $('#block-ui').fadeOut(500, function() {
+                $('#docs-frame').attr('src', '../content/js/lib/data-api/docs/index.html');
                 $('#page-docs').fadeIn(200);
                 jsonSyntaxEditor.refresh();
             });
