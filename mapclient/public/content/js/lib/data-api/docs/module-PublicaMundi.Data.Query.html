@@ -244,7 +244,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -396,7 +396,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -422,7 +422,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -551,7 +551,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -577,7 +577,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -706,7 +706,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -732,7 +732,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -861,7 +861,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -887,7 +887,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1016,7 +1016,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1042,7 +1042,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1171,7 +1171,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1197,7 +1197,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1400,6 +1400,323 @@
 
     
 
+    <h4 class="name" id="describeResource"><span class="type-signature"></span>describeResource<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns the schema information of a resource.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Execution options
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The value of this provided for the function call.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Resource unique id.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Success <a href="module-PublicaMundi.Data.Query.html#~setDescribeResourceSuccessCallback">callback</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Failure <a href="module-PublicaMundi.Data.Query.html#~setFailureCallback">callback</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>complete</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Complete <a href="module-PublicaMundi.Data.Query.html#~setCompleteCallback">callback</a>.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="distance"><span class="type-signature"></span>distance<span class="signature">(arg1, arg2, alias)</span><span class="type-signature"></span></h4>
 
     
@@ -1452,7 +1769,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1478,7 +1795,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1630,7 +1947,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1656,7 +1973,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1808,7 +2125,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1834,7 +2151,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -1986,7 +2303,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2012,7 +2329,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2164,7 +2481,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2190,7 +2507,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2342,7 +2659,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2368,7 +2685,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2520,7 +2837,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2546,7 +2863,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2672,7 +2989,7 @@
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -2925,7 +3242,7 @@
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -3056,6 +3373,257 @@
             
 
             <td class="description last">Complete <a href="module-PublicaMundi.Data.Query.html#~setCompleteCallback">callback</a>.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="field"><span class="type-signature"></span>field<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Declares a field to be included in the response. Declaring no fields will result in including all fields from all declared resources in the response. In this case ambiguous field name exceptions may occur.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Field properties.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>resource</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Field resource.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Field name.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>alias</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Field alias.</td>
         </tr>
 
     
@@ -3263,257 +3831,6 @@
             
 
             <td class="description last">Field alias.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="field"><span class="type-signature"></span>field<span class="signature">(options)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Declares a field to be included in the response. Declaring no fields will result in including all fields from all declared resources in the response. In this case ambiguous field name exceptions may occur.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Field properties.
-                <h6>Properties</h6>
-                
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>resource</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Field resource.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Field name.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>alias</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Field alias.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
         </tr>
 
     
@@ -3875,6 +4192,292 @@
 
     
 
+    <h4 class="name" id="getResources"><span class="type-signature"></span>getResources<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns metadata for all resources. Function <a href="module-PublicaMundi.Data.Query.html#getResources">getResources</a> returns metadata for all resources available in the catalog. The result may contains resources that are not visible in the MapClient application.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Execution options
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The value of this provided for the function call.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Success <a href="module-PublicaMundi.Data.Query.html#~setGetResourcesSuccessCallback">callback</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Failure <a href="module-PublicaMundi.Data.Query.html#~setFailureCallback">callback</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>complete</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Complete <a href="module-PublicaMundi.Data.Query.html#~setCompleteCallback">callback</a>.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="greater"><span class="type-signature"></span>greater<span class="signature">(arg1, arg2)</span><span class="type-signature"></span></h4>
 
     
@@ -3927,7 +4530,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -3953,7 +4556,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4082,7 +4685,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4108,7 +4711,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4237,7 +4840,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4263,7 +4866,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4392,7 +4995,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4418,7 +5021,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4547,7 +5150,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4573,7 +5176,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4702,7 +5305,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4728,7 +5331,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4857,7 +5460,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -4883,7 +5486,7 @@
 <span class="param-type">string</span>
 |
 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -5384,178 +5987,6 @@
 
     
 
-    <h4 class="name" id="orderBy"><span class="type-signature"></span>orderBy<span class="signature">(resource, name, desc)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sorts the results
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>resource</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Field resource.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Field name.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>desc</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Sorts the result in descending order.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id="orderBy"><span class="type-signature"></span>orderBy<span class="signature">(options)</span><span class="type-signature"></span></h4>
 
     
@@ -5605,7 +6036,7 @@
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -5741,6 +6172,178 @@
 </table>
 
             </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="orderBy"><span class="type-signature"></span>orderBy<span class="signature">(resource, name, desc)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sorts the results
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>resource</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Field resource.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Field name.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>desc</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Sorts the result in descending order.</td>
         </tr>
 
     
@@ -6010,224 +6613,6 @@
 
     
 
-    <h4 class="name" id="resource"><span class="type-signature"></span>resource<span class="signature">(options)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Declares a resource. Declaring more than one resources will create a cross join query.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Resource properties.
-                <h6>Properties</h6>
-                
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>resource</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Resource unique name.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>alias</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Resource unique alias.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id="resource"><span class="type-signature"></span>resource<span class="signature">(resource, alias<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
@@ -6331,6 +6716,224 @@
             
 
             <td class="description last">Optional resource alias.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="resource"><span class="type-signature"></span>resource<span class="signature">(options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Declares a resource. Declaring more than one resources will create a cross join query.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Resource properties.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>resource</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Resource unique name.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>alias</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Resource unique alias.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -7313,6 +7916,255 @@
 
     
 
+    <h4 class="name" id="~setDescribeResourceSuccessCallback"><span class="type-signature"></span>setDescribeResourceSuccessCallback<span class="signature">(response)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    This callback executes when <a href="module-PublicaMundi.Data.Query.html#describeResource">describeResource</a> has completed successfully.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>response</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Response data.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">True if query has executed successfully.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Error message. Empty if query execution was successful.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resource</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Resource schema information</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+                
+
+    
+
     <h4 class="name" id="~setFailureCallback"><span class="type-signature"></span>setFailureCallback<span class="signature">(message)</span><span class="type-signature"></span></h4>
 
     
@@ -7439,6 +8291,255 @@
 
     
 
+    <h4 class="name" id="~setGetResourcesSuccessCallback"><span class="type-signature"></span>setGetResourcesSuccessCallback<span class="signature">(response)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    This callback executes when <a href="module-PublicaMundi.Data.Query.html#getResources">getResources</a> has completed successfully.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>response</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Response data.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">True if query has executed successfully.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Error message. Empty if query execution was successful.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>resources</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Dictionary of resource metadata with resource unique id values as keys.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+                
+
+    
+
     <h4 class="name" id="~setSuccessCallback"><span class="type-signature"></span>setSuccessCallback<span class="signature">(response)</span><span class="type-signature"></span></h4>
 
     
@@ -7488,7 +8589,7 @@
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">object</span>
 
 
             
@@ -7594,7 +8695,7 @@
             <td class="type">
             
                 
-<span class="param-type">Array.&lt;Object></span>
+<span class="param-type">Array.&lt;object></span>
 
 
             
@@ -7730,13 +8831,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-PublicaMundi.html">PublicaMundi</a></li></ul><h3>Classes</h3><ul><li><a href="module-PublicaMundi.Data.Query.html">Query</a></li><li><a href="module-PublicaMundi.Data.SyntaxException.html">SyntaxException</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-PublicaMundi.Data.html">Data</a></li><li><a href="module-PublicaMundi.Data.CRS.html">CRS</a></li><li><a href="module-PublicaMundi.Data.Format.html">Format</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-PublicaMundi.html">PublicaMundi</a></li></ul><h3>Classes</h3><ul><li><a href="module-PublicaMundi.Data.Query.html">Query</a></li><li><a href="module-PublicaMundi.Data.SyntaxException.html">SyntaxException</a></li></ul><h3>Namespaces</h3><ul><li><a href="module-PublicaMundi.Data.html">Data</a></li><li><a href="module-PublicaMundi.Data.CRS.html">CRS</a></li><li><a href="module-PublicaMundi.Data.Format.html">Format</a></li><li><a href="module-PublicaMundi.Data.WPS.html">WPS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+
 </footer>
 
 <script> prettyPrint(); </script>

@@ -55,7 +55,7 @@
             ETRS89: 'EPSG:4258'
         };
 
-        /** Export data operation supported formats. For query operation only JSON and GeoJSON formats are supported.
+        /** Export data operation supported formats. For {@link module:PublicaMundi.Data.Query#execute execute} operation only {@link module:PublicaMundi.Data.Format.JSON JSON} and {@link module:PublicaMundi.Data.Format.GeoJSON GeoJSON} formats are supported.
          * @namespace
          */
         PublicaMundi.Data.Format = {
@@ -115,21 +115,33 @@
         // Data API configuration
         var configuration = {
             debug: false,
-            proxy: null,
-            endpoint: null
+            endpoint: null,
+            alias: {}
         };
 
         /**
-         * Sets configuration options for all {@link module:PublicaMundi.Data.Query Query} instances. Individual instances can override the global API configuration using the constructor parameters or setter methods.
+         * Sets configuration options for all {@link module:PublicaMundi.Data.Query Query} instances.
          * @function
          * @static
-         * @param {Object} options Configuration options. Not all options are required
-         * @param {boolean} options.debug Enables debug mode.
-         * @param {string} options.proxy Data API proxy service for executing WPS requests.
-         * @param {string} options.endpoint Data API service endpoint.
+         * @param {object} options Configuration options.
+         * @param {boolean} [options.debug=false] Enables debug mode.
+         * @param {string} [options.endpoint] Data API service endpoint. Endpoint value can be overriden when creating a new {@link module:PublicaMundi.Data.Query Query} instance.
+         * @param {object} options.alias Declares alias names for resources.
+         * @example
+         *
+         *   PublicaMundi.Data.configure({
+         *      debug: true,
+         *      alias: {
+         *          'roads': 'f62e6867-f74c-4342-9755-976b574ac7f7',
+         *          'cities': 'b6fc004b-07bd-4945-bf34-8ad4a8781c91'
+         *      }
+         *  });
          */
         PublicaMundi.Data.configure = function(options) {
             extend(configuration, options);
+            if(configuration.debug) {
+                console.log(JSON.stringify(configuration, null, '\t'));
+            }
         };
 
         /**
@@ -379,7 +391,7 @@
          * @memberof module:PublicaMundi.Data.Query
          * @function
          * @instance
-         * @param {Object} options Resource properties.
+         * @param {object} options Resource properties.
          * @param {string} options.resource Resource unique name.
          * @param {string} [options.alias] Resource unique alias.
          */
@@ -450,7 +462,7 @@
          * @memberof module:PublicaMundi.Data.Query
          * @function
          * @instance
-         * @param {Object} options Field properties.
+         * @param {object} options Field properties.
          * @param {string} [options.resource] Field resource.
          * @param {string} options.name Field name.
          * @param {string} [options.alias] Field alias.
@@ -525,7 +537,7 @@
         /**
          * Declares a computed field for the area of a resource field or a geometry expressed in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 Field or geometry expressed in GeoJSON format.
+         * @param {string|object} arg1 Field or geometry expressed in GeoJSON format.
          * @param {string} alias Computed field name.
          */
         PublicaMundi.Data.Query.prototype.area = function (arg1, alias) {
@@ -544,8 +556,8 @@
         /**
          * Declares a computed field for the distance between two geometries represented either as a resource field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 Field or geometry expressed in GeoJSON format.
-         * @param {string|Object} arg2 Field or geometry expressed in GeoJSON format.
+         * @param {string|object} arg1 Field or geometry expressed in GeoJSON format.
+         * @param {string|object} arg2 Field or geometry expressed in GeoJSON format.
          * @param {string} alias Computed field name.
          */
         PublicaMundi.Data.Query.prototype.distance = function (arg1, arg2, alias) {
@@ -564,8 +576,8 @@
         /**
          * Adds a filter that checks if two arguments (field or value) are equal.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.equal = function (arg1, arg2) {
             var filter = {
@@ -582,8 +594,8 @@
         /**
          * Adds a filter that checks if two arguments (field or value) are not equal.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.notEqueal = function (arg1, arg2) {
             var filter = {
@@ -600,8 +612,8 @@
         /**
          * Adds a filter that checks if the first argument is less than the second argument.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.less = function (arg1, arg2) {
             var filter = {
@@ -618,8 +630,8 @@
         /**
          * Adds a filter that checks if the first argument is less or equal than the second argument.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.lessOrEqual = function (arg1, arg2) {
             var filter = {
@@ -636,8 +648,8 @@
         /**
          * Adds a filter that checks if the first argument is greater than the second argument.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.greater = function (arg1, arg2) {
             var filter = {
@@ -654,8 +666,8 @@
         /**
          * Adds a filter that checks if the first argument is greater or equal than the second argument.
          * @function
-         * @param {string|Object} arg1 First field or value.
-         * @param {string|Object} arg2 Second field of value.
+         * @param {string|object} arg1 First field or value.
+         * @param {string|object} arg2 Second field of value.
          */
         PublicaMundi.Data.Query.prototype.greaterOrEqual = function (arg1, arg2) {
             var filter = {
@@ -672,8 +684,8 @@
         /**
          * Adds a filter that checks if a string field contains a value.
          * @function
-         * @param {string|Object} field Field to search.
-         * @param {string|Object} value Value to search.
+         * @param {string|object} field Field to search.
+         * @param {string|object} value Value to search.
          */
         PublicaMundi.Data.Query.prototype.like = function (arg1, arg2) {
             var filter;
@@ -719,8 +731,8 @@
         /**
          * Adds a filter that checks if the distance between two geometries expressed as a field or as an object in GeoJSON format is equal to a specific value.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          * @param {number} distance Distance between two geometries.
          */
         PublicaMundi.Data.Query.prototype.distanceEqual = function (arg1, arg2, arg3) {
@@ -740,8 +752,8 @@
         /**
          * Adds a filter that checks if the distance between two geometries expressed as a field or as an object in GeoJSON format is less or equal than a specific value.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          * @param {number} distance Distance between two geometries.
          */
         PublicaMundi.Data.Query.prototype.distanceLessOrEqual = function (arg1, arg2, arg3) {
@@ -761,8 +773,8 @@
         /**
          * Adds a filter that checks if the distance between two geometries expressed as a field or as an object in GeoJSON format is less than a specific value.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          * @param {number} distance Distance between two geometries.
          */
         PublicaMundi.Data.Query.prototype.distanceLess = function (arg1, arg2, arg3) {
@@ -782,8 +794,8 @@
         /**
          * Adds a filter that checks if the distance between two geometries expressed as a field or as an object in GeoJSON format is greater or equal than a specific value.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          * @param {number} distance Distance between two geometries.
          */
         PublicaMundi.Data.Query.prototype.distanceGreaterOrEqual = function (arg1, arg2, arg3) {
@@ -803,8 +815,8 @@
         /**
          * Adds a filter that checks if the distance between two geometries expressed as a field or as an object in GeoJSON format is greater than a specific value.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          * @param {number} distance Distance between two geometries.
          */
         PublicaMundi.Data.Query.prototype.distanceGreater = function (arg1, arg2, arg3) {
@@ -824,8 +836,8 @@
         /**
          * Adds a filter that checks if the area of two geometries expressed as a field or as an object in GeoJSON format is equal.'
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.areaEqual = function (arg1, arg2) {
             var filter = {
@@ -843,8 +855,8 @@
         /**
          * Adds a filter that checks if the area of first geometry is less or equal than the area of the second geometry. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.areaLessOrEqual = function (arg1, arg2) {
             var filter = {
@@ -862,8 +874,8 @@
         /**
          * Adds a filter that checks if the area of first geometry is less than the area of the second geometry. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.areaLess = function (arg1, arg2) {
             var filter = {
@@ -881,8 +893,8 @@
         /**
          * Adds a filter that checks if the area of first geometry is greater or equal than the area of the second geometry. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.areaGreaterOrEqual = function (arg1, arg2) {
             var filter = {
@@ -900,8 +912,8 @@
         /**
          * Adds a filter that checks if the area of first geometry is greater than the area of the second geometry. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.areaGreater = function (arg1, arg2) {
             var filter = {
@@ -919,8 +931,8 @@
         /**
          * Adds a filter that checks if the first geometry contains the second geometry. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.contains = function (arg1, arg2) {
             var filter = {
@@ -937,8 +949,8 @@
         /**
          * Adds a filter that checks if two geometries intersect. Geometries are expressed as a field or as an object in GeoJSON format.
          * @function
-         * @param {string|Object} arg1 First field or geometry.
-         * @param {string|Object} arg2 Second field of geometry.
+         * @param {string|object} arg1 First field or geometry.
+         * @param {string|object} arg2 Second field of geometry.
          */
         PublicaMundi.Data.Query.prototype.intersects = function (arg1, arg2) {
             var filter = {
@@ -998,7 +1010,7 @@
          * @memberof module:PublicaMundi.Data.Query
          * @function
          * @instance
-         * @param {Object} options Sort field.
+         * @param {object} options Sort field.
          * @param {string} [options.resource] Field resource.
          * @param {string} options.name Field name.
          * @param {string} [options.desc] Sorts the result in descending order.
@@ -1067,10 +1079,10 @@
         /**
          * This callback executes when a request has completed successfully.
          * @callback module:PublicaMundi.Data.Query~setSuccessCallback
-         * @param {Object} response Response data.
+         * @param {object} response Response data.
          * @param {boolean} response.success True if query has executed successfully.
          * @param {string} response.message Error message. Empty if query execution was successful.
-         * @param {Object[]} [response.data] Query results (applicable only to {@link module:PublicaMundi.Data.Query#execute execute} requests).
+         * @param {object[]} [response.data] Query results (applicable only to {@link module:PublicaMundi.Data.Query#execute execute} requests).
          * @param {string} [response.code] Contains a link to the exported file (applicable only to {@link module:PublicaMundi.Data.Query#export export} requests).
          */
 
@@ -1192,7 +1204,7 @@
         /**
          * Executes a query.
          * @function
-         * @param {Object} options Execution options
+         * @param {object} options Execution options
          * @param {string} [options.success] Success {@link module:PublicaMundi.Data.Query~setSuccessCallback callback}.
          * @param {string} [options.failure] Failure {@link module:PublicaMundi.Data.Query~setFailureCallback callback}.
          * @param {string} [options.complete] Complete {@link module:PublicaMundi.Data.Query~setCompleteCallback callback}.
@@ -1243,7 +1255,7 @@
         /**
          * Executes a query and exports data.
          * @function
-         * @param {Object} options Execution options
+         * @param {object} options Execution options
          * @param {string} [options.success] Success {@link module:PublicaMundi.Data.Query~setSuccessCallback callback}.
          * @param {string} [options.failure] Failure {@link module:PublicaMundi.Data.Query~setFailureCallback callback}.
          * @param {string} [options.complete] Complete {@link module:PublicaMundi.Data.Query~setCompleteCallback callback}.
@@ -1327,6 +1339,24 @@
             return this;
         };
 
+        /**
+         * This callback executes when {@link module:PublicaMundi.Data.Query#getResources getResources} has completed successfully.
+         * @callback module:PublicaMundi.Data.Query~setGetResourcesSuccessCallback
+         * @param {object} response Response data.
+         * @param {boolean} response.success True if query has executed successfully.
+         * @param {string} response.message Error message. Empty if query execution was successful.
+         * @param {object} [response.resources] Dictionary of resource metadata with resource unique id values as keys.
+         */
+
+        /**
+         * Returns metadata for all resources. Function {@link module:PublicaMundi.Data.Query#getResources getResources} returns metadata for all resources available in the catalog. The result may contains resources that are not visible in the MapClient application.
+         * @function
+         * @param {object} options Execution options
+         * @param {string} [options.context] The value of this provided for the function call.
+         * @param {string} [options.success] Success {@link module:PublicaMundi.Data.Query~setGetResourcesSuccessCallback callback}.
+         * @param {string} [options.failure] Failure {@link module:PublicaMundi.Data.Query~setFailureCallback callback}.
+         * @param {string} [options.complete] Complete {@link module:PublicaMundi.Data.Query~setCompleteCallback callback}.
+         */
         PublicaMundi.Data.Query.prototype.getResources = function (options) {
             options = options || {};
             options.success = options.success || this.callbacks.success;
@@ -1376,6 +1406,25 @@
             return this;
         };
 
+        /**
+         * This callback executes when {@link module:PublicaMundi.Data.Query#describeResource describeResource} has completed successfully.
+         * @callback module:PublicaMundi.Data.Query~setDescribeResourceSuccessCallback
+         * @param {object} response Response data.
+         * @param {boolean} response.success True if query has executed successfully.
+         * @param {string} response.message Error message. Empty if query execution was successful.
+         * @param {object} [response.resource] Resource schema information
+         */
+
+        /**
+         * Returns the schema information of a resource.
+         * @function
+         * @param {object} options Execution options
+         * @param {string} [options.context] The value of this provided for the function call.
+         * @param {string} options.id Resource unique id.
+         * @param {string} [options.success] Success {@link module:PublicaMundi.Data.Query~setDescribeResourceSuccessCallback callback}.
+         * @param {string} [options.failure] Failure {@link module:PublicaMundi.Data.Query~setFailureCallback callback}.
+         * @param {string} [options.complete] Complete {@link module:PublicaMundi.Data.Query~setCompleteCallback callback}.
+         */
         PublicaMundi.Data.Query.prototype.describeResource = function (options) {
             options.success = options.success || this.callbacks.success;
             options.failure = options.failure || this.callbacks.failure;
