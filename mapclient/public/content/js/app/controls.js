@@ -11,7 +11,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     return 1;
                 }
                 return 0;
-            }
+            };
         }
         return function(a, b) {
             if(a[prop] < b[prop]) {
@@ -21,7 +21,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 return 1;
             }
             return 0;
-        }
+        };
     };
 
     PublicaMundi.Maps.Component = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
@@ -163,7 +163,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             };
 
             this.values.getTreeNodeById = function(id, parent) {
-                if(id == null) {
+                if(!id) {
                     return null;
                 }
                 parent = parent || self.values.rootTreeNode;
@@ -223,6 +223,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             };
 
             this.values.renderTreeNodeElements = function(parentTreeNodeId) {
+                var i, caption, properties, options, elem;
+
                 var parentTreeNode = this.values.getTreeNodeById(parentTreeNodeId) || this.values.rootTreeNode;
                 var parentTreeNodeElement = parentTreeNode.element || $('#' + this.values.contentElement);
 
@@ -240,10 +242,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				var nodes = this.values.ckan.getNodeChidlren(parentTreeNodeId);
 				nodes.sort(sortByProperty('index'));
 
-				for(var i = 0; i < nodes.length; i++) {
+				for(i = 0; i < nodes.length; i++) {
                     if(!this.values.ckan.isNodeEmpty(nodes[i].id)) {
-                        var caption = PublicaMundi.i18n.getResource('node.' + nodes[i].id, nodes[i].caption[PublicaMundi.i18n.getLocale()]);
-                        var properties = {
+                        caption = PublicaMundi.i18n.getResource('node.' + nodes[i].id, nodes[i].caption[PublicaMundi.i18n.getLocale()]);
+                        properties = {
                             id: nodes[i].id,
                             expanded: false,
                             loaded: false,
@@ -253,7 +255,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.' + nodes[i].id
                         };
 
-                        var options = {
+                        options = {
                             id: nodes[i].id,
                             image: 'content/images/app/show.svg',
                             isLeaf: false,
@@ -262,19 +264,19 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.' + nodes[i].id
                         };
 
-                        var elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
+                        elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
                         $(parentTreeNodeElement).append(elem);
                     }
 				}
 
                 if((node) && (node.resources.length > 0)) {
                     var resources = [];
-                    for(var i = 0; i < node.resources.length; i++) {
+                    for(i = 0; i < node.resources.length; i++) {
                         resources.push(this.values.ckan.getResourceById(node.resources[i]));
                     }
                     resources.sort(sortByProperty('node_index'));
 
-                    for(var i = 0; i < resources.length; i++) {
+                    for(i = 0; i < resources.length; i++) {
                         var resource = resources[i];
                         var _package = this.values.ckan.getPackageById(resource.package);
 
@@ -284,9 +286,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             var layerId = resource.id + '_' + resource.metadata.extras.layer;
                             var selected = this.values.resources.isLayerSelected(layerId);
 
-                            var caption = resource.name[PublicaMundi.i18n.getLocale()];
+                            caption = resource.name[PublicaMundi.i18n.getLocale()];
 
-                            var properties = {
+                            properties = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
                                 expanded: false,
                                 loaded: false,
@@ -301,7 +303,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                 i18n: 'node.resource.' + resource.id
                             };
 
-                            var options = {
+                            options = {
                                 id: layerId.replace(/[^\w\s]/gi, ''),
                                 image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                 isLeaf: true,
@@ -310,9 +312,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                 i18n: 'node.resource.' + resource.id
                             };
                         } else {
-                            var caption = resource.name[PublicaMundi.i18n.getLocale()];
+                            caption = resource.name[PublicaMundi.i18n.getLocale()];
 
-                            var properties = {
+                            properties = {
                                 id: resource.id,
                                 expanded: false,
                                 loaded: false,
@@ -325,7 +327,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                 i18n: 'node.resource.' + resource.id
                             };
 
-                            var options = {
+                            options = {
                                 id: resource.id,
                                 image: 'content/images/app/show.svg',
                                 isLeaf: false,
@@ -335,13 +337,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             };
                         }
 
-                        var elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
+                        elem = this.values.createTreeNodeElement.call(this, parentTreeNode, options, properties);
                         $(parentTreeNodeElement).append(elem);
                     }
                 }
             };
 
 			this.values.renderGroups = function() {
+                var i;
+
 				$('#' + this.values.contentElement).html('');
 
 				var all_groups = this.values.ckan.getGroups();
@@ -350,7 +354,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     var packages = this.values.ckan.getFilteredPackages();
 
-                    for(var i=0; i < all_groups.length; i++) {
+                    for(i = 0; i < all_groups.length; i++) {
                         for(var j=0; j < packages.length; j++) {
                             if($.inArray(all_groups[i].id, packages[j].groups) !== -1) {
                                 groups.push(all_groups[i]);
@@ -370,7 +374,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     $('#' + this.values.element + '-result').show();
                 }
 
-				for(var i = 0; i < groups.length; i++) {
+				for(i = 0; i < groups.length; i++) {
                     if((!preload) || (!this.values.ckan.isGroupEmpty(groups[i].id))) {
                         var caption = PublicaMundi.i18n.getResource('group.' + groups[i].id, groups[i].caption[PublicaMundi.i18n.getLocale()]);
 
@@ -408,13 +412,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				$('#' + this.values.contentElement).html('');
 
 				var all_organizations = this.values.ckan.getOrganizations();
-                var organizations = [];
+                var i, j, organizations = [];
 
                 if(this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) {
                     var packages = this.values.ckan.getFilteredPackages();
 
-                    for(var i=0; i < all_organizations.length; i++) {
-                        for(var j=0; j < packages.length; j++) {
+                    for(i = 0; i < all_organizations.length; i++) {
+                        for(j = 0; j < packages.length; j++) {
                             if(all_organizations[i].id === packages[j].organization) {
                                 organizations.push(all_organizations[i]);
                                 break;
@@ -427,7 +431,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
 				organizations.sort(sortByProperty('caption', PublicaMundi.i18n.getLocale()));
 
-				for(var i = 0; i < organizations.length; i++) {
+				for(i = 0; i < organizations.length; i++) {
                     if((!preload) || (!this.values.ckan.isOrganizationEmpty(organizations[i].id))) {
                         var caption = PublicaMundi.i18n.getResource('organization.' + organizations[i].id, organizations[i].caption[PublicaMundi.i18n.getLocale()]);
 
@@ -537,9 +541,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                         $(children).append(elem);
 					}
 				}
-			}
+			};
 
 			var renderOrganizationPackages = function(element, organization_id) {
+                var j, r, resourceId, caption, properties, options, elem;
+
                 var parent = $('#node-' + this.values.element + '-' + organization_id);
                 var parentNode = this.values.getTreeNodeById(organization_id);
 
@@ -567,9 +573,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 					var children = $('<ul class="tree-node" style="display: none;"></ul>');
                     $(parent).append(children);
 
-					for(var j = 0; j < organization_packages.length; j++) {
+					for(j = 0; j < organization_packages.length; j++) {
                         if(organization_packages[j].resources.length > 0) {
-                            for(var r=0; r < organization_packages[j].resources.length; r++) {
+                            for(r = 0; r < organization_packages[j].resources.length; r++) {
                                 this.values.resources.setCatalogResourceMetadataOptions(organization_packages[j].resources[r]);
                             }
 
@@ -577,13 +583,13 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                (organization_packages[j].resources[0].metadata) &&
                                (!!organization_packages[j].resources[0].metadata.extras.layer)) {
 
-                                var resourceId = organization_packages[j].resources[0].id ;
+                                resourceId = organization_packages[j].resources[0].id ;
                                 var layerId = resourceId + '_' + organization_packages[j].resources[0].metadata.extras.layer;
                                 var selected = this.values.resources.isLayerSelected(layerId);
 
-                                var caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
+                                caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
 
-                                var properties = {
+                                properties = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     expanded: false,
                                     loaded: false,
@@ -598,7 +604,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var options = {
+                                options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                     isLeaf: true,
@@ -607,14 +613,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             } else if(organization_packages[j].resources.length === 1) {
-                                var resourceId = organization_packages[j].resources[0].id ;
+                                resourceId = organization_packages[j].resources[0].id ;
 
-                                var caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
+                                caption = organization_packages[j].resources[0].name[PublicaMundi.i18n.getLocale()];
 
-                                var properties = {
+                                properties = {
                                     id: resourceId,
                                     expanded: false,
                                     loaded: false,
@@ -627,7 +633,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var options = {
+                                options = {
                                     id: resourceId,
                                     image: 'content/images/app/show.svg',
                                     isLeaf: false,
@@ -636,12 +642,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             } else {
-                                var caption = organization_packages[j].title[PublicaMundi.i18n.getLocale()];
+                                caption = organization_packages[j].title[PublicaMundi.i18n.getLocale()];
 
-                                var properties = {
+                                properties = {
                                     id: organization_packages[j].id,
                                     expanded: false,
                                     loaded: false,
@@ -653,7 +659,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     caption: caption
                                 };
 
-                                var options = {
+                                options = {
                                     id: organization_packages[j].id,
                                     image: 'content/images/app/show.svg',
                                     isLeaf: false,
@@ -661,7 +667,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     hasInformation: (organization_packages[j].info) || (!!(organization_packages[j].notes))
                                 };
 
-                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             }
                         }
@@ -669,9 +675,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				}
 
                 self.setFilter(self.getFilter(), 0);
-            }
+            };
 
             var renderOrganizationResources = function(element, organization_id) {
+                var resourceId, caption, properties, options, elem;
+
                 var parent = $('#node-' + this.values.element + '-' + organization_id);
                 var parentNode = this.values.getTreeNodeById(organization_id);
 
@@ -699,8 +707,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
                             this.values.resources.setCatalogResourceMetadataOptions(resources[r]);
 
-                            var resourceId = resources[r].id ;
-                            var caption = resources[r].name[PublicaMundi.i18n.getLocale()];
+                            resourceId = resources[r].id ;
+                            caption = resources[r].name[PublicaMundi.i18n.getLocale()];
 
                             // For filtered packages with a single resoucrce (CKAN catalog search) ...
                             if((this.values.mode === PublicaMundi.Maps.LayerTreeViewMode.ByFilter) &&
@@ -722,7 +730,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                 var layerId = resourceId + '_' + resources[r].metadata.extras.layer;
                                 var selected = this.values.resources.isLayerSelected(layerId);
 
-                                var properties = {
+                                properties = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     expanded: false,
                                     loaded: false,
@@ -737,7 +745,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var options = {
+                                options = {
                                     id: layerId.replace(/[^\w\s]/gi, ''),
                                     image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                                     isLeaf: true,
@@ -746,10 +754,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             } else {
-                                var properties = {
+                                properties = {
                                     id: resourceId,
                                     expanded: false,
                                     loaded: false,
@@ -762,7 +770,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var options = {
+                                options = {
                                     id: resourceId,
                                     image: 'content/images/app/show.svg',
                                     isLeaf: false,
@@ -771,7 +779,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                     i18n: 'node.resource.' + resourceId
                                 };
 
-                                var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                                elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                                 $(children).append(elem);
                             }
                         }
@@ -786,9 +794,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				}
 
                 self.setFilter(self.getFilter(), 0);
-            }
+            };
 
 			var renderPackageResources = function(element, package_id) {
+                var caption, properties, options, elem;
+
                 var parent = $('#node-' + this.values.element + '-' + package_id);
                 var parentNode = this.values.getTreeNodeById(package_id);
 
@@ -806,9 +816,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                         var layerId = resource.id + '_' + resource.metadata.extras.layer;
 						var selected = this.values.resources.isLayerSelected(layerId);
 
-                        var caption = resource.name[PublicaMundi.i18n.getLocale()];
+                        caption = resource.name[PublicaMundi.i18n.getLocale()];
 
-                        var properties = {
+                        properties = {
                             id: layerId.replace(/[^\w\s]/gi, ''),
                             expanded: false,
                             loaded: false,
@@ -819,7 +829,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.resource.' + resource.id
                         };
 
-                        var options = {
+                        options = {
                             id: layerId.replace(/[^\w\s]/gi, ''),
                             image: (selected ? 'content/images/app/checkbox-checked.svg' : 'content/images/app/checkbox-empty.svg'),
                             isLeaf: true,
@@ -828,9 +838,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.resource.' + resource.id
                         };
 					} else {
-                        var caption = resource.name[PublicaMundi.i18n.getLocale()];
+                        caption = resource.name[PublicaMundi.i18n.getLocale()];
 
-                        var properties = {
+                        properties = {
                             id: resource.id,
                             expanded: false,
                             loaded: false,
@@ -839,7 +849,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.resource.' + resource.id
                         };
 
-                        var options = {
+                        options = {
                             id: resource.id,
                             image: 'content/images/app/show.svg',
                             isLeaf: false,
@@ -848,10 +858,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             i18n: 'node.resource.' + resource.id
                         };
 					}
-                    var elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
+                    elem = this.values.createTreeNodeElement.call(this, parentNode, options, properties);
                     $(children).append(elem);
 				}
-			}
+			};
 
 			var renderResourceLayers = function(element, resource_id, layers) {
                 var parent = $('#node-' + this.values.element + '-' + resource_id);
@@ -894,7 +904,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				}
 
                 self.setFilter(self.getFilter(), 0);
-			}
+			};
 
             $('#' + this.values.element).on('click.' + this.values.contentElement, '.tree-text', function() {
                 var handler = $(this).parent().find('.tree-toggle');
@@ -1434,8 +1444,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             nodes = nodes.reverse();
 
             for(i=0; i<nodes.length; i++) {
-                var selector = '#node-' + this.values.element + '-' + nodes[i];
-                var data = $(selector).data();
+                selector = '#node-' + this.values.element + '-' + nodes[i];
+                data = $(selector).data();
                 if(!data.expanded) {
                     $(selector).find('.tree-text').first().click();
                 }
@@ -1464,7 +1474,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         if(title.text.hasOwnProperty([PublicaMundi.i18n.getLocale()])) {
             title.text = title.text[PublicaMundi.i18n.getLocale()];
         } else if(title.hasOwnProperty('el')) {
-            title.text = title.text['el'];
+            title.text = title.text.el;
         }
 
 		var content = [];
@@ -1566,7 +1576,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				var total = elements.size();
 
 				elements.each(function(index, element) {
-					if(index == 0) {
+					if(index === 0) {
 						$(element).find('[data-action="up"]').addClass('action-disabled');
 						if(total == 1) {
 							$(element).find('[data-action="down"]').addClass('action-disabled');
@@ -1585,7 +1595,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 						$(element).find('[data-action="down"]').removeClass('action-disabled');
 					}
 				});
-			}
+			};
 
 			$('#' + this.values.element).on('click.' + this.values.element, '.action', function() {
 				var parent = $(this).closest('.selected-layer');
@@ -1669,7 +1679,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 			var parts = id.split('_');
 			var layer = parts.splice(1).join('_');
 
-			var resource = this.values.ckan.getResourceById(parts[0]);
+			resource = this.values.ckan.getResourceById(parts[0]);
 
 			if(resource) {
 				this.values.resources.setCatalogResourceMetadataOptions(resource);
@@ -1742,7 +1752,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.render();
         },
         getName: function() {
-            return this.values.name
+            return this.values.name;
         },
         getActive: function() {
             return (this.values.active && this.values.enabled);
@@ -1751,6 +1761,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             return (this.values.actions.length > 0);
         },
         setActive: function(active) {
+            var i;
+
             this.values.active = active && this.values.enabled;
             if(this.values.element) {
                 if(this.values.active) {
@@ -1758,7 +1770,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                         find('a').addClass('tool-toggle-selected').removeClass('btn-default').addClass('btn-primary').
                         find('img').attr('src', this.values.images.enabled);
 
-                    for(var i=0; i< this.values.actions.length; i++) {
+                    for(i = 0; i< this.values.actions.length; i++) {
                         this.values.actions[i].show();
                     }
                 } else {
@@ -1766,7 +1778,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                         find('a').removeClass('tool-toggle-selected').removeClass('btn-primary').addClass('btn-default').
                         find('img').attr('src', this.values.images.disabled);
 
-                    for(var i=0; i< this.values.actions.length; i++) {
+                    for(i = 0; i< this.values.actions.length; i++) {
                         this.values.actions[i].hide();
                     }
                 }
@@ -1819,7 +1831,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.values.overlay = null;
             this.values.interaction = null;
 
-            this.values.type = PublicaMundi.Maps.MeasureToolType.Length
+            this.values.type = PublicaMundi.Maps.MeasureToolType.Length;
 
             if (typeof PublicaMundi.Maps.Tool.prototype.initialize === 'function') {
                 PublicaMundi.Maps.Tool.prototype.initialize.apply(this, arguments);
@@ -1828,11 +1840,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
             this.event('measure:end');
 
-            // Tooltip
-            this.values.tooltip;
-            this.values.tooltipElement;
-
             var formatMeasurement = function() {
+                var length, output, coordinates;
+
                 if(!self.values.feature) {
                     return null;
                 }
@@ -1843,17 +1853,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 var geom = self.values.feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326');
 
                 if(self.values.type === PublicaMundi.Maps.MeasureToolType.Length) {
-                    var coordinates = geom.getCoordinates();
+                    coordinates = geom.getCoordinates();
 
-                    var length = 0;
+                    length = 0;
                     for (var i = 0, ii = coordinates.length - 1; i < ii; ++i) {
                       var c1 = coordinates[i];
                       var c2 = coordinates[i + 1];
                       length += wgs84Sphere.haversineDistance(c1, c2);
                     }
 
-                    var length = Math.round(length * 100) / 100;
-                    var output;
+                    length = Math.round(length * 100) / 100;
                     if (length > 100) {
                         output = (Math.round(length / 1000 * 100) / 100) + ' ' + 'km';
                     } else {
@@ -1861,10 +1870,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     }
                     return output;
                 } else {
-                    var coordinates = geom.getLinearRing(0).getCoordinates();
+                    coordinates = geom.getLinearRing(0).getCoordinates();
                     var area = Math.abs(wgs84Sphere.geodesicArea(coordinates));
 
-                    var output;
                     if (area > 1000000) {
                         output = (Math.round(area / 1000000 * 1000) / 1000) + ' ' + 'km<sup>2</sup>';
                     } else {
@@ -1883,7 +1891,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 if(self.values.tooltip) {
                     self.values.map.removeOverlay(self.values.tooltip);
                 }
-            }
+            };
 
             this.values.handler = function(e) {
                 if (e.dragging) {
@@ -2036,7 +2044,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     var _ExportActionHandler = function(e) {
         if(this.values.action.isBusy()) {
             return;
-        };
+        }
 
         $('#' + this.values.element + '-error').html('');
 
@@ -2045,12 +2053,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     };
 
     var _ExportDialogActionExportHandler = function(e) {
-        var self = this;
+        var self = this, i, j;
 
         if(this.values.action.isBusy()) {
             this.values.dialog.hide();
             return;
-        };
+        }
 
         var feature = this.getFeature();
 
@@ -2062,8 +2070,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             var resources = this.values.resources.getQueryableResources();
 
             var quyarable = [];
-            for(var i=0; i<layers.length; i++) {
-                for(var j=0; j<resources.length; j++) {
+            for(i = 0; i<layers.length; i++) {
+                for(j = 0; j<resources.length; j++) {
                     if(layers[i].resource_id == resources[j].wms) {
                         quyarable.push({
                             table: resources[j].table,
@@ -2088,7 +2096,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     format($('#' + this.values.element + '-format').val());
 
                 var files= [];
-                for(var i=0; i<quyarable.length; i++) {
+                for(i = 0; i<quyarable.length; i++) {
                     files.push(quyarable[i].title);
 
                     query.resource(quyarable[i].table).
@@ -2120,7 +2128,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             jQuery('#export-download-frame').remove();
             jQuery('body').append('<div id="export-download-frame" style="display: none"><iframe src="' + this.values.endpoint + 'api/download/' + data.code + '"></iframe></div>');
         }
-    }
+    };
 
     PublicaMundi.Maps.ExportTool = PublicaMundi.Class(PublicaMundi.Maps.Tool, {
         initialize: function (options) {
@@ -2352,7 +2360,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             return;
         }
 
-        var id = 1;
+        var i, j, id = 1;
 
         // Clear selection
         this.clearSelection();
@@ -2378,8 +2386,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         var templates = [];
 
         var quyarable = [];
-        for(var i=0; i<layers.length; i++) {
-            for(var j=0; j<resources.length; j++) {
+        for(i = 0; i<layers.length; i++) {
+            for(j = 0; j<resources.length; j++) {
                 if(layers[i].resource_id == resources[j].wms) {
                     quyarable.push(resources[j].table);
                     templates.push(resources[j].template);
@@ -2398,9 +2406,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.suspendUI();
 
             var query = this.values.query;
-            query.reset().format(API.Data.Format.GeoJSON)
+            query.reset().format(API.Data.Format.GeoJSON);
 
-            for(var i=0; i<quyarable.length; i++) {
+            for(i = 0; i<quyarable.length; i++) {
                 query.resource(quyarable[i]).
                       distanceLessOrEqual(
                         point,
@@ -2483,7 +2491,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.event('selection:changed');
 
             this.values.query = new API.Data.Query(this.values.endpoint);
-            this.values.features = new ol.Collection;
+            this.values.features = new ol.Collection();
             this.values.focus = null;
 
             if(this.values.buffer < 0) {
@@ -2590,7 +2598,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             }
         },
         setFeatureFocus: function(index) {
-            var self = this;
+            var self = this, i;
 
             if(this.values.focus) {
                 if(this.values.focus.index == index) {
@@ -2601,7 +2609,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             }
 
             var features = this.getFeatures();
-            if(features.length == 0) {
+            if(features.length === 0) {
                 return false;
             }
 
@@ -2645,7 +2653,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             var keys = feature.getKeys();
             if(($.inArray('__template__', keys) !== -1) && (feature.get('__template__'))) {
                 var text = feature.get('__template__');
-                for (var i = 0; i < keys.length; i++) {
+                for (i = 0; i < keys.length; i++) {
                     var re = new RegExp('%\\(' + keys[i] + '\\)s', 'g');
                     text = text.replace(re, (feature.get(keys[i]) ? feature.get(keys[i]) : ''));
                 }
@@ -2653,15 +2661,15 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 content.push(text);
             } else {
                 content.push('<div class="feature-table"><table style="width: 100%;">');
-                for (var i = 0; i < keys.length; i++) {
+                for (i = 0; i < keys.length; i++) {
                     if ((keys[i] != feature.getGeometryName()) && (keys[i] != '__template__')) {
                         content.push('<tr class="feature-row"><td class="feature-prop-key">' + keys[i] + '</td><td class="feature-prop-value">' +
                         (feature.get(keys[i]) ? feature.get(keys[i]) : '') + '</td></tr>');
                     }
                 }
-                content.push('</table></div>')
+                content.push('</table></div>');
             }
-            content.push('</div>')
+            content.push('</div>');
             content.push('</div>');
 
             content.push('</div>');
@@ -2720,7 +2728,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         },
         setFeatureFocusNext: function() {
             var features = this.getFeatures();
-            if(features.length == 0) {
+            if(features.length === 0) {
                 return false;
             }
 
@@ -2741,7 +2749,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     });
 
     var getGeometryCenter = function(geom) {
-        var c1, c2, center;
+        var c1, c2, center, middle;
         if (geom instanceof ol.geom.Polygon) {
             center = geom.getInteriorPoint().getCoordinates();
         } else if (geom instanceof ol.geom.MultiPolygon) {
@@ -2759,14 +2767,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         } else {
             var singleGeom = geom;
             if(geom instanceof ol.geom.MultiLineString) {
-                var middle= Math.floor(geom.getLineStrings().length / 2);
+                middle= Math.floor(geom.getLineStrings().length / 2);
                 singleGeom = geom.getLineString(middle);
 
                 extent = geom.getExtent();
             }
 
             var coords = singleGeom.getCoordinates();
-            var middle = Math.floor(coords.length / 2);
+            middle = Math.floor(coords.length / 2);
 
             center = [0, 0];
             c1 = coords[middle-1];
@@ -3177,7 +3185,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             });
             if(topModal) {
                 $(topModal).zIndex(myIndex);
-                $(myElement).zIndex(topModalIndex)
+                $(myElement).zIndex(topModalIndex);
             }
         },
         show: function() {
@@ -3213,14 +3221,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         if(response.success) {
             this.values.page.data = response.data[0].records;
 
-            var records = this.values.page.data, content = [];
+            var records = this.values.page.data, content = [], field, i;
 
             content.push('<div class="clearfix" style="overflow: scroll; max-height: ' + (this.values.height - 100) + 'px;"><table class="table table-striped data-table">');
 
             if(records.length > 0) {
                 content.push('<thead>');
                 content.push('<tr>');
-                for(var field in records[0]) {
+                for(field in records[0]) {
                     if( field !== this.values.geometryName) {
                         content.push('<th>' + field + '</th>');
                     }
@@ -3234,9 +3242,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 if (maxPageSize > records.length) {
                     maxPageSize = records.length;
                 }
-                for(var i=0; i < maxPageSize; i++) {
+                for(i = 0; i < maxPageSize; i++) {
                     content.push('<tr>');
-                    for(var field in records[i]) {
+                    for(field in records[i]) {
                         if( field !== this.values.geometryName) {
                             content.push('<td>' + (records[i][field] ? records[i][field] : '' ) + '</td>');
                         }
@@ -3543,14 +3551,14 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             switch(file.error) {
                                 case 'minFileSize': case 'maxFileSize': case 'acceptFileTypes': case 'invalidContent': case 'conversionFailed':
                                 case 'crsNotSupported': case 'acceptFileFormats':
-                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + + file.error + '">' +
+                                    $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.' + file.error + '">' +
                                                                                             PublicaMundi.i18n.getResource('action.upload-resource.error.' + file.error) + '</div>');
                                     break;
                                 default:
                                     $('#' + self.values.element + '-error').html('').append('<div class="alert alert-danger" role="alert" data-i18n-id="action.upload-resource.error.unknown">' +
                                                                                             PublicaMundi.i18n.getResource('action.upload-resource.error.unknown') + '</div>');
                                     break;
-                            };
+                            }
                         } else {
                             var format = $('#' + self.values.element + '-format').val();
                             if((format == 'ESRI Shapefile') || (format == 'DXF') || (format == 'CSV')) {
@@ -3579,8 +3587,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 add : function (e, data) {
                     $('#' + self.values.element + '-error').html('');
 
-                    var allowed_extensions = /(\.|\/)(gml|kml|geojson|json|zip|dxf|csv)$/i
-                    var locally_allowed_extensions = /(\.|\/)(gml|kml|geojson|json)$/i
+                    var allowed_extensions = /(\.|\/)(gml|kml|geojson|json|zip|dxf|csv)$/i;
+                    var locally_allowed_extensions = /(\.|\/)(gml|kml|geojson|json)$/i;
 
                     var submit = true;
 
@@ -3701,12 +3709,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             });
 
             $('#' + this.values.element + '-x, #' + this.values.element + '-y').change(function() {
-                var value = parseFloat(this.value)
+                var value = parseFloat(this.value);
 
                 if(!isNaN(value)) {
                     this.value = value.toFixed(4);
                 } else {
-                    this.value = ''
+                    this.value = '';
                 }
             });
 
@@ -3733,7 +3741,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             offsetY: 20
                         })
                     })
-                ]
+                ];
             };
 
             this.values.overlay = new ol.FeatureOverlay({
@@ -3790,7 +3798,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             if(position) {
                 $('#' + this.values.element + '-x').val(position[0].toFixed(4));
                 $('#' + this.values.element + '-y').val(position[1].toFixed(4));
-            };
+            }
         },
         projectionToString: function() {
             var code = this.values.projection.getCode();
@@ -3804,7 +3812,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     return 'ΕΓΣΑ87';
                 case 'EPSG:4258':
                     return 'ETRS89';
-            };
+            }
 
             return code;
         },
@@ -4068,7 +4076,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     };
 
     var _ParseCoordinates = function(crs, delimiter, text) {
-        var re, coordinates = [], transformed = [];
+        var re, coordinates = [], transformed = [], i;
 
         text = text || '';
 
@@ -4084,7 +4092,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         var tokens = text.split(re);
         var num, numbers = [];
 
-        for(var i=0; i<tokens.length; i++) {
+        for(i = 0; i<tokens.length; i++) {
             if(tokens[i]) {
                 if(delimiter==',') {
                     tokens[i] = tokens[i].replace(',', '.');
@@ -4096,7 +4104,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             }
         }
 
-        for(var i=0; i<numbers.length; i+=2) {
+        for(i = 0; i<numbers.length; i+=2) {
             if(numbers[i+1]) {
                 coordinates.push([numbers[i], numbers[i+1]]);
                 transformed.push([numbers[i], numbers[i+1]]);
@@ -4166,7 +4174,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             offsetY: 20
                         })
                     })
-                ]
+                ];
             };
 
             this.values.overlay = new ol.FeatureOverlay({
@@ -4259,12 +4267,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                                                             $('#' + self.values.element + '-delimiter').val(),
                                                             $('#' + self.values.element + '-text').val());
 
-                        var initial = coordinates.initial, transformed = coordinates.transformed;
+                        var initial = coordinates.initial, transformed = coordinates.transformed, c, feature;
                         if(initial.length > 0) {
                             var bbox = null;
                             if(transformed.length > 1) {
                                 bbox = [transformed[0][0], transformed[0][1], transformed[0][0], transformed[0][1]];
-                                for(var c=1; c<transformed.length; c++) {
+                                for(c = 1; c<transformed.length; c++) {
                                     bbox[0] = Math.min(bbox[0], transformed[c][0]);
                                     bbox[1] = Math.min(bbox[1], transformed[c][1]);
                                     bbox[2] = Math.max(bbox[2], transformed[c][0]);
@@ -4273,16 +4281,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             }
 
                             self.values.overlay.getFeatures().clear();
-                            self.values.features = new ol.Collection;
+                            self.values.features = new ol.Collection();
 
                             var ring = [];
-                            for(var c=0; c<transformed.length-1; c++) {
+                            for(c = 0; c<transformed.length-1; c++) {
                                 ring.push(transformed[c]);
 
                                 var point = new ol.geom.Point(transformed[c]);
-                                var label = initial[c][0].toFixed(4) + ' , ' + initial[c][1].toFixed(4)
+                                var label = initial[c][0].toFixed(4) + ' , ' + initial[c][1].toFixed(4);
 
-                                var feature = new ol.Feature({
+                                feature = new ol.Feature({
                                     name: 'point-' + (c+1),
                                     label: label,
                                     geometry: point
@@ -4291,7 +4299,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             }
                             var geom = new ol.geom.Polygon([ring]);
 
-                            var feature = new ol.Feature({
+                            feature = new ol.Feature({
                                 name: 'polygo-',
                                 label: '',
                                 geometry: geom

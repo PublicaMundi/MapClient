@@ -170,7 +170,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                     style: style
                 });
             } else if (metadata.text) {
-                var source = new ol.source.Vector({
+                source = new ol.source.Vector({
                     projection: PublicaMundi.Maps.CRS.Mercator,
                     format: format,
                     useSpatialIndex: true
@@ -183,10 +183,10 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
 
                 if((metadata.type.toUpperCase() == PublicaMundi.Maps.Resources.Types.GML) &&
                    (features.length > 0) &&
-                   ((!features[0].getGeometry()) || (features[0].getGeometry().getCoordinates().length == 0))) {
+                   ((!features[0].getGeometry()) || (features[0].getGeometry().getCoordinates().length === 0))) {
                     format = new ol.format.GML2();
 
-                    var features = format.readFeatures(metadata.text, {
+                    features = format.readFeatures(metadata.text, {
                         dataProjection: metadata.projection,
                         featureProjection: PublicaMundi.Maps.CRS.Mercator
                     });
@@ -212,7 +212,7 @@ define(['jquery', 'ol', 'URIjs/URI', 'shared'], function ($, ol, URI, PublicaMun
                 }
 
                 map.getView().fitExtent(extent, map.getSize());
-            }
+            };
 
             if(__object) {
                 map.addLayer(__object);

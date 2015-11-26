@@ -1,6 +1,5 @@
 ﻿define(['jquery', 'URIjs/URI', 'shared'], function ($, URI, PublicaMundi) {
     "use strict";
-
     PublicaMundi.define('Maps.CKAN');
 
     PublicaMundi.Maps.CKAN.Metadata = PublicaMundi.Class(PublicaMundi.Maps.Observable, {
@@ -52,15 +51,17 @@
 					url: uri.toString().replace(/\/\//g, '/').replace(/:\//g, '://'),
 					context: self
 				}).done(function (response) {
+                    var i;
+
                     self.values.catalog.nodes = response.nodes || [];
 					self.values.catalog.organizations = response.organizations;
                     self.values.catalog.groups = response.groups;
                     self.values.catalog.packages = response.packages;
 
-                    for(var i = 0; i < self.values.catalog.organizations.length; i++) {
+                    for(i = 0; i < self.values.catalog.organizations.length; i++) {
                         self.values.catalog.organizations[i].loaded = true;
                     }
-                    for(var i = 0; i < self.values.catalog.groups.length; i++) {
+                    for(i = 0; i < self.values.catalog.groups.length; i++) {
                         self.values.catalog.groups[i].loaded = true;
                     }
 
@@ -89,7 +90,7 @@
                 node.isEmpty = false;
                 return node.isEmpty;
             }
-            if(node.children.length == 0) {
+            if(node.children.length === 0) {
                 node.isEmpty = true;
                 return node.isEmpty;
             }
@@ -138,9 +139,9 @@
         getNodeChidlren: function(nodeId) {
             var nodes = [];
 
-            if(nodeId == null) {
+            if(!nodeId) {
                 for(var id in this.values.catalog.nodes) {
-                    if(this.values.catalog.nodes[id].parent == null) {
+                    if(!this.values.catalog.nodes[id].parent) {
                         nodes.push(this.values.catalog.nodes[id]);
                     }
                 }
@@ -355,7 +356,7 @@
                                     _resource.description = {
                                         el: _resource.description,
                                         en: _resource.description
-                                    }
+                                    };
 									_package.resources.push(_resource);
 								}
 							}
@@ -453,7 +454,7 @@
                                     _resource.description = {
                                         el: _resource.description,
                                         en: _resource.description
-                                    }
+                                    };
 									_package.resources.push(_resource);
 								}
 							}
@@ -525,7 +526,7 @@
 					dataType: 'jsonp',
 					context: self
 				}).done(function (response) {
-					var organization = null, o
+					var organization = null, index;
 					if ((response.success) && (response.result)) {
 						organization = {
 								id: response.result.id,
@@ -582,7 +583,7 @@
                                     _resource.description = {
                                         el: _resource.description,
                                         en: _resource.description
-                                    }
+                                    };
 									_package.resources.push(_resource);
 								}
 							}
@@ -595,7 +596,7 @@
 							}
 						}
 
-						var index = self.getIndexOfOrganization(organization.id);
+						index = self.getIndexOfOrganization(organization.id);
 						if(index < 0) {
 							self.values.catalog.organizations.push(organization);
 						} else {
@@ -638,7 +639,7 @@
 					dataType: 'jsonp',
 					context: self
 				}).done(function (response) {
-					var group = null, o
+					var group = null, index;
 					if ((response.success) && (response.result)) {
 						group = {
 								id: response.result.id,
@@ -696,7 +697,7 @@
                                     _resource.description = {
                                         el: _resource.description,
                                         en: _resource.description
-                                    }
+                                    };
 									_package.resources.push(_resource);
 								}
 							}
@@ -709,7 +710,7 @@
 							}
 						}
 
-						var index = self.getIndexOfGroup(group.id);
+						index = self.getIndexOfGroup(group.id);
 						if(index < 0) {
 							self.values.catalog.groups.push(group);
 						} else {
@@ -864,19 +865,19 @@
                         data = {
                             title: self.getGroupById(id).caption,
                             description: self.getGroupById(id).description
-                        }
+                        };
                         break;
                     case 'organization':
                         data = {
                             title: self.getOrganizationById(id).caption,
                             description: self.getOrganizationById(id).description
-                        }
+                        };
                         break;
                     case 'package':
                         data = {
                             title: self.getPackageById(id).title,
                             description: self.getPackageById(id).notes
-                        }
+                        };
                         break;
                     default:
                         resolve({});
@@ -907,7 +908,7 @@
                                     self.getOrganizationById(id).description = response.text;
                                     break;
                                 case 'package':
-                                    self.getPackageById(id).notes = response.text
+                                    self.getPackageById(id).notes = response.text;
                                     break;
                             }
                             data.description = response.text;

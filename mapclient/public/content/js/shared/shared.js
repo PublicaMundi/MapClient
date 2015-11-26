@@ -341,7 +341,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             }
 
             this.values.readers = {};
-            this.values.layers = []
+            this.values.layers = [];
             this.values.layerCounter = 0;
             this.values.maxLayerCount = this.values.maxLayerCount || 5;
             this.values.queryable = [];
@@ -472,6 +472,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                 return null;
             }
 
+            var i;
             var exists = false;
             var title = null;
 			var bbox = null;
@@ -480,7 +481,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 			var resource = parts[0];
 			var layer = parts.splice(1).join('_');
 
-			for(var i=0; i<metadata.layers.length;i++) {
+			for(i = 0; i<metadata.layers.length;i++) {
 				if(metadata.layers[i].key == layer) {
 					title = metadata.layers[i].title;
 					bbox = metadata.layers[i].bbox;
@@ -494,7 +495,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             }
 
 			var __object = null;
-			for(var i=0; i < this.values.layers.length; i++) {
+			for(i = 0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
 					break;
@@ -506,7 +507,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 					proxy: this.values.proxy
 				});
 
-                __object = factory.create(map, metadata, layer, title)
+                __object = factory.create(map, metadata, layer, title);
 
                 map.getLayers().insertAt(map.getLayers().getLength(), __object);
 
@@ -593,7 +594,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
                     opacity: (currentValue.layer.getOpacity() * 100),
                     endpoint: currentValue.endpoint,
                     key : currentValue.key
-                }
+                };
             });
         },
         isLayerSelected: function(id) {
@@ -618,9 +619,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 		},
 		moveLayerUp: function(map, id) {
 			var __object = null;
-            var index;
+            var i, index;
 
-			for(var i=0; i < this.values.layers.length; i++) {
+			for(i = 0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
                     index = i;
@@ -633,7 +634,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             var baseLayerProperties = map.get('base_layer_properties');
             var startIndex = (baseLayerProperties.exists ? 3 : 2);
 
-            for (var i = startIndex; i < layers.length; i++) {
+            for (i = startIndex; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
@@ -653,9 +654,9 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
 		},
 		moveLayerDown: function(map, id) {
 			var __object = null;
-            var index;
+            var index, i;
 
-			for(var i=0; i < this.values.layers.length; i++) {
+			for(i = 0; i < this.values.layers.length; i++) {
 				if(this.values.layers[i].id == id) {
 					__object = this.values.layers[i].layer;
                     index = i;
@@ -668,7 +669,7 @@ define(['module', 'jquery', 'ol', 'proj4', 'URIjs/URI'], function (module, $, ol
             var baseLayerProperties = map.get('base_layer_properties');
             var startIndex = (baseLayerProperties.exists ? 3 : 2);
 
-            for (var i = startIndex; i < layers.length; i++) {
+            for (i = startIndex; i < layers.length; i++) {
                 if (layers[i] === __object) {
                     currentIndex = i;
                     break;
