@@ -210,8 +210,9 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
     $('#process_id').selectmenu().selectmenu('disable');
     $('#process_id-menu').css({'max-height' : '200px', 'min-width' : '350px'});
 
-    var vectorSource = new ol.source.GeoJSON({
-        projection: 'EPSG:3857'
+    var vectorSource = new ol.source.Vector({
+        projection: 'EPSG:3857',
+        format: new ol.format.GeoJSON()
     });
 
     $('#process_show').click(function () {

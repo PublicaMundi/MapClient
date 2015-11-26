@@ -2,6 +2,8 @@ import logging
 
 import os, time
 
+from paste.deploy.converters import asbool
+
 from pylons import config, request, response, session, url, tmpl_context as c
 from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import jsonify
@@ -54,8 +56,16 @@ class HomeController(BaseController):
         if 'dataapi.export.formats.disabled' in config:
            c.exportDisabledFormats =  filter(None, config['dataapi.export.formats.disabled'].split(','))
 
+        # Debug mode
+        debug = asbool(config['mapclient.debug'])
+
+        # RequireJS main script
         if self._isMobileOrTablet() == False:
-            c.main = 'client-main.js'
+            if debug == True:
+                c.main = 'js/client-main.js'
+            else:
+                c.main = 'jsmin/client-main.min.js'
         else:
             c.main = 'client-main-mobile.js'
+
         return render('/index.jinja2')

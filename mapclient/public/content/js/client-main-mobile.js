@@ -4,28 +4,13 @@
     // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
-		promise: [
-			'lib/promise/promise-6.1.0.min',
-			'https://www.promisejs.org/polyfills/promise-6.1.0.min'
-		],
-        jquery: [
-            'lib/jquery/jquery-2.1.3.min'
-        ],
-        jqueryui: [
-            'lib/jquery-ui/jquery-ui.1.11.4.min'
-        ],
-        jqueryui_touch_punch: [
-            'lib/jquery-ui.touch-punch/jquery.ui.touch-punch.min'
-        ],
-		bootstrap: [
-			'lib/bootstrap/current/bootstrap.min'
-		],
-		bootstrap_select: [
-			'lib/bootstrap-select/bootstrap-select.min'
-		],
-        ol: [
-            'lib/ol3/ol.3.5.0'
-        ],
+		promise: 'lib/promise/promise-6.1.0.min',
+        jquery: 'lib/jquery/jquery-2.1.3.min',
+        jqueryui: 'lib/jquery-ui/jquery-ui.1.11.4.min',
+        jqueryui_touch_punch: 'lib/jquery-ui.touch-punch/jquery.ui.touch-punch.min',
+		bootstrap: 'lib/bootstrap/bootstrap.min',
+		bootstrap_select: 'lib/bootstrap-select/bootstrap-select.min',
+        ol: 'lib/ol3/ol.3.5.0',
         URIjs: 'lib/uri',
         app: 'app/client',
         controls: 'app/controls',

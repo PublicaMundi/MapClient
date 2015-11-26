@@ -3,20 +3,11 @@
     // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
-		promise: [
-			'lib/promise/promise-6.1.0.min',
-			'https://www.promisejs.org/polyfills/promise-6.1.0.min'
-		],
-        jquery: [
-            'lib/jquery/jquery-2.1.3.min'
-        ],
-        jqueryui: [
-            'lib/jquery-ui/jquery-ui.1.11.4.min'
-        ],
+		promise: 'lib/promise/promise-6.1.0.min',
+        jquery: 'lib/jquery/jquery-2.1.3.min',
+        jqueryui: 'lib/jquery-ui/jquery-ui.1.11.4.min',
         proj4: 'lib/proj4js/proj4',
-        ol: [
-            'lib/ol3/ol.3.4.0'
-        ],
+        ol:'lib/ol3/ol.3.5.0',
         URIjs: 'lib/uri',
         shared: 'shared/shared',
 		data_api: 'lib/data-api/data',

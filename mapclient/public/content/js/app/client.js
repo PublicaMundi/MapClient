@@ -122,9 +122,11 @@
         }
 
         return null;
-    }
+    };
 
     var createHellenicCadastreBaseLayer = function() {
+        var source, fn;
+
         if(members.config.servers.tilecache.length > 0) {
             // 1: Use tilecache if available
             var tileGrid = new ol.tilegrid.TileGrid({
@@ -137,7 +139,7 @@
                                   0.074645535421371464, 0.037322767710685732, 0.018661383855342866]
             });
 
-            var source = new ol.source.TileWMS({
+            source = new ol.source.TileWMS({
                 urls: members.config.servers.tilecache,
                 params: {
                     VERSION: '1.1.0',
@@ -155,7 +157,7 @@
                 tileGrid: tileGrid
             });
 
-            var fn = source.tileUrlFunction;
+            fn = source.tileUrlFunction;
 
             source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
                 var url = fn(tileCoord, pixelRatio, projection);
@@ -208,7 +210,7 @@
                 'LAYERS': 'KTBASEMAP'
             };
 
-            var source = new ol.source.TileWMS({
+            source = new ol.source.TileWMS({
                 url: 'http://gis.ktimanet.gr/wms/wmsopen/wmsserver.aspx',
                 params: params,
                 projection: 'EPSG:900913',
@@ -221,7 +223,7 @@
                 ]
             });
 
-            var fn = source.tileUrlFunction;
+            fn = source.tileUrlFunction;
 
             source.tileUrlFunction = function(tileCoord, pixelRatio, projection) {
                 var url = fn(tileCoord, pixelRatio, projection);
@@ -265,7 +267,7 @@
 
             var canvasOrigin = map.getPixelFromCoordinate([extent[0], extent[3]]);
 
-            var delta = [mapOrigin[0]-canvasOrigin[0], mapOrigin[1]-canvasOrigin[1]]
+            var delta = [mapOrigin[0]-canvasOrigin[0], mapOrigin[1]-canvasOrigin[1]];
 
             var img=$("#grid-tiles")[0];
             var pat=context.createPattern(img,"repeat");
@@ -352,7 +354,7 @@
         $('.ol-attribution').removeClass('ol-attribution-google');
 
         updateDragZoomInteractionKinetic(false);
-    }
+    };
 
     var updateDragZoomInteractionKinetic = function(isGoogle) {
         var dragPan, index = 0, interactions = members.map.control.getInteractions();
@@ -370,7 +372,7 @@
             }
             index++;
         }, this);
-    }
+    };
 
 	var createBaseLayer = function(type, set) {
 		var layer = null, prev_propeties = null;
@@ -490,7 +492,7 @@
         // Map Base Layers
         var layer;
 
-		var selection = $('#base_layer option:selected')
+		var selection = $('#base_layer option:selected');
 
 		layer = createBaseLayer($(selection).data('type'), $(selection).data('set'));
         members.map.control.addLayer(layer);
@@ -833,13 +835,15 @@
         });
 
         members.actions.clear.on('action:execute', function(args) {
-            for(var item in members.tools) {
+            var item;
+
+            for(item in members.tools) {
                 members.tools[item].clear();
             }
-            for(var item in members.actions) {
+            for(item in members.actions) {
                 members.actions[item].clear();
             }
-            for(var item in members.components) {
+            for(item in members.components) {
                 members.components[item].clear();
             }
         });
@@ -903,7 +907,7 @@
                 } else {
                     $('#tool-actions-header').hide();
                 }
-                var name = args.sender.getName();
+                name = args.sender.getName();
                 for(var item in members.tools) {
                     if(name != members.tools[item].getName()) {
                         members.tools[item].setActive(false);
@@ -1006,17 +1010,17 @@
 			members.ui.section = id;
 
 			if(id === 'organization') {
-                $('#tree-filter').show()
+                $('#tree-filter').show();
 				members.components.layerTreeGroup.hide();
                 members.components.layerTreeSearch.hide();
 				members.components.layerTreeOrganization.show();
 			} else if (id === 'group') {
-                $('#tree-filter').show()
+                $('#tree-filter').show();
 				members.components.layerTreeOrganization.hide();
                 members.components.layerTreeSearch.hide();
 				members.components.layerTreeGroup.show();
 			} if (id === 'search') {
-                $('#tree-filter').hide()
+                $('#tree-filter').hide();
                 members.components.layerTreeGroup.hide();
 				members.components.layerTreeOrganization.hide();
                 members.components.layerTreeSearch.show();
@@ -1040,7 +1044,7 @@
 			members.components.layerSelection.remove(args.id);
 
             resize();
-		}
+		};
 
         var showCatalogObjectInfo = function(args) {
             if(args.data) {
@@ -1104,14 +1108,14 @@
         });
 		var layerSelectionAdded  = function(args) {
             resize();
-		}
+		};
 
 		var layerSelectionRemoved  = function(args) {
 			members.components.layerTreeGroup.remove(args.id);
             members.components.layerTreeOrganization.remove(args.id);
             members.components.layerTreeSearch.remove(args.id);
             resize();
-		}
+		};
 
 		members.components.layerSelection.on('layer:added', layerSelectionAdded);
 
@@ -1243,7 +1247,7 @@
                 members.tools[item].setEnabled(false);
             }
         }
-    }
+    };
 
     var enableAllTools = function(name) {
         for(var item in members.tools) {
@@ -1254,7 +1258,7 @@
         if((name) && (members.tools.hasOwnProperty(name))) {
             members.tools[name].setActive(true);
         }
-    }
+    };
 
     var disableAllInteractions = function(name) {
         for(var item in members.interactions) {
@@ -1396,7 +1400,7 @@
                 PublicaMundi.i18n.setResource(locale, 'node.' + nodes[key].id, nodes[key].caption[locale]);
             }
         }
-    }
+    };
 
     PublicaMundi.initialize = function () {
         initializeParameters();
@@ -1484,7 +1488,7 @@
                         afterQueryableLoaded();
                     });
                 }
-            }
+            };
 
             if(members.ckan.isPreloadingEnabled()) {
                 members.ckan.preload().then(afterPreload);
@@ -1500,6 +1504,6 @@
             }
         });
     };
-
+    window.PublicaMundi = PublicaMundi;
     return PublicaMundi;
 });

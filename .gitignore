@@ -62,3 +62,5 @@ development.ini
 # Node
 node_modules
 npm-debug.log
+
+build.txt
