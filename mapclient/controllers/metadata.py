@@ -198,7 +198,7 @@ class MetadataController(BaseController):
 
             return json.dumps(metadata, cls=ShapelyGeoJsonEncoder, encoding='utf-8')
         except Exception as ex:
-            log.error(ex)
+            log.exception('Metadata loading has failed.')
 
         return json.dumps({
             'organizations': [],
@@ -224,7 +224,7 @@ class MetadataController(BaseController):
 
             return json.dumps(r)
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to metadata for organization {id}.'.format(id = id))
 
         return json.dumps({
             'success': False,
@@ -248,7 +248,7 @@ class MetadataController(BaseController):
 
             return json.dumps(r)
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to metadata for group {id}.'.format(id = id))
 
         return json.dumps({
             'success': False,
@@ -272,7 +272,7 @@ class MetadataController(BaseController):
 
             return json.dumps(r)
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to metadata for package {id}.'.format(id = id))
 
         return json.dumps({
             'success': False,

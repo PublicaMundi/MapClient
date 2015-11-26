@@ -170,10 +170,13 @@ class ApiController(BaseController):
                 "resources" : resources
             }
         except Exception as ex:
-            log.error(ex)
+            message = u'Failed to load metadata for resources.'
+
+            log.exception(message)
+
             result = {
                 "success" : False,
-                "message" : u'Failed to load metadata for resources.',
+                "message" : message,
                 "resource": None
             }
 
@@ -208,10 +211,13 @@ class ApiController(BaseController):
                     }
                 }
         except Exception as ex:
-            log.error(ex)
+            message =  u'Failed to load resource {resource} metadata.'.format(resource = id)
+
+            log.exception(message)
+
             result = {
                 "success" : False,
-                "message" : u'Failed to load resource {resource} metadata.'.format(resource = resource),
+                "message" : message,
                 "resource": None
             }
 
@@ -248,7 +254,7 @@ class ApiController(BaseController):
 
             return self._format_response(result, callback, query_result['format'])
         except DataException as apiEx:
-            log.error(apiEx)
+            log.exception('Data API exception has occured.')
 
             details = None
             if not apiEx.innerException is None and config['dataapi.error.details']:
@@ -261,11 +267,13 @@ class ApiController(BaseController):
                 'data' : None
             }, callback)
         except Exception as ex:
-            log.error(ex)
+            message = u'Unhandled exception has occured.'
+
+            log.exception(message)
 
             return self._format_response({
                 'success': False,
-                'message': 'Unhandled exception has occured.',
+                'message': message,
                 'details': (ex.message if config['dataapi.error.details'] else ''),
                 'data' : None
             }, callback)
@@ -382,7 +390,9 @@ class ApiController(BaseController):
 
             return json.dumps(result, encoding='utf-8')
         except DataException as apiEx:
-            log.error(apiEx)
+            message = u'Data API exception has occured.'
+
+            log.exception(message)
 
             if path != None:
                 shutil.rmtree(path)
@@ -398,14 +408,16 @@ class ApiController(BaseController):
                 'token': None
             }, None)
         except Exception as ex:
-            log.error(ex)
+            message = u'Unhandled exception has occured.'
+
+            log.exception(message)
 
             if path != None:
                 shutil.rmtree(path)
 
             return self._format_response({
                 'success': False,
-                'message': 'Unhandled exception has occured.',
+                'message': message,
                 'details': (ex.message if config['dataapi.error.details'] else ''),
                 'token': None
             }, None)
@@ -523,7 +535,7 @@ class ApiController(BaseController):
 
             return json.dumps(result, encoding='utf-8')
         except DataException as apiEx:
-            log.error(apiEx)
+            log.exception('Data API exception has occured.')
 
             if path != None:
                 shutil.rmtree(path)
@@ -539,14 +551,16 @@ class ApiController(BaseController):
                 'token': None
             }, None)
         except Exception as ex:
-            log.error(ex)
+            message = u'Unhandled exception has occured.'
+
+            log.exception(message)
 
             if path != None:
                 shutil.rmtree(path)
 
             return self._format_response({
                 'success': False,
-                'message': 'Unhandled exception has occured.',
+                'message': message,
                 'details': (ex.message if config['dataapi.error.details'] else ''),
                 'token': None
             }, None)
