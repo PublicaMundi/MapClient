@@ -34,8 +34,7 @@ class ConfigController(BaseController):
             if not ipArray is None and len(ipArray)>0:
                 return ipArray[0].strip()
         except Exception as ex:
-            log.error("Failed to get IP address.")
-            log.error(ex)
+            log.exception('Failed to get IP address.')
 
         return None
 
@@ -64,8 +63,7 @@ class ConfigController(BaseController):
 
             Session.commit()
         except Exception as ex:
-            log.error('Failed to create shortcut for configuration %(configuration)s' % { 'configuration' : config})
-            log.error(ex)
+            log.exception('Failed to create shortcut for configuration %(configuration)s' % { 'configuration' : config})
 
         return url
 
@@ -90,7 +88,7 @@ class ConfigController(BaseController):
                 'config' : config
             })
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to load configuration {config}.'.format(config = id))
 
         return json.dumps({
             'success' : False,
@@ -114,7 +112,7 @@ class ConfigController(BaseController):
                 'url' : url
             })
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to save configuration.')
 
         return json.dumps({
             'success' : False,
@@ -131,7 +129,7 @@ class ConfigController(BaseController):
             c.lib = config['lib'] if 'lib' in config else 'leaflet'
             c.config = json.dumps(configuration)
         except Exception as ex:
-            log.error(ex)
+            log.exception(u'Failed to load and embed configuration {config}.'.format(config = id))
 
             abort(404, 'Map configuration was not found')
 
