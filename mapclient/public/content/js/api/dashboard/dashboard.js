@@ -8,6 +8,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         map: {
             query : null,
             layer: null
+        },
+        schema: {
         }
     };
 
@@ -251,6 +253,60 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             }
         });
     });
+
+    var describe_resource = function(id) {
+        if(properties.schema.hasOwnProperty(id)) {
+            displaySchema(id, properties.schema[id]);
+        } else {
+            var query = new API.Data.Query();
+
+            query.describeResource({
+                id: id,
+                context: this,
+                success: function(data) {
+                    properties.schema[id] = data.resource;
+                    displaySchema(id, data.resource);
+                }
+            });
+        }
+    };
+
+
+    var displaySchema = function(id, resource) {
+        var content = [], fields = resource.fields;
+
+        content.push('<table class="schema-table">');
+
+        for (var f in fields) {
+            content.push('<tr class="field-row"><td class="field-name">' + fields[f].name + '</td>');
+            if(fields[f].name === resource.geometry_column) {
+                content.push('<td class="field-type field-geometry">' + fields[f].type + '</td></tr>');
+            } else {
+                content.push('<td class="field-type">' + fields[f].type + '</td></tr>');
+            }
+        }
+        content.push('</table>');
+
+        $('#schema-table').html(content.join(''));
+
+        if($('#schema-dialog').is(':ui-dialog')) {
+            $('#schema-dialog').dialog( "option", 'title', 'Schema : ' + id );
+
+            if(!$('#schema-dialog').dialog('isOpen')) {
+                $('#schema-dialog').dialog('open');
+            }
+        } else {
+            $('#schema-dialog').dialog({
+                title: 'Schema : ' + id,
+                width: 350,
+                height: 400,
+                position: { my: "left bottom", at: "left bottom", of: $('#page-resources') },
+                open: function() {
+
+                }
+            });
+        }
+    };
 
     $('#process_describe').click(function () {
         $('#query_size, #query_time').hide();
@@ -657,13 +713,10 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
     select.getFeatures().on('change:length', function (e) {
         if (e.target.getArray().length === 0) {
-            // this means it's changed to no features selected
-            window.features = null;
             if($('#feature-dialog').hasClass('ui-dialog-content')) {
                 $('#feature-dialog').dialog('close');
             }
         } else {
-            // this means there is at least 1 feature selected
             var features = e.target;
             var feature = features.getArray()[0];
 
@@ -739,7 +792,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                     for(var j=0; j < p.resources.length; j++) {
                         var r = p.resources[j];
                         if(r.queryable) {
-                            content.push('<div class="resource-tile">');
+                            content.push('<div class="resource-tile" id="' + r.id + '">');
 
                             content.push('<div class="clearfix resource-label">Title</div>');
                             content.push('<div class="clearfix resource-title resource-value">' + p.title.en + '</div>');
@@ -757,6 +810,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                             content.push('<div class="clearfix">');
                             content.push('<a class="resource-tile-link" href="' + catalogLink + '" target="_blank">View in catalog</a>');
                             content.push('<a class="resource-tile-link" href="' + mapLink+ '" target="_blank">View in maps</a>');
+                            content.push('<a class="resource-tile-link resource-schema-link" href="#" data-resource="' + r.id + '">View schema</a>');
                             content.push('</div>');
 
                             content.push('</div>');
@@ -766,6 +820,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                 $('#resource-catalog-content').html(content.join(''));
 
                 toggleResourceTiles();
+
+                $('.resource-schema-link').click(function(e) {
+                    e.preventDefault();
+                    describe_resource($(this).data('resource'));
+                });
 
                 $('#resource-catalog-header').show();
                 $('#resource-catalog-content').fadeIn(250);
@@ -805,8 +864,8 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         var extent = [1948226, 4024868, 4008846, 5208724];
 
         if(packageData.spatial) {
-            var source = new ol.source.GeoJSON({
-                object:{
+            var format = new ol.format.GeoJSON()
+            var features = format.readFeatures({
                     'type': 'FeatureCollection',
                     'crs': {
                         'type': 'name',
@@ -816,10 +875,11 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
                         'type': 'Feature',
                         'geometry': packageData.spatial
                     }]
-                },
-                projection: 'EPSG:3857'
+                }, {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: 'EPSG:3857'
             });
-            extent = source.getFeatures()[0].getGeometry().getExtent();
+            extent = features[0].getGeometry().getExtent();
         }
 
 
@@ -874,9 +934,6 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         var p = $(this).data('package');
         var r = $(this).data('resource');
 
-        //var url = '../?package=' + p + '&resource=' + r;
-        //window.open(url, '_blank');
-
         viewResource(p, r);
     });
 
@@ -903,6 +960,16 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             case 'page-resources':
                 loadResourcesFromCatalog();
                 break;
+        }
+
+        if($('#schema-dialog').is(':ui-dialog')) {
+            $('#schema-dialog').dialog('close');
+        }
+        if($('#map-dialog').is(':ui-dialog')) {
+            $('#map-dialog').dialog('close');
+        }
+        if($('#feature-dialog').is(':ui-dialog')) {
+            $('#feature-dialog').dialog('close');
         }
 
         resize();
