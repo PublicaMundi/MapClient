@@ -88,6 +88,7 @@
 
             if(node.resources.length > 0) {
                 node.isEmpty = false;
+
                 return node.isEmpty;
             }
             if(node.children.length === 0) {
@@ -139,9 +140,9 @@
         getNodeChidlren: function(nodeId) {
             var nodes = [];
 
-            if(!nodeId) {
+            if((!nodeId) && (nodeId!==0)) {
                 for(var id in this.values.catalog.nodes) {
-                    if(!this.values.catalog.nodes[id].parent) {
+                    if((!this.values.catalog.nodes[id].parent) && (this.values.catalog.nodes[id].parent!==0)) {
                         nodes.push(this.values.catalog.nodes[id]);
                     }
                 }

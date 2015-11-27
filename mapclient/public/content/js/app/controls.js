@@ -163,7 +163,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             };
 
             this.values.getTreeNodeById = function(id, parent) {
-                if(!id) {
+                if((!id) && (id!==0)) {
                     return null;
                 }
                 parent = parent || self.values.rootTreeNode;
