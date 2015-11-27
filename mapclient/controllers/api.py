@@ -366,6 +366,11 @@ class ApiController(BaseController):
                     filename = files[i]
 
                 if len(data[i]['features']) > 0:
+                    if export_format == EXPORT_FORMAT_DXF:
+                        # For DXF remove all properties
+                        for f in data[i]['features']:
+                            f['properties'] = {}
+
                     self._export_partial_result(self._format_response(data[i], None, QUERY_FORMAT_GEOJSON), path, filename, crs, export_format)
                     index+=1
 
