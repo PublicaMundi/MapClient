@@ -103,8 +103,8 @@ body {
 
 .text-developers {
     padding-left: 122px;
-    color: #ADADAD; 
-    font-size: 0.75em; 
+    color: #ADADAD;
+    font-size: 0.75em;
     font-family: Verdana,Arial;
 }
 
@@ -490,9 +490,39 @@ img.action-button {
     .page.page-overlay {
         background: white;
         z-index: 999999;
-        overflow: hidden;    
+        overflow: hidden;
     }
 
 #docs-frame{
     border: none;
+}
+
+.schema-table {
+    border-collapse: collapse;
+    width: 98%;
+}
+
+.field-row {
+    font-size: 0.8em;
+}
+
+.field-name {
+    width: 120px;
+    word-wrap: break-word;
+    vertical-align: top;
+    font-weight: bold;
+    padding: 4px;
+}
+
+.field-type {
+    max-width: 200px;
+    word-wrap: break-word;
+    vertical-align: top;
+    padding: 4px;
+    color: blue;
+}
+
+.field-type.field-geometry {
+    font-weight: bold;
+    color: #f5871f;
 }
