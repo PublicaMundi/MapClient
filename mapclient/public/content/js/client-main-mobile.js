@@ -1,7 +1,6 @@
 ﻿var config = {
     enforceDefine: false,
     waitSeconds: 30,
-    // Disable caching
     urlArgs: "v=" + (new Date()).getTime(),
     paths: {
 		promise: 'lib/promise/promise-6.1.0.min',
@@ -28,31 +27,21 @@
         iframetransport: 'lib/fileupload/jquery.iframe-transport',
         locale_en: 'i18n/en/strings',
         locale_el: 'i18n/el/strings',
-        // WPS support
-        hogan: 'lib/hogan/hogan-3.0.2.min',
-        xml2json: 'lib/x2js/xml2json.min',
-        queryString: 'lib/query-string/query-string',
-        wpsPayloads: 'lib/zoo-client/payloads',
-        wpsPayload: 'lib/zoo-client/wps-payload',
-        utils: 'lib/zoo-client/utils',
-        zoo: 'lib/zoo-client/zoo'
+        xml2json: 'lib/x2js/xml2json.min'
     },
     shim: {
 		jquery: {
 			deps : ['promise']
 		},
-		bootstrap : { 
-			deps : ['jquery'] 
-		},
-		bootstrap_select : { 
-			deps : ['bootstrap', 'jquery'] 
-		},
-        typeahead: {
-            deps: [
-                'jquery',
-                'bloodhound'
-            ]
+        jqueryui: {
+            deps: ['jquery']
         },
+		bootstrap : {
+			deps : ['jquery']
+		},
+		bootstrap_select : {
+			deps : ['bootstrap', 'jquery']
+		},
         iframetransport: {
             deps: [
                 'jquery'
@@ -64,11 +53,11 @@
                 'iframetransport'
             ]
         },
-        jqueryui: {
-            deps: ['jquery']
-        },
-        jqueryui_touch_punch: {
-            deps: ['jqueryui']
+        typeahead: {
+            deps: [
+                'jquery',
+                'bloodhound'
+            ]
         },
         ol: {
             deps: ['proj4']
@@ -99,18 +88,17 @@
                 'jquery',
                 'bootstrap',
                 'bootstrap_select',
-                'jqueryui', 
-                'jqueryui_touch_punch',               
+                'jqueryui',
+                'jqueryui_touch_punch',
                 'proj4',
                 'ol',
                 'URIjs/URI',
                 'shared',
                 'ckan',
-                'controls',                
+                'controls',
                 'wms',
                 'file',
                 'data_api',
-                'data_api_wps',
                 'fileupload'
             ]
         },
@@ -125,28 +113,11 @@
                 'shared'
             ]
         },
-        data_api_wps: {
-            deps: [
-                'data_api',
-                'zoo',
-                'wpsPayload'
-            ]
-        },
-        wpsPayloads: {
-            deps: ['hogan'],
-        },
-        wpsPayload: {
-            deps: ['wpsPayloads'],
-            exports: 'wpsPayload',
-        },
-        hogan: {
-            exports: 'Hogan',
-        },
         xml2json: {
           exports: "X2JS",
         },
-        queryString: {
-            exports: 'queryString',
+        jqueryui_touch_punch: {
+            deps: ['jqueryui']
         }
 	}
 };
@@ -180,14 +151,26 @@ requirejs.onResourceLoad = function (context, map, depArray) {
 	document.getElementById("loading-text").innerHTML = 'Loading Scripts ... ' + (100 * (initialization.scriptCounter) / initialization.scriptTotal).toFixed(0) + '%'
 };
 
-define('client-main-mobile', function () {
-    "use strict";
-
-    require(['jquery', 'app'], function ($, PublicaMundi) {
-        $(function () {
-            // Add code for application initialization here
-            PublicaMundi.initialize();
-        });
+require(['app', 
+         'jquery', 
+         'promise', 
+         'jqueryui',
+         'jqueryui_touch_punch',
+         'bootstrap', 
+         'bootstrap_select', 
+         'iframetransport', 
+         'fileupload', 
+         'bloodhound', 
+         'typeahead',
+         'handlebars',
+         'controls',
+         'ckan',
+         'wms', 
+         'file', 
+         'data_api', 
+         'xml2json'], function (PublicaMundi, $) {
+    $(function () {
+        // Add code for application initialization here
+        PublicaMundi.initialize();
     });
 });
-
