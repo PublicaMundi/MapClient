@@ -4,7 +4,7 @@
     dir: '../mapclient/public/content/jsmin',
     modules: [
         {
-            name: 'client-main.min',
+            name: 'client-main',
             create: false
         }
     ],
