@@ -64,8 +64,11 @@ class HomeController(BaseController):
             if debug == True:
                 c.main = 'js/client-main.js'
             else:
-                c.main = 'jsmin/client-main.min.js'
+                c.main = 'jsmin/client-main.js'
         else:
-            c.main = 'client-main-mobile.js'
+            if debug == True:
+                c.main = 'js/client-main-mobile.js'
+            else:
+                c.main = 'jsmin/client-main-mobile.js'
 
         return render('/index.jinja2')

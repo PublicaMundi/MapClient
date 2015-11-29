@@ -1,7 +1,7 @@
 ﻿var config = {
     enforceDefine: false,
     waitSeconds: 30,
-    urlArgs: "v=" + (new Date()).getTime(),
+    //urlArgs: "v=" + (new Date()).getTime(),
     paths: {
 		promise: 'lib/promise/promise-6.1.0.min',
         jquery: 'lib/jquery/jquery-2.1.3.min',
