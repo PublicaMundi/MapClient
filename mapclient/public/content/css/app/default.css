@@ -6,13 +6,13 @@
     height: 0;
 }
 
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 800px) {
     .device1 {
         display: none !important;
     }
 }
 
-@media screen and (max-width: 710px) {
+@media screen and (max-width: 640px) {
     .device2 {
         display: none !important;
     }
