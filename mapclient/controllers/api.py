@@ -23,6 +23,7 @@ import zipfile
 import uuid
 import string
 import time
+import urllib2
 
 from mapclient.lib.ogr2ogr import main as ogr_export
 from publicamundi.data.api import *
@@ -569,6 +570,82 @@ class ApiController(BaseController):
                 'details': (ex.message if config['dataapi.error.details'] else ''),
                 'token': None
             }, None)
+    
+    
+    def describe_layergroups(self):
+        """ Provides a json representation of GeoServer's Layer Group's structure
+        """
+        layer_groups_structure = {'layergroups':{}}
+        
+        try:
+            layer_groups = self._get_layergroups()
+        except RuntimeError as ex:
+            return json.dumps(layer_groups_structure)
+        
+        for layer_group in layer_groups:
+            layer_groups_structure['layergroups'][layer_group] = []
+            
+            try:
+                members = self._get_layergroup_members(layer_group.split(':')[1])
+            except RuntimeError as ex:
+                members = []
+                            
+            for member in members:
+                layer_groups_structure['layergroups'][layer_group].append(member)
+        
+        return json.dumps(layer_groups_structure)
+    
+    
+    def _get_layergroups(self):
+        workspace = config['mapclient.geoserver.workspace']        
+        path = 'workspaces/' + workspace + '/layergroups.json' 
+        
+        result = json.loads(self._make_geoserver_rest_request(path))
+        layer_groups = []
+        if result['layerGroups'] and result['layerGroups']['layerGroup']:
+            layer_groups = [workspace + ':' + x['name'] for x in result['layerGroups']['layerGroup']]
+
+        return layer_groups
+            
+    
+    
+    def _get_layergroup_members(self, layergroup):
+        
+        workspace = config['mapclient.geoserver.workspace']
+        path = 'workspaces/' + workspace + '/layergroups/' + layergroup + '.json' 
+        
+        result = json.loads(self._make_geoserver_rest_request(path))
+        members = [workspace + ':' + x['name'] for x in result['layerGroup']['publishables']['published']]
+                
+        return members
+    
+    
+    def _make_geoserver_rest_request(self, path, data=None):
+        url = config['mapclient.geoserver.api_url'] + 'rest/' + path
+        username = config['mapclient.geoserver.username']
+        password = config['mapclient.geoserver.password']
+        
+        request = urllib2.Request(url = url)
+        
+        passw = 'Basic ' + ((username + ':' + password).encode('base64').rstrip())
+        
+        #TODO Check POST case
+        if data:
+            request.add_data(data.encode('utf-8'))
+        
+        request.add_header('Authorization', 
+                           'Basic ' + ((username + ':' + password).encode('base64').rstrip()))
+        try:
+            response = urllib2.urlopen(request)
+        except urllib2.HTTPError as ex:
+            try:
+                detail = ex.read()
+            except:
+                detail = 'n/a'
+            raise RuntimeError('GeoServer REST Request \'%s\' failed with '
+                               'exception: \'%s\'. Details: %s' % (path, ex, detail))
+        return response.read()   
+    
 
     def _parse_query(self):
         if request.environ["REQUEST_METHOD"] == 'POST':

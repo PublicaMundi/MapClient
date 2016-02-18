@@ -12,6 +12,7 @@
     "index.selected-layers" : "Selected Layers",
     "index.tools" : "Tools",
     "index.tool-actions" : "Actions",
+    "index.layer-group.legend.title" : "Legend for",
 
     "index.feedback" : "Leave your feedback",
 

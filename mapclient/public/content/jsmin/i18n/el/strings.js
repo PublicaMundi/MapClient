@@ -12,6 +12,7 @@
     "index.selected-layers" : "Επιλεγμένα επίπεδα",
     "index.tools" : "Εργαλεία",
     "index.tool-actions" : "Λειτουργείες",
+    "index.layer-group.legend.title" : "Υπόμνημα για",
 
     "index.feedback" : "Αφήστε τα σχόλιά σας",
 
