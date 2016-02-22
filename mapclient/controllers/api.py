@@ -627,8 +627,6 @@ class ApiController(BaseController):
         
         request = urllib2.Request(url = url)
         
-        passw = 'Basic ' + ((username + ':' + password).encode('base64').rstrip())
-        
         #TODO Check POST case
         if data:
             request.add_data(data.encode('utf-8'))
