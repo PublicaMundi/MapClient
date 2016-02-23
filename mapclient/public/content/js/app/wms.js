@@ -11,6 +11,18 @@
         return true;
     };
 
+    var _bboxTransform = function (bbox){
+    	var bottomLeft, topRight;
+    	
+        bottomLeft = ol.proj.transform([bbox[0], bbox[1]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+        topRight = ol.proj.transform([bbox[2], bbox[3]], PublicaMundi.Maps.CRS.WGS84, PublicaMundi.Maps.CRS.Mercator);
+        bbox = [bottomLeft[0], bottomLeft[1], topRight[0], topRight[1]];
+        if (_isBoundingBoxFinite(bbox)) {
+            return bbox;
+        }
+        return null;
+    };
+    
     var _bboxReduce = function (previousValue, currentValue, index, array) {
         if (previousValue) {
             return previousValue;
@@ -122,17 +134,31 @@
 					resolve(self.values.cache[metadata.key]);
 					return;
 				}
-
-				$.ajax({
+				
+				var getLayergroupsRequest = $.ajax({
+					url: window.location.href + 'api/describe_layergroups',
+					context: self,
+                    headers: {
+                        'Accept' : 'text/xml; charset=utf-8',
+                        'Content-Type': 'text/xml; charset=utf-8'
+                    }
+				});
+				
+				var getCapabilitiesRequest = $.ajax({
 					url: getCapabilitiesUrl,
 					context: self,
                     headers: {
                         'Accept' : 'text/xml; charset=utf-8',
                         'Content-Type': 'text/xml; charset=utf-8'
                     }
-				}).done(function (response) {
-					var parser = new ol.format.WMSCapabilities();
-					var result = parser.read(response);
+                    
+				});
+
+				$.when(getLayergroupsRequest, getCapabilitiesRequest).done(function (getLayergroupsResponse, getCapabilitiesResponse) {
+					var layerGroupsStructure = JSON.parse(getLayergroupsResponse[0]);
+					console.log(layerGroupsStructure.layergroups['topp:gps-nea-peramos'][2]);
+					var parser = new ol.format.WMSCapabilities();				
+					var result = parser.read(getCapabilitiesResponse[0]);
 
 					// Refresh default metadata values from response
 					metadata.title = result.Service.Title;
@@ -147,15 +173,17 @@
 							layers.push(result.Capability.Layer);
 						}
 					}
-
+					
+					var layerGroups = Object.keys(layerGroupsStructure.layergroups);
+					
 					for (var i = 0; i < layers.length; i++) {
 						var layer = {
 							key: layers[i].Name,
 							name: layers[i].Name,
 							title: layers[i].Title,
-							bbox: layers[i].BoundingBox.reduce(_bboxReduce, null),
+							bbox: _bboxTransform(layers[i].EX_GeographicBoundingBox),
 							queryable: layers[i].queryable,
-							legend: null
+							legend: null,
 						};
 
 						if ((layers[i].Style) &&
@@ -163,6 +191,19 @@
 							(layers[i].Style[0].LegendURL) &&
 							(layers[i].Style[0].LegendURL.length > 0)) {
 							layer.legend = layers[i].Style[0].LegendURL[0].OnlineResource;
+						}else if (layerGroups.indexOf(layers[i].Name) >= 0){
+							layer.legend = 'content/images/app/legend.png';
+							
+							layerComponents = layerGroupsStructure.layergroups[layers[i].Name];
+							layer.layerGroupLegend = [];
+							for (var j = 0; j < layers.length; j++) {
+								if(layerComponents.indexOf(layers[j].Name) >= 0){
+									layer.layerGroupLegend.push({
+										'title': layers[j].Title,
+										'legend': layers[j].Style[0].LegendURL[0].OnlineResource,
+									});
+								}
+							}
 						}
 
 						metadata.layers.push(layer);

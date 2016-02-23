@@ -715,6 +715,28 @@
                         break;
                 }
         });
+        
+        members.components.layerGroupLegendDialog = new PublicaMundi.Maps.Dialog({
+            title: '',
+            element: 'dialog-3',
+            visible: false,
+            width: 400,
+            height: 400,
+            buttons: {
+                close : {
+                    text: 'button.close',
+                    style: 'primary'
+                }
+            }
+        });
+        
+        members.components.layerGroupLegendDialog.on('dialog:action', function(args){
+            switch(args.action){
+                case 'close':
+                    this.hide();
+                    break;
+            }
+        });
 
         // UI actions
         members.actions.restoreZoomLevel = new PublicaMundi.Maps.Action({
@@ -1061,6 +1083,39 @@
                 members.components.catalogInfoDialog.show();
             }
         };
+        
+        var showLayerGroupLegend = function(args){
+        	if(args.title) {
+        		members.components.layerGroupLegendDialog.setTitle(PublicaMundi.i18n.getResource('index.layer-group.legend.title') + " " + args.title);
+        		var content = [];
+        		content.push('<div class="layergroup-legend-container">');
+        		content.push('<table>');
+
+        		for (var i = 0; i < args.legend.length; i++){
+        			if (i % 2 === 0){
+        				content.push('<tr>');
+        			}
+        			content.push('<td>');
+        			content.push('<img src=\'' + args.legend[i].legend + '\'/>');
+        			content.push('</td>');
+        			content.push('<td>');
+        			content.push(args.legend[i].title);
+        			content.push('</td>');
+        			if (i % 2 === 1){
+        				content.push('</tr>');
+        			}
+        			else if(i === args.legend.length -1){
+        				content.push('</td></tr>');
+        			}
+        		}
+
+        		content.push('</table>');
+        		content.push('</div>');
+        		
+                members.components.layerGroupLegendDialog.setContent(content.join(''));
+                members.components.layerGroupLegendDialog.show();
+        	}
+        };
 
         var layerAdded = function(args) {
             if(args.sender != members.components.layerTreeGroup) {
@@ -1088,6 +1143,8 @@
         members.components.layerTreeSearch.on('layer:removed', layerRemoved);
         members.components.layerTreeSearch.on('catalog:info-loading', resetCatalogObjectInfo);
         members.components.layerTreeSearch.on('catalog:info-loaded', showCatalogObjectInfo);
+        
+        members.components.layerSelection.on('layer-group:legend-loaded', showLayerGroupLegend);
 
         // Interaction events
         members.components.layerTreeSearch.on('bbox:draw', function(args) {

@@ -443,6 +443,10 @@ ul {
     border-bottom: solid 1px #E7E7E7;
 }
 
+.layer-group {
+    cursor: pointer;
+}
+
 .inactive {
     cursor: not-allowed;
 }
@@ -858,6 +862,14 @@ div.legend-container {
     float: left;
     height: 24px;
     width: 24px;
+}
+
+div.layergroup-legend-container > table {
+    width: 100%;
+}
+
+div.layergroup-legend-container td {
+	padding: 2px 5px 2px 5px;
 }
 
 img.legend {

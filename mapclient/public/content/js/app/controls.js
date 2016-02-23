@@ -1463,7 +1463,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
         }
     });
 
-    var _LayerSelectionAddItem = function(id, title, legend) {
+    var _LayerSelectionAddItem = function(id, title, legend, layerGroupLegend) {
 		var self = this;
         var layer = this.values.resources.getLayerById(id);
 
@@ -1482,7 +1482,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
 		content.push('<div data-id="' + id + '" class="clearfix selected-layer">');
 
-		content.push('<div class="legend-container">');
+		if(layerGroupLegend){
+			content.push('<div class="legend-container layer-group">');
+		} else{
+			content.push('<div class="legend-container">');
+		}
+		
 		if(legend) {
 			content.push('<img id="' + safeId + '-legend-img" src="' + legend + '" alt=" " class="legend" />');
 		} else {
@@ -1508,7 +1513,12 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 
 		content.push('</div>');
 
-		$('#' + this.values.element).prepend(content.join(''));
+		var elem = $.parseHTML(content.join(''));
+		$(elem).data({
+			title: title.text,
+			legend: layerGroupLegend,
+		});
+		$('#' + this.values.element).prepend(elem);
 
 		$('#' + safeId + '-legend-img').load(function() {
             var nWidth = $(this).prop('naturalWidth');
@@ -1569,6 +1579,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
             this.event('layer:down');
 
             this.event('layer:opacity:changed');
+            this.event('layer-group:legend-loaded');
 
             this.values.updateActions = function() {
 				var elements = $('#' + self.values.element).find('.selected-layer');
@@ -1625,6 +1636,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 						break;
 				}
 
+			});
+
+			$('#' + this.values.element).on('click.' + this.values.element, '.layer-group', function(){
+				console.log($(this).parent().data());
+				self.trigger('layer-group:legend-loaded',
+                    {
+                        title: $(this).parent().data().title,
+                        legend: $(this).parent().data().legend,
+                    }
+                );
+				
 			});
 
 			$('#' + this.values.element).on('change.' + this.values.element, '[type="range"]', function() {
@@ -1685,17 +1707,17 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 				this.values.resources.setCatalogResourceMetadataOptions(resource);
 
 				this.values.resources.getResourceMetadata(resource.metadata.type, resource.metadata.parameters).then(function(metadata) {
-					var title, legend;
-
+					var title, legend, layerGroupLegend;
 					for(var i=0; i<metadata.layers.length;i++) {
 						if(metadata.layers[i].key == layer) {
 							title = metadata.layers[i].title;
 							legend = metadata.layers[i].legend;
+							layerGroupLegend = metadata.layers[i].layerGroupLegend;
 							break;
 						}
 					}
 
-					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(resource, title), legend);
+					_LayerSelectionAddItem.call(self, id, resolveLayerTitleFromMetadata(resource, title), legend, layerGroupLegend);
 
                     return true;
 				}, function(reason) {
@@ -1706,7 +1728,7 @@ define(['module', 'jquery', 'ol', 'URIjs/URI', 'data_api', 'shared'], function (
 			} else if(metadata) {
 				for(var i=0, count=metadata.layers.length; i<count; i++) {
 					if(metadata.layers[i].key == layer) {
-						_LayerSelectionAddItem.call(self, id, { i18n : '', text : metadata.layers[i].title }, metadata.layers[i].legend);
+						_LayerSelectionAddItem.call(self, id, { i18n : '', text : metadata.layers[i].title }, metadata.layers[i].legend, layerGroupLegend);
 
 						return true;
 					}
